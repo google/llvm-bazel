@@ -12,6 +12,10 @@ It is branched off of the
 in the [TensorFlow](http://tensorflow.org) project, but aims to be suitable for
 more general usage.
 
+# Status
+
+Just a direct copy of the BUILD files from TF. Not expected to build yet.
+
 # License
 Licensed under the Apache license with LLVM Exceptions. See [LICENSE](LICENSE)
 for more information.
