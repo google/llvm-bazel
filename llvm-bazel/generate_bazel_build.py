@@ -32,6 +32,61 @@ Library = collections.namedtuple(
 TargetGroup = collections.namedtuple("TargetGroup", ["name"])
 
 
+def _walk_llvm_repository(path, components, directory):
+  """Walks an LLVM source repository to find libraries.
+
+  Args:
+    path: A path to an LLVM source directory containing LLVMBuild.txt files to
+      traverse.
+    components: A dictionary mapping target names to Library tuples, to be
+      filled in by the traversal.
+    directory: The current relative path from the root of the source tree.
+  """
+
+  # Parses the LLVMBuild.txt file. LLVM Build files are in INI format.
+  llvmbuild_path = os.path.join(path, directory, "LLVMBuild.txt")
+  config = configparser.RawConfigParser()
+  config.read(llvmbuild_path)
+
+  # Iterate over the components to find libraries.
+  for section in config.sections():
+    if section.startswith("component"):
+      name = config.get(section, "name")
+      section_type = config.get(section, "type")
+
+      if section_type == "Library":
+        # Parses the list of required libraries.
+        required_libraries = []
+        if config.has_option(section, "required_libraries"):
+          required_libraries = config.get(section, "required_libraries").split()
+
+        parent = None
+        if config.has_option(section, "parent"):
+          parent = config.get(section, "parent")
+
+        # Forms the include path by string substitution.
+        include_directory = directory.replace("lib/", "include/llvm/", 1)
+        components[name] = Library(name, required_libraries, directory,
+                                   include_directory, parent)
+      elif section_type == "TargetGroup":
+        components[name] = TargetGroup(name)
+      elif section_type in [
+          "LibraryGroup", "BuildTool", "Tool", "Group", "TargetGroup",
+          "OptionalLibrary"
+      ]:
+        # We do not need this kind of component for a Tensorflow build; silently
+        # ignore it.
+        pass
+      else:
+        logging.error("Unknown section type: %s", section_type)
+
+  # Recursively visits subdirectories, if any.
+  if config.has_option("common", "subdirectories"):
+    for subdirectory in config.get("common", "subdirectories").split():
+      _walk_llvm_repository(path, components,
+                            os.path.join(directory, subdirectory))
+
+
 def _coerce_to_str_node(obj):
   """Coerce a Python string to Python Str node."""
   if isinstance(obj, str):
@@ -90,61 +145,6 @@ def _create_rule_node(rule_syntax_name, attributes):
                      kwargs=None))
 
 
-def _walk_llvm_repository(path, components, directory):
-  """Walks an LLVM source repository to find libraries.
-
-  Args:
-    path: A path to an LLVM source directory containing LLVMBuild.txt files to
-      traverse.
-    components: A dictionary mapping target names to Library tuples, to be
-      filled in by the traversal.
-    directory: The current relative path from the root of the source tree.
-  """
-
-  # Parses the LLVMBuild.txt file. LLVM Build files are in INI format.
-  llvmbuild_path = os.path.join(path, directory, "LLVMBuild.txt")
-  config = configparser.RawConfigParser()
-  config.read(llvmbuild_path)
-
-  # Iterate over the components to find libraries.
-  for section in config.sections():
-    if section.startswith("component"):
-      name = config.get(section, "name")
-      section_type = config.get(section, "type")
-
-      if section_type == "Library":
-        # Parses the list of required libraries.
-        required_libraries = []
-        if config.has_option(section, "required_libraries"):
-          required_libraries = config.get(section, "required_libraries").split()
-
-        parent = None
-        if config.has_option(section, "parent"):
-          parent = config.get(section, "parent")
-
-        # Forms the include path by string substitution.
-        include_directory = directory.replace("lib/", "include/llvm/", 1)
-        components[name] = Library(name, required_libraries, directory,
-                                   include_directory, parent)
-      elif section_type == "TargetGroup":
-        components[name] = TargetGroup(name)
-      elif section_type in [
-          "LibraryGroup", "BuildTool", "Tool", "Group", "TargetGroup",
-          "OptionalLibrary"
-      ]:
-        # We do not need this kind of component for a Tensorflow build; silently
-        # ignore it.
-        pass
-      else:
-        logging.error("Unknown section type: %s", section_type)
-
-  # Recursively visits subdirectories, if any.
-  if config.has_option("common", "subdirectories"):
-    for subdirectory in config.get("common", "subdirectories").split():
-      _walk_llvm_repository(path, components,
-                            os.path.join(directory, subdirectory))
-
-
 def _ast_string_list(alist):
   """Converts a list of strings into an AST string list."""
   return ast.List(elts=[ast.Str(s=s) for s in alist], ctx=ast.Load())
@@ -160,8 +160,8 @@ def _ast_glob_expr(path_list):
 
 
 def _ast_cc_library_rule(library,
-                         extra_srcs=None,
-                         extra_srcs_symbol=None,
+                         extra_glob_srcs=None,
+                         extra_symbol_srcs=None,
                          extra_hdrs=None,
                          extra_glob_hdrs=None,
                          extra_deps=None,
@@ -171,8 +171,8 @@ def _ast_cc_library_rule(library,
 
   Args:
     library: a Library object describing the library
-    extra_srcs: a list of extra glob patterns to add to the rule's 'srcs'
-    extra_srcs_symbol: an additional symbol (e.g. externally defined variable)
+    extra_glob_srcs: a list of extra glob patterns to add to the rule's 'srcs'
+    extra_symbol_srcs: additional symbols (e.g. externally defined variables)
       to add to the rule's 'srcs'.
     extra_hdrs: a list of filenames to add to the rule's 'hdrs'; not globbed.
     extra_glob_hdrs: a list of patterns to add to the rule's 'hdrs'; globbed.
@@ -184,6 +184,13 @@ def _ast_cc_library_rule(library,
   Returns:
     A python AST for a cc_library() rule.
   """
+  extra_glob_srcs = extra_glob_srcs if extra_glob_srcs else []
+  extra_hdrs = extra_hdrs if extra_hdrs else []
+  extra_glob_hdrs = extra_glob_hdrs if extra_glob_hdrs else []
+  extra_deps = extra_deps if extra_deps else []
+  extra_copts = extra_copts if extra_copts else []
+  extra_symbol_srcs = extra_symbol_srcs if extra_symbol_srcs else []
+
   deps = [":config"]
   deps += [":" + dep for dep in library.deps]
   deps += extra_deps
@@ -193,12 +200,13 @@ def _ast_cc_library_rule(library,
       os.path.join(library.src_path, "*.c"),
       os.path.join(library.src_path, "*.cpp"),
       os.path.join(library.src_path, "*.inc")
-  ] + list(extra_srcs)
+  ] + extra_glob_srcs
   if not export_src_headers:
     src_globs.append(src_hdrs)
 
-  if extra_srcs_symbol is not None:
-    srcs = ast.BinOp(left=_ast_glob_expr(_ast_string_list(src_globs)),
+  srcs = _ast_glob_expr(_ast_string_list(src_globs))
+  for extra_srcs_symbol in extra_symbol_srcs:
+    srcs = ast.BinOp(left=srcs,
                      op=ast.Add(),
                      right=ast.Call(func=ast.Name(id=extra_srcs_symbol,
                                                   ctx=ast.Load()),
@@ -206,8 +214,6 @@ def _ast_cc_library_rule(library,
                                     starargs=None,
                                     kwargs=None,
                                     args=[]))
-  else:
-    srcs = _ast_glob_expr(_ast_string_list(src_globs))
 
   hdr_globs = [
       os.path.join(library.hdrs_path, "*.h"),
@@ -266,6 +272,7 @@ TABLEGEN_INTRINSIC_HEADER_TARGETS = [
     "riscv", "s390", "wasm", "x86", "xcore"
 ]
 
+# Extra dependencies for generated rules.
 # A dictionary mapping LLVM targets to lists of additional `deps` to include in
 # the generated cc_library() rule.
 EXTRA_DEPS = {
@@ -318,8 +325,12 @@ EXTRA_DEPS = {
     "SystemZDesc": [":SystemZCommonTableGen"],
 }
 
-# A dictionary mapping LLVM targets to lists of additional `hdrs` to include in
-# the generated cc_library() rule. The header strings are not globbed.
+# Extra files to include in generated rules.
+# These map LLVM targets to lists of globbed or unglobbed files to add to the
+# target's source and headers.
+# Most of these exist to work around layering violations or headers that aren't
+# in the usual place.
+
 EXTRA_HDRS = {
     "Support": [
         "include/llvm/BinaryFormat/MachO.def",
@@ -341,8 +352,6 @@ EXTRA_HDRS = {
     ]
 }
 
-# Most of these exist to work around layering violations or headers that aren't
-# in the usual place.
 EXTRA_GLOB_HDRS = {
     "AArch64Info": [
         "lib/Target/AArch64/*.def",
@@ -392,10 +401,7 @@ EXTRA_GLOB_HDRS = {
     "Vectorize": ["include/llvm/Transforms/Vectorize.h",],
 }
 
-# A dictionary mapping LLVM targets to lists of additional `srcs` to include in
-# the generated cc_library() rule. The sources are passed to glob().
-# Most of these exist to work around layering violations.
-EXTRA_SRCS = {
+EXTRA_GLOB_SRCS = {
     "Analysis": [
         "include/llvm/Transforms/Utils/Local.h",
         "include/llvm/Transforms/Scalar.h",
@@ -462,8 +468,12 @@ EXTRA_SRCS = {
     "SystemZInfo": ["lib/Target/SystemZ/MCTargetDesc/*.h"]
 }
 
-# A prelude to emit at the start of the generated BUILD file.
-PRELUDE = R"""
+EXTRA_SYMBOL_SRCS = {
+    "Support": ["llvm_support_platform_specific_srcs_glob"],
+}
+
+# A prelude to emit at the start of the generated section of the BUILD file.
+PRELUDE = """
 ########################## Begin autogenerated content #########################
 ###  This content is autogenerated by generate_bazel_build.py. Do not edit!  ###
 ################################################################################
@@ -510,18 +520,15 @@ def main(args):
             "-Iexternal/llvm-project/llvm/lib/Target/" + parent.name
         ]
         export_src_headers = True
-    extra_srcs_symbol = None
-    if name == "Support":
-      extra_srcs_symbol = "llvm_support_platform_specific_srcs_glob"
     if name == "Analysis":
       continue
     rules.append(
         _ast_cc_library_rule(component,
-                             extra_deps=EXTRA_DEPS.get(name, []),
-                             extra_srcs=EXTRA_SRCS.get(name, []),
-                             extra_srcs_symbol=extra_srcs_symbol,
-                             extra_hdrs=EXTRA_HDRS.get(name, []),
-                             extra_glob_hdrs=EXTRA_GLOB_HDRS.get(name, []),
+                             extra_deps=EXTRA_DEPS.get(name),
+                             extra_glob_srcs=EXTRA_GLOB_SRCS.get(name),
+                             extra_symbol_srcs=EXTRA_SYMBOL_SRCS.get(name),
+                             extra_hdrs=EXTRA_HDRS.get(name),
+                             extra_glob_hdrs=EXTRA_GLOB_HDRS.get(name),
                              extra_copts=extra_copts,
                              export_src_headers=export_src_headers))
 
