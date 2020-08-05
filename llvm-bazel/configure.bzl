@@ -6,6 +6,8 @@
 
 _OVERLAY_PARENT_PATHS = [
     "llvm",
+    "mlir",
+    "mlir/test",
 ]
 
 def _is_absolute(path):
