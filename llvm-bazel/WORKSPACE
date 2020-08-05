@@ -2,8 +2,6 @@
 # See https://llvm.org/LICENSE.txt for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-workspace(name = "llvm_bazel")
-
 load(":configure.bzl", "llvm_configure")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 

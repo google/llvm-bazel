@@ -2,9 +2,4 @@
 # See https://llvm.org/LICENSE.txt for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-py_binary(
-    name = "expand_cmake_vars",
-    srcs = ["expand_cmake_vars.py"],
-    srcs_version = "PY2AND3",
-    visibility = ["@llvm-project//:__subpackages__"],
-)
+# Required to reference .bzl files in this package
