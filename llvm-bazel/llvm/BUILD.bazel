@@ -1,10 +1,9 @@
 # This file is licensed under the Apache License v2.0 with LLVM Exceptions.
 # See https://llvm.org/LICENSE.txt for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-
-licenses(["notice"])
-
-exports_files(["LICENSE.TXT"])
+#
+# This BUILD file is auto-generated; do not edit!
+# See generate_bazel_build.py
 
 load(
     "//llvm:llvm.bzl",
@@ -22,7 +21,12 @@ load(
     "template_rule",
 )
 
-package(default_visibility = ["//visibility:public"])
+package(
+    default_visibility = ["//visibility:public"],
+    licenses = ["notice"],
+)
+
+exports_files(["LICENSE.TXT"])
 
 llvm_host_triple = "x86_64-unknown-linux_gnu"
 
@@ -155,10 +159,10 @@ gentbl(
     name = "InstCombineTableGen",
     tbl_outs = [(
         "-gen-searchable-tables",
-        "lib/Transforms/InstCombine/InstCombineTables.inc",
+        "lib/Target/AMDGPU/InstCombineTables.inc",
     )],
     tblgen = ":llvm-tblgen",
-    td_file = "lib/Transforms/InstCombine/InstCombineTables.td",
+    td_file = "lib/Target/AMDGPU/InstCombineTables.td",
     td_srcs = glob([
         "include/llvm/CodeGen/*.td",
         "include/llvm/IR/Intrinsics*.td",
