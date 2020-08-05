@@ -10,7 +10,7 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 llvm_configure(
     name = "llvm-project",
-    overlay_path = ".",
+    overlay_path = "llvm-project-overlay",
     src_path = "../third_party/llvm-project",
 )
 
