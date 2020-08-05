@@ -19,6 +19,7 @@ build-*/
 
 # Bazel artifacts
 /bazel-*
+/llvm-bazel/bazel-*
 
 # Emacs autosaves
 *~
