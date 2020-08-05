@@ -16,6 +16,17 @@ more general usage.
 
 Just a direct copy of the BUILD files from TF. Not expected to build yet.
 
+# Generating BUILD files
+
+Build files can be generated from LLVMBuild.txt files by running the provided
+script.
+
+```shell
+llvm-bazel/generate_bazel_build.py \
+    --llvm_root third_party/llvm-project/llvm/ \
+    > llvm-bazel/llvm/BUILD.bazel
+```
+
 # License
 Licensed under the Apache license with LLVM Exceptions. See [LICENSE](LICENSE)
 for more information.
