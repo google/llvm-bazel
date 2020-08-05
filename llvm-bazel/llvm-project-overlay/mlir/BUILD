@@ -434,7 +434,6 @@ cc_library(
     ]),
     hdrs = glob([
         "include/mlir/Dialect/*.h",
-        "include/mlir/Dialect/*.h",
     ]),
     includes = ["include"],
     deps = [
@@ -930,6 +929,7 @@ cc_library(
         ":DialectUtils",
         ":EDSC",
         ":IR",
+        ":LinalgOps",
         ":SCFDialect",
         ":SideEffectInterfaces",
         ":StandardOps",
@@ -2371,6 +2371,7 @@ cc_library(
         ":ConversionPassIncGen",
         ":IR",
         ":LLVMDialect",
+        ":Parser",
         ":Pass",
         ":StandardOps",
         ":Support",
@@ -2599,9 +2600,11 @@ cc_library(
         "lib/Target/LLVMIR/DebugTranslation.cpp",
         "lib/Target/LLVMIR/DebugTranslation.h",
         "lib/Target/LLVMIR/ModuleTranslation.cpp",
+        "lib/Target/LLVMIR/TypeTranslation.cpp",
     ],
     hdrs = [
         "include/mlir/Target/LLVMIR/ModuleTranslation.h",
+        "include/mlir/Target/LLVMIR/TypeTranslation.h",
     ],
     includes = ["include"],
     deps = [
@@ -2774,6 +2777,7 @@ cc_library(
         "@llvm-project//mlir/test:TestAffine",
         "@llvm-project//mlir/test:TestDialect",
         "@llvm-project//mlir/test:TestIR",
+        "@llvm-project//mlir/test:TestLLVMIR",
         "@llvm-project//mlir/test:TestPass",
         "@llvm-project//mlir/test:TestReducer",
         "@llvm-project//mlir/test:TestSPIRV",
@@ -2804,6 +2808,7 @@ cc_library(
         ":Support",
         ":Translation",
         "@llvm-project//llvm:Support",
+        "@llvm-project//mlir/test:TestLLVMTypeTranslation",
     ],
 )
 
@@ -2925,6 +2930,7 @@ cc_binary(
         "@llvm-project//mlir/test:TestAffine",
         "@llvm-project//mlir/test:TestDialect",
         "@llvm-project//mlir/test:TestIR",
+        "@llvm-project//mlir/test:TestLLVMIR",
         "@llvm-project//mlir/test:TestPass",
         "@llvm-project//mlir/test:TestReducer",
         "@llvm-project//mlir/test:TestSPIRV",
@@ -3662,6 +3668,7 @@ cc_library(
         ":EDSC",
         ":IR",
         ":LLVMDialect",
+        ":LLVMIRModuleTranslation",
         ":Pass",
         ":StandardOps",
         ":StandardToLLVM",
