@@ -42,7 +42,7 @@ def _llvm_configure_impl(repository_ctx):
     src_workspace_path = repository_ctx.path(
         repository_ctx.attr.workspace,
     ).dirname
-    src_path = repository_ctx.attr.path
+    src_path = repository_ctx.attr.src_path
     if not _is_absolute(src_path):
         src_path = _join_path(src_workspace_path, src_path)
 
@@ -53,7 +53,7 @@ def _llvm_configure_impl(repository_ctx):
     ).dirname
     overlay_path = _join_path(
         this_workspace_path,
-        "build_tools/bazel/third_party_import/llvm-project/overlay",
+        repository_ctx.attr.overlay_path,
     )
 
     # Each parent path of an overlay file must have its children manually
@@ -63,7 +63,7 @@ def _llvm_configure_impl(repository_ctx):
     # the entire tree (which would be wasteful).
     for overlay_parent_path in _OVERLAY_PARENT_PATHS:
         src_child_path = _join_path(src_path, overlay_parent_path)
-        overlay_child_path = _join_path(this_workspace_path, overlay_parent_path)
+        overlay_child_path = _join_path(overlay_path, overlay_parent_path)
 
         # Symlink from external src path
         _symlink_src_dir(repository_ctx, src_child_path, overlay_parent_path)
@@ -85,6 +85,7 @@ llvm_configure = repository_rule(
     attrs = {
         "_this_workspace": attr.label(default = Label("//:WORKSPACE")),
         "workspace": attr.label(default = Label("//:WORKSPACE")),
-        "path": attr.string(mandatory = True),
+        "src_path": attr.string(mandatory = True),
+        "overlay_path": attr.string(mandatory = True),
     },
 )
