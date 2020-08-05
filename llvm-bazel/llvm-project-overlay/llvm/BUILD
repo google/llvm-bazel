@@ -40,6 +40,14 @@ llvm_targets = [
     "X86",
 ]
 
+py_binary(
+    name = "expand_cmake_vars",
+    srcs = ["expand_cmake_vars.py"],
+    srcs_version = "PY2AND3",
+    visibility = ["@llvm-project//:__subpackages__"],
+)
+
+
 llvm_target_asm_parsers = llvm_targets
 
 llvm_target_asm_printers = llvm_targets
