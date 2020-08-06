@@ -10,6 +10,9 @@ _OVERLAY_PARENT_PATHS = [
     "mlir/test",
 ]
 
+# Directory of overlay files relative to WORKSPACE
+OVERLAY_DIR = "llvm-project-overlay"
+
 def _is_absolute(path):
     """Returns `True` if `path` is an absolute path.
 
@@ -21,6 +24,8 @@ def _is_absolute(path):
     return path.startswith("/") or (len(path) > 2 and path[1] == ":")
 
 def _join_path(a, b):
+    if _is_absolute(b):
+        return b
     return str(a) + "/" + str(b)
 
 def _symlink_src_dir(repository_ctx, from_path, to_path):
@@ -38,23 +43,23 @@ def _symlink_src_dir(repository_ctx, from_path, to_path):
         repository_ctx.symlink(from_child_path, to_child_path)
 
 def _llvm_configure_impl(repository_ctx):
-    # Compute path that sources are symlinked from.
     src_workspace_path = repository_ctx.path(
         repository_ctx.attr.workspace,
     ).dirname
-    src_path = repository_ctx.attr.src_path
-    if not _is_absolute(src_path):
-        src_path = _join_path(src_workspace_path, src_path)
 
-    # Compute path (relative to here) where overlay files
-    # are symlinked from.
-    this_workspace_path = repository_ctx.path(
-        repository_ctx.attr.workspace,
-    ).dirname
-    overlay_path = _join_path(
-        this_workspace_path,
-        repository_ctx.attr.overlay_path,
-    )
+    if repository_ctx.attr.overlay_path:
+        overlay_path = _join_path(
+            src_workspace_path,
+            repository_ctx.attr.overlay_path,
+        )
+    else:
+        this_workspace_path = repository_ctx.path(
+            repository_ctx.attr._this_workspace,
+        ).dirname
+        overlay_path = _join_path(this_workspace_path, OVERLAY_DIR)
+
+    # Compute path that sources are symlinked from.
+    src_path = _join_path(src_workspace_path, repository_ctx.attr.src_path)
 
     # Each parent path of an overlay file must have its children manually
     # symlinked. This is because the directory itself must be in the cache
@@ -86,6 +91,6 @@ llvm_configure = repository_rule(
         "_this_workspace": attr.label(default = Label("//:WORKSPACE")),
         "workspace": attr.label(default = Label("//:WORKSPACE")),
         "src_path": attr.string(mandatory = True),
-        "overlay_path": attr.string(mandatory = True),
+        "overlay_path": attr.string(),
     },
 )
