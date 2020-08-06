@@ -19,10 +19,6 @@ build-*/
 
 # Bazel artifacts
 /bazel-*
-/llvm-bazel/bazel-*
-
-# Per-user bazelrc files
-/llvm-bazel/user.bazelrc
 
 # Emacs autosaves
 *~

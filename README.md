@@ -15,7 +15,10 @@ suitable for more general usage.
 
 # Status
 
-Bazel builds can be run from the llvm-bazel subdirectory.
+Bazel builds can be run from the [llvm-bazel subdirectory](./llvm-bazel) for a
+build based on a submodule and [http-archive-demo](./http-archive-demo) for a
+build based on
+[http_archive](https://docs.bazel.build/versions/master/repo/http.html#http_archive).
 
 `bazel build --config=generic_clang @llvm-project//mlir/...` builds. Cuda and
 Vulkan support are disabled.

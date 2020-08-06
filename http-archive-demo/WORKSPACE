@@ -1,0 +1,54 @@
+# This file is licensed under the Apache License v2.0 with LLVM Exceptions.
+# See https://llvm.org/LICENSE.txt for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+# Demonstration of using these build files with http_archive instead of submodules.
+
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+LLVM_BAZEL_COMMIT = "b85c6e9bab34a538238dbbf1a5362763861a1ea7"
+
+LLVM_BAZEL_SHA256 = "b155109985789bad2b3ed2a667500dba5e2708302ebf722bee48b6e36669a47c"
+
+http_archive(
+    name = "llvm-bazel",
+    sha256 = LLVM_BAZEL_SHA256,
+    strip_prefix = "llvm-bazel-{commit}/llvm-bazel".format(commit = LLVM_BAZEL_COMMIT),
+    url = "https://github.com/google/llvm-bazel/archive/{commit}.tar.gz".format(commit = LLVM_BAZEL_COMMIT),
+)
+
+http_archive(
+    name = "zlib",
+    build_file = "@llvm-bazel//third_party_build:zlib.BUILD",
+    sha256 = "c3e5e9fdd5004dcb542feda5ee4f0ff0744628baf8ed2dd5d66f8ca1197cb1a1",
+    strip_prefix = "zlib-1.2.11",
+    urls = [
+        "https://storage.googleapis.com/mirror.tensorflow.org/zlib.net/zlib-1.2.11.tar.gz",
+        "https://zlib.net/zlib-1.2.11.tar.gz",
+    ],
+)
+
+LLVM_COMMIT = "c558c22cab9a555d2e521102b775759381e9727f"
+
+LLVM_SHA256 = "b3651e78f4f3b372273c71cb58e0d0767b61e7d9c93b79fd399065c1148089f5"
+
+LLVM_URLS = [
+    "https://storage.googleapis.com/mirror.tensorflow.org/github.com/llvm/llvm-project/archive/{commit}.tar.gz".format(commit = LLVM_COMMIT),
+    "https://github.com/llvm/llvm-project/archive/{commit}.tar.gz".format(commit = LLVM_COMMIT),
+]
+
+http_archive(
+    name = "llvm-project-raw",
+    build_file_content = "#empty",
+    sha256 = LLVM_SHA256,
+    strip_prefix = "llvm-project-" + LLVM_COMMIT,
+    urls = LLVM_URLS,
+)
+
+load("@llvm-bazel//:configure.bzl", "llvm_configure")
+
+llvm_configure(
+    name = "llvm-project",
+    src_path = ".",
+    workspace = "@llvm-project-raw//:WORKSPACE",
+)
