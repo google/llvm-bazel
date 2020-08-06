@@ -4,12 +4,6 @@
 
 """Configures an LLVM overlay project."""
 
-_OVERLAY_PARENT_PATHS = [
-    "llvm",
-    "mlir",
-    "mlir/test",
-]
-
 # Directory of overlay files relative to WORKSPACE
 OVERLAY_DIR = "llvm-project-overlay"
 
@@ -28,24 +22,12 @@ def _join_path(a, b):
         return b
     return str(a) + "/" + str(b)
 
-def _symlink_src_dir(repository_ctx, from_path, to_path):
-    children = repository_ctx.path(from_path).readdir()
-    for from_child_path in children:
-        if to_path:
-            to_child_path = _join_path(to_path, from_child_path.basename)
-        else:  # Root
-            to_child_path = from_child_path.basename
-
-        # Skip paths that are already in the overlay list.
-        # They will have this function called on them to populate.
-        if to_child_path in _OVERLAY_PARENT_PATHS:
-            continue
-        repository_ctx.symlink(from_child_path, to_child_path)
-
 def _llvm_configure_impl(repository_ctx):
     src_workspace_path = repository_ctx.path(
         repository_ctx.attr.workspace,
     ).dirname
+
+    src_path = _join_path(src_workspace_path, repository_ctx.attr.src_path)
 
     if repository_ctx.attr.overlay_path:
         overlay_path = _join_path(
@@ -58,37 +40,41 @@ def _llvm_configure_impl(repository_ctx):
         ).dirname
         overlay_path = _join_path(this_workspace_path, OVERLAY_DIR)
 
-    # Compute path that sources are symlinked from.
-    src_path = _join_path(src_workspace_path, repository_ctx.attr.src_path)
 
-    # Each parent path of an overlay file must have its children manually
-    # symlinked. This is because the directory itself must be in the cache
-    # (so that we can modify it without modifying the underlying source
-    # path). An alternative to this would be to perform a deep symlink of
-    # the entire tree (which would be wasteful).
-    for overlay_parent_path in _OVERLAY_PARENT_PATHS:
-        src_child_path = _join_path(src_path, overlay_parent_path)
-        overlay_child_path = _join_path(overlay_path, overlay_parent_path)
+    overlay_script = repository_ctx.path(
+        repository_ctx.attr._overlay_script,
+    )
 
-        # Symlink from external src path
-        _symlink_src_dir(repository_ctx, src_child_path, overlay_parent_path)
+    cmd = [
+        overlay_script,
+        "--src",
+        src_path,
+        "--overlay",
+        overlay_path,
+        "--target",
+        ".",
+    ]
+    exec_result = repository_ctx.execute(cmd, timeout = 20)
 
-        # Symlink from the overlay path.
-        _symlink_src_dir(repository_ctx, overlay_child_path, overlay_parent_path)
-
-    # Then symlink any top-level entries not previously handled.
-    # Doing it here means that if we got it wrong, it will fail with a
-    # "File Exists" error vs doing the wrong thing.
-    _symlink_src_dir(repository_ctx, src_path, "")
-
-    # Build files and overlays.
-    repository_ctx.file("BUILD")  # Root build is empty.
+    if exec_result.return_code != 0:
+        fail(("Failed to execute overlay script: '{cmd}':\n" +
+              "Exited with code {return_code}" +
+              "stdout:\n{stdout}\n" + "stderr:\n{stderr}\n").format(
+            cmd = " ".join(cmd),
+            return_code = exec_result.return_code,
+            stdout = exec_result.stdout,
+            stderr = exec_result.stderr,
+        ))
 
 llvm_configure = repository_rule(
     implementation = _llvm_configure_impl,
     local = True,
     attrs = {
         "_this_workspace": attr.label(default = Label("//:WORKSPACE")),
+        "_overlay_script": attr.label(
+            default = Label("//:overlay_directories.py"),
+            allow_single_file = True,
+        ),
         "workspace": attr.label(default = Label("//:WORKSPACE")),
         "src_path": attr.string(mandatory = True),
         "overlay_path": attr.string(),
