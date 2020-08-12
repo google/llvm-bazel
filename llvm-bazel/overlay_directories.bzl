@@ -37,6 +37,11 @@ def _overlay_directories_impl(repository_ctx):
     )
     python_bin = repository_ctx.which("python3")
     if not python_bin:
+        # Windows typically just defines "python" as python3. The script itself
+        # contains a check to ensure python3.
+        python_bin = repository_ctx.which("python")
+
+    if not python_bin:
         fail("Failed to find python3 binary")
 
     cmd = [

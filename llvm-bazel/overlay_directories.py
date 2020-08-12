@@ -14,6 +14,14 @@ contained in the overlay directory tree.
 import argparse
 import errno
 import os
+import sys
+
+
+def _check_python_version():
+  if sys.version_info[0] < 3:
+    raise RuntimeError(
+        "Must be invoked with a python 3 interpreter but was %s" %
+        sys.executable)
 
 
 def _check_dir_exists(path):
@@ -80,4 +88,5 @@ def main(args):
 
 
 if __name__ == "__main__":
+  _check_python_version()
   main(parse_arguments())
