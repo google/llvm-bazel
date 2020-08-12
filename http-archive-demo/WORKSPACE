@@ -6,9 +6,9 @@
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
-LLVM_BAZEL_COMMIT = "b85c6e9bab34a538238dbbf1a5362763861a1ea7"
+LLVM_BAZEL_COMMIT = "af2ad7e699a83d7da327b740c009cedc10e8bfc2"
 
-LLVM_BAZEL_SHA256 = "b155109985789bad2b3ed2a667500dba5e2708302ebf722bee48b6e36669a47c"
+LLVM_BAZEL_SHA256 = "6756f87d0ecc2d172af4c3654072c1aa779d09c33571c830d0b191ae41f72122"
 
 http_archive(
     name = "llvm-bazel",
@@ -50,5 +50,5 @@ load("@llvm-bazel//:configure.bzl", "llvm_configure")
 llvm_configure(
     name = "llvm-project",
     src_path = ".",
-    workspace = "@llvm-project-raw//:WORKSPACE",
+    src_workspace = "@llvm-project-raw//:WORKSPACE",
 )
