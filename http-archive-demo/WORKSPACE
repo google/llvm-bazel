@@ -2,7 +2,7 @@
 # See https://llvm.org/LICENSE.txt for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-# Demonstration of using these build files with http_archive instead of submodules.
+# Demonstration of using these build files with http_archive.
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
