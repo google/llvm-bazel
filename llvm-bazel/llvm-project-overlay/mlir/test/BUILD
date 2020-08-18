@@ -171,20 +171,6 @@ cc_library(
 )
 
 cc_library(
-    name = "TestLLVMTypeTranslation",
-    srcs = [
-        "lib/Target/TestLLVMTypeTranslation.cpp",
-    ],
-    deps = [
-        ":TestLLVMIR",
-        "@llvm-project//mlir:IR",
-        "@llvm-project//mlir:LLVMDialect",
-        "@llvm-project//mlir:LLVMIRModuleTranslation",
-        "@llvm-project//mlir:Translation",
-    ],
-)
-
-cc_library(
     name = "TestTransforms",
     srcs = glob(["lib/Transforms/*.cpp"]),
     defines = ["MLIR_CUDA_CONVERSIONS_ENABLED"],
@@ -199,6 +185,8 @@ cc_library(
         "@llvm-project//mlir:GPUToGPURuntimeTransforms",
         "@llvm-project//mlir:GPUTransforms",
         "@llvm-project//mlir:IR",
+        "@llvm-project//mlir:LLVMDialect",
+        "@llvm-project//mlir:LLVMTransforms",
         "@llvm-project//mlir:LinalgOps",
         "@llvm-project//mlir:LinalgTransforms",
         "@llvm-project//mlir:Pass",
@@ -232,19 +220,6 @@ cc_library(
         "@llvm-project//mlir:Support",
         "@llvm-project//mlir:Transforms",
         "@llvm-project//mlir:VectorOps",
-    ],
-)
-
-cc_library(
-    name = "TestLLVMIR",
-    srcs = [
-        "lib/Dialect/LLVMIR/LLVMTypeTestDialect.cpp",
-    ],
-    deps = [
-        "@llvm-project//llvm:Support",
-        "@llvm-project//mlir:Dialect",
-        "@llvm-project//mlir:IR",
-        "@llvm-project//mlir:LLVMDialect",
     ],
 )
 
