@@ -4,38 +4,27 @@
 
 # Demonstration of using these build files with an llvm-project submodule.
 
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
-
 #TODO(gcmn): When Bazel 3.5 is out, consistently use hyphens for repo aliases,
 # as the overeager and non-uniform validation preventing these has gone away in
 # https://github.com/bazelbuild/bazel/pull/11838.
+workspace(name = "llvm_bazel_submodule_demo")
+
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 
 maybe(
-  local_repository,
-  name = "llvm_bazel",
-  path = "llvm-bazel-submodule/llvm-bazel",
-)
-
-# We only have to do these shenanigans because the path we're looking for is
-# outside of any repository Bazel knows about. We can't just use a relative ".."
-# path with a reference to this workspace because then that would break out of
-# the repo alias into the encapsulating Bazel outputBase and the files we're
-# looking for do not exist there.
-maybe(
-  new_local_repository,
-  name = "llvm_project_raw",
-  path = "../third_party/llvm-project",
-  build_file_content = "",
+    local_repository,
+    name = "llvm_bazel",
+    path = "llvm-bazel-submodule/llvm-bazel",
 )
 
 load("@llvm_bazel//:configure.bzl", "llvm_configure")
 
 maybe(
-  llvm_configure,
-  name = "llvm-project",
-  src_path = ".",
-  src_workspace = "@llvm_project_raw//:WORKSPACE",
+    llvm_configure,
+    name = "llvm-project",
+    src_path = "third_party/llvm-project",
+    src_workspace = "@llvm_bazel_submodule_demo//:WORKSPACE",
 )
 
 maybe(

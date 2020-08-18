@@ -1,5 +1,5 @@
 [submodule "third_party/llvm-project"]
-	path = third_party/llvm-project
+	path = submodule-demo/third_party/llvm-project
 	url = git@github.com:llvm/llvm-project.git
 	fetchRecurseSubmodules = false
 [submodule "submodule-demo/llvm-bazel"]
