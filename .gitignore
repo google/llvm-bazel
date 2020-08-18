@@ -13,10 +13,6 @@
 # macOS files
 .DS_Store
 
-# CMake artifacts
-build/
-build-*/
-
 # Bazel artifacts
 /bazel-*
 
@@ -31,3 +27,7 @@ build-*/
 compile_commands.json
 .cache/clangd
 .clangd/
+
+# Submodule demo needs to stay in its own branch to avoid infinite submodule
+# recursion.
+submodule-demo/
