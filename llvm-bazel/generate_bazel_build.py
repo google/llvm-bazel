@@ -159,7 +159,12 @@ def _ast_glob_expr(path_list):
                   args=[path_list])
 
 
+def _or_default(arg, default):
+  return arg if arg else default
+
+
 def _ast_cc_library_rule(library,
+                         extra_srcs=None,
                          extra_glob_srcs=None,
                          extra_symbol_srcs=None,
                          extra_hdrs=None,
@@ -171,6 +176,7 @@ def _ast_cc_library_rule(library,
 
   Args:
     library: a Library object describing the library
+    extra_srcs: a list of strings to add to the rule's 'srcs'
     extra_glob_srcs: a list of extra glob patterns to add to the rule's 'srcs'
     extra_symbol_srcs: additional symbols (e.g. externally defined variables)
       to add to the rule's 'srcs'.
@@ -184,12 +190,13 @@ def _ast_cc_library_rule(library,
   Returns:
     A python AST for a cc_library() rule.
   """
-  extra_glob_srcs = extra_glob_srcs if extra_glob_srcs else []
-  extra_hdrs = extra_hdrs if extra_hdrs else []
-  extra_glob_hdrs = extra_glob_hdrs if extra_glob_hdrs else []
-  extra_deps = extra_deps if extra_deps else []
-  extra_copts = extra_copts if extra_copts else []
-  extra_symbol_srcs = extra_symbol_srcs if extra_symbol_srcs else []
+  extra_srcs = _or_default(extra_srcs, [])
+  extra_glob_srcs = _or_default(extra_glob_srcs, [])
+  extra_hdrs = _or_default(extra_hdrs, [])
+  extra_glob_hdrs = _or_default(extra_glob_hdrs, [])
+  extra_deps = _or_default(extra_deps, [])
+  extra_copts = _or_default(extra_copts, [])
+  extra_symbol_srcs = _or_default(extra_symbol_srcs, [])
 
   deps = [":config"]
   deps += [":" + dep for dep in library.deps]
@@ -205,6 +212,10 @@ def _ast_cc_library_rule(library,
     src_globs.append(src_hdrs)
 
   srcs = _ast_glob_expr(_ast_string_list(src_globs))
+  if extra_srcs:
+    srcs = ast.BinOp(left=srcs,
+                     op=ast.Add(),
+                     right=_ast_string_list(extra_srcs))
   for extra_srcs_symbol in extra_symbol_srcs:
     srcs = ast.BinOp(left=srcs,
                      op=ast.Add(),
@@ -339,8 +350,6 @@ EXTRA_HDRS = {
         "include/llvm/Support/VCSRevision.h",
     ],
     "TextAPI": [
-        "include/llvm/TextAPI/ELF/TBEHandler.h",
-        "include/llvm/TextAPI/ELF/ELFStub.h",
         "include/llvm/TextAPI/MachO/Architecture.def",
         "include/llvm/TextAPI/MachO/PackedVersion.h",
         "include/llvm/TextAPI/MachO/InterfaceFile.h",
@@ -399,6 +408,12 @@ EXTRA_GLOB_HDRS = {
     ],
     "TableGen": ["include/llvm/Target/*.def",],
     "Vectorize": ["include/llvm/Transforms/Vectorize.h",],
+}
+
+EXTRA_SRCS = {
+    "FrontendOpenMP": [
+        "include/llvm/Frontend/OpenMP/OMP.cpp",
+    ],
 }
 
 EXTRA_GLOB_SRCS = {
@@ -525,6 +540,7 @@ def main(args):
     rules.append(
         _ast_cc_library_rule(component,
                              extra_deps=EXTRA_DEPS.get(name),
+                             extra_srcs=EXTRA_SRCS.get(name),
                              extra_glob_srcs=EXTRA_GLOB_SRCS.get(name),
                              extra_symbol_srcs=EXTRA_SYMBOL_SRCS.get(name),
                              extra_hdrs=EXTRA_HDRS.get(name),
