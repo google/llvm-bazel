@@ -29,14 +29,15 @@ with a submodule for the llvm-project and the build files in tree.
 Users are more likely going to want to fetch build files from this repository
 and use them with their own copy of the llvm-project.
 
-The [http-archive-demo directory](./http-archive-demo) shows a build based on
+The
+[http-archive-demo branch](https://github.com/google/llvm-bazel/tree/http-archive-demo/http-archive-demo)
+shows a build based on
 [http_archive](https://docs.bazel.build/versions/master/repo/http.html#http_archive).
 
 The
 [submodule demo branch](https://github.com/google/llvm-bazel/tree/submodule-demo/submodule-demo)
 shows usage of these build files with both them and llvm-project coming from
-submodules (it has to be a separate branch to avoid infinite submodule
-recursion).
+submodules.
 
 You can build either of these demos with a command like
 

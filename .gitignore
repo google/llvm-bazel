@@ -28,6 +28,6 @@ compile_commands.json
 .cache/clangd
 .clangd/
 
-# Submodule demo needs to stay in its own branch to avoid infinite submodule
-# recursion.
+# Demos are on their own branches
 submodule-demo/
+http-archive-demo/
