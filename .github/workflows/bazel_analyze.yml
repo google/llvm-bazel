@@ -1,0 +1,31 @@
+# This file is licensed under the Apache License v2.0 with LLVM Exceptions.
+# See https://llvm.org/LICENSE.txt for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+name: Bazel Analyze
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches-ignore: "submodule-demo"
+
+jobs:
+  linux:
+    runs-on: ubuntu-18.04
+    container: l.gcr.io/google/bazel:3.3.1
+    steps:
+      - name: Installing actions/checkout@v2 dependencies
+        run: |
+          # Update git to version >= 2.18 for actions/checkout@v2.
+          add-apt-repository ppa:git-core/ppa
+          apt-get update
+          apt-get install -y git
+      - name: Checking out repository
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Analyzing core with Bazel
+        run: |
+          cd llvm-bazel
+          bazel build --nobuild @llvm-project//...
