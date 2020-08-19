@@ -11,13 +11,13 @@ name: Auto Integrate
 
 on:
   push:
-    branches: [main]
+    branches: [main, rev-traversal]
 
 jobs:
   auto_integrate:
     runs-on: ubuntu-18.04
     env:
-      MERGING_BRANCH: "main"
+      MERGING_BRANCH: "rev-traversal"
       INTEGRATION_BRANCH: "auto-integrate"
     steps:
       - name: Installing dependencies
