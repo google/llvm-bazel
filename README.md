@@ -34,7 +34,7 @@ shows a build based on
 [http_archive](https://docs.bazel.build/versions/master/repo/http.html#http_archive).
 
 The
-[submodule demo branch](https://github.com/google/llvm-bazel/tree/submodule-demo/submodule-demo)
+[submodule-demo branch](https://github.com/google/llvm-bazel/tree/submodule-demo/submodule-demo)
 shows usage of these build files with both them and llvm-project coming from
 submodules.
 
