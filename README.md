@@ -15,17 +15,34 @@ suitable for more general usage.
 
 # Status
 
-Bazel builds can be run from the [llvm-bazel subdirectory](./llvm-bazel) for a
-build based on a submodule and [http-archive-demo](./http-archive-demo) for a
-build based on
+MLIR builds with Cuda and Vulkan support disabled.
+
+Building LLVM core has many issues with finding `.inc` files.
+
+# Usage
+
+These build files are flexible in how they can be used. The
+[llvm-bazel subdirectory](./llvm-bazel) has the simplest build configuration
+with a submodule for the llvm-project and the build files in tree.
+
+Users are more likely going to want to fetch build files from this repository
+and use them with their own copy of the llvm-project.
+
+The
+[http-archive-demo branch](https://github.com/google/llvm-bazel/tree/http-archive-demo/http-archive-demo)
+shows a build based on
 [http_archive](https://docs.bazel.build/versions/master/repo/http.html#http_archive).
 
-`bazel build --config=generic_clang @llvm-project//mlir/...` builds. Cuda and
-Vulkan support are disabled.
+The
+[submodule demo branch](https://github.com/google/llvm-bazel/tree/submodule-demo/submodule-demo)
+shows usage of these build files with both them and llvm-project coming from
+submodules.
 
-`bazel build --config=generic_clang @llvm-project//...` has many issues with
-finding `.inc` files. These issues also exist in the BUILD files used by TF.
+You can build either of these demos with a command like
 
+```shell
+bazel --config=generic_clang @llvm-project//mlir/...
+```
 
 # Generating BUILD files
 
