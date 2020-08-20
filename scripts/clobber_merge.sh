@@ -13,4 +13,4 @@ SECOND_PARENT="${2:-main}"
 
 git checkout "${FIRST_PARENT?}"
 git reset --hard \
-  "$(git commit-tree ${SECOND_PARENT?}^{tree} -p ${FIRST_PARENT?} -p ${SECOND_PARENT?} -m "Merge in ${SECOND_PARENT?}")"
+  "$(git commit-tree ${SECOND_PARENT?}^{tree} -p ${FIRST_PARENT?} -p ${SECOND_PARENT?} -m "Merge from ${SECOND_PARENT?}")"
