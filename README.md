@@ -17,8 +17,7 @@ suitable for more general usage.
 
 MLIR builds with Cuda and Vulkan support disabled.
 
-Building LLVM core has many issues with finding `.inc` files. These issues also
-exist in the BUILD files used by TF.
+Building LLVM core has many issues with finding `.inc` files.
 
 # Usage
 
