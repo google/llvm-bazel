@@ -258,23 +258,16 @@ def _ast_cc_library_rule(library,
 
 def _format_build_source(source, path):
   """Formats a BUILD file's contents with buildifier."""
-  try:
-    buildifier = subprocess.Popen(
-        ["buildifier", "-type=build",
-         "-path=\"%s\"" % path],
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        encoding="utf8")
-    formatted_source, err = buildifier.communicate(source)
-  except OSError as os_error:
-    logging.error("Formatting failed on BUILD file: %s",
-                  path,
-                  exc_info=os_error)
-    return source
-
-  if err:
-    logging.error("Buildifier: %s", err)
+  buildifier = subprocess.Popen(
+      ["buildifier", "-type=build",
+       "-path=\"%s\"" % path],
+      stdin=subprocess.PIPE,
+      stdout=subprocess.PIPE,
+      stderr=subprocess.PIPE,
+      encoding="utf8")
+  formatted_source, stderr = buildifier.communicate(source)
+  if buildifier.poll() != 0:
+    raise RuntimeError("Formatting with buildifier failed: \n%s" % (stderr,))
   return formatted_source
 
 
@@ -411,9 +404,7 @@ EXTRA_GLOB_HDRS = {
 }
 
 EXTRA_SRCS = {
-    "FrontendOpenMP": [
-        "include/llvm/Frontend/OpenMP/OMP.cpp",
-    ],
+    "FrontendOpenMP": ["include/llvm/Frontend/OpenMP/OMP.cpp",],
 }
 
 EXTRA_GLOB_SRCS = {
