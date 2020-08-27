@@ -2571,7 +2571,9 @@ cc_binary(
         "tools/dsymutil/*.cpp",
         "tools/dsymutil/*.h",
     ]),
+    copts = llvm_copts,
     stamp = 0,
+    visibility = ["//visibility:public"],
     deps = [
         ":AllTargetsCodeGens",
         ":BinaryFormat",
@@ -2621,6 +2623,7 @@ cc_binary(
         "tools/lli/*.cpp",
         "tools/lli/*.h",
     ]),
+    copts = llvm_copts,
     # ll scripts rely on symbols from dependent
     # libraries being resolvable.
     linkopts = [
@@ -2633,6 +2636,7 @@ cc_binary(
         "-Wl,--export-dynamic-symbol=__cxa_throw",
     ],
     stamp = 0,
+    visibility = ["//visibility:public"],
     deps = [
         ":AllTargetsAsmParsers",
         ":AllTargetsCodeGens",
@@ -2713,7 +2717,9 @@ cc_binary(
         "tools/llvm-bcanalyzer/*.cpp",
         "tools/llvm-bcanalyzer/*.h",
     ]),
+    copts = llvm_copts,
     stamp = 0,
+    visibility = ["//visibility:public"],
     deps = [
         ":BitReader",
         ":Support",
@@ -2725,7 +2731,9 @@ cc_binary(
     srcs = glob([
         "tools/llvm-cat/*.cpp",
     ]),
+    copts = llvm_copts,
     stamp = 0,
+    visibility = ["//visibility:public"],
     deps = [
         ":BitReader",
         ":BitWriter",
@@ -2742,7 +2750,9 @@ cc_binary(
         "tools/llvm-cfi-verify/lib/*.cpp",
         "tools/llvm-cfi-verify/lib/*.h",
     ]),
+    copts = llvm_copts,
     stamp = 0,
+    visibility = ["//visibility:public"],
     deps = [
         ":AllTargetsAsmParsers",
         ":AllTargetsCodeGens",
@@ -2793,7 +2803,9 @@ cc_binary(
         "tools/llvm-cvtres/*.cpp",
         "tools/llvm-cvtres/*.h",
     ]),
+    copts = llvm_copts,
     stamp = 0,
+    visibility = ["//visibility:public"],
     deps = [
         ":CvtResTableGen",
         ":Object",
@@ -2808,7 +2820,9 @@ cc_binary(
         "tools/llvm-cxxdump/*.cpp",
         "tools/llvm-cxxdump/*.h",
     ]),
+    copts = llvm_copts,
     stamp = 0,
+    visibility = ["//visibility:public"],
     deps = [
         ":AllTargetsCodeGens",
         ":BitReader",
@@ -2823,7 +2837,9 @@ cc_binary(
         "tools/llvm-cxxmap/*.cpp",
         "tools/llvm-cxxmap/*.h",
     ]),
+    copts = llvm_copts,
     stamp = 0,
+    visibility = ["//visibility:public"],
     deps = [
         ":Support",
     ],
@@ -2835,7 +2851,9 @@ cc_binary(
         "tools/llvm-cxxfilt/*.cpp",
         "tools/llvm-cxxfilt/*.h",
     ]),
+    copts = llvm_copts,
     stamp = 0,
+    visibility = ["//visibility:public"],
     deps = [
         ":Demangle",
         ":Support",
@@ -2865,7 +2883,9 @@ cc_binary(
         "tools/llvm-dwarfdump/*.cpp",
         "tools/llvm-dwarfdump/*.h",
     ]),
+    copts = llvm_copts,
     stamp = 0,
+    visibility = ["//visibility:public"],
     deps = [
         ":AllTargetsCodeGens",
         ":BinaryFormat",
@@ -2883,7 +2903,9 @@ cc_binary(
         "tools/llvm-dwp/*.cpp",
         "tools/llvm-dwp/*.h",
     ]),
+    copts = llvm_copts,
     stamp = 0,
+    visibility = ["//visibility:public"],
     deps = [
         ":AllTargetsCodeGens",
         ":DebugInfoDWARF",
@@ -2900,7 +2922,9 @@ cc_binary(
         "tools/llvm-elfabi/*.cpp",
         "tools/llvm-elfabi/*.h",
     ]),
+    copts = llvm_copts,
     stamp = 0,
+    visibility = ["//visibility:public"],
     deps = [
         ":InterfaceStub",
         ":Object",
@@ -2915,8 +2939,9 @@ cc_binary(
 #    srcs = [
 #        "tools/llvm-exegesis/llvm-exegesis.cpp",
 #    ],
-#    copts = ["-DHAVE_LIBPFM=0"],
+#    copts = llvm_copts + ["-DHAVE_LIBPFM=0"],
 #    stamp = 0,
+#    visibility = ["//visibility:public"],
 #    deps = [
 #        ":AllTargetsAsmParsers",
 #        ":AllTargetsCodeGens",
@@ -2936,7 +2961,9 @@ cc_binary(
         "tools/llvm-extract/*.cpp",
         "tools/llvm-extract/*.h",
     ]),
+    copts = llvm_copts,
     stamp = 0,
+    visibility = ["//visibility:public"],
     deps = [
         ":AsmParser",
         ":BitReader",
@@ -2970,6 +2997,7 @@ cc_binary(
         "tools/llvm-jitlink/*.cpp",
         "tools/llvm-jitlink/*.h",
     ]),
+    copts = llvm_copts,
     # Make symbols from the standard library dynamically resolvable.
     linkopts = [
         "-Wl,--undefined=_ZTIi",
@@ -2981,6 +3009,7 @@ cc_binary(
         "-Wl,--export-dynamic-symbol=__cxa_throw",
     ],
     stamp = 0,
+    visibility = ["//visibility:public"],
     deps = [
         ":AllTargetsAsmParsers",
         ":AllTargetsCodeGens",
@@ -3003,7 +3032,9 @@ cc_binary(
         "tools/llvm-libtool-darwin/*.cpp",
         "tools/llvm-libtool-darwin/*.h",
     ]),
+    copts = llvm_copts,
     stamp = 0,
+    visibility = ["//visibility:public"],
     deps = [
         ":BinaryFormat",
         ":Object",
@@ -3050,7 +3081,9 @@ cc_binary(
     srcs = [
         "tools/llvm-lipo/llvm-lipo.cpp",
     ],
+    copts = llvm_copts,
     stamp = 0,
+    visibility = ["//visibility:public"],
     deps = [
         ":LipoOptsTableGen",
         ":Object",
@@ -3108,7 +3141,9 @@ cc_binary(
         "tools/llvm-mc/*.cpp",
         "tools/llvm-mc/*.h",
     ]),
+    copts = llvm_copts,
     stamp = 0,
+    visibility = ["//visibility:public"],
     deps = [
         ":AllTargetsAsmParsers",
         ":AllTargetsCodeGens",
@@ -3129,8 +3164,9 @@ cc_binary(
         "tools/llvm-mca/Views/*.cpp",
         "tools/llvm-mca/Views/*.h",
     ]),
-    copts = ["-Iexternal/llvm-project/llvm/tools/llvm-mca"],
+    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/tools/llvm-mca"],
     stamp = 0,
+    visibility = ["//visibility:public"],
     deps = [
         ":AllTargetsAsmParsers",
         ":AllTargetsCodeGens",
@@ -3148,7 +3184,9 @@ cc_binary(
         "tools/llvm-ml/*.cpp",
         "tools/llvm-ml/*.h",
     ]),
+    copts = llvm_copts,
     stamp = 0,
+    visibility = ["//visibility:public"],
     deps = [
         ":AllTargetsAsmParsers",
         ":AllTargetsCodeGens",
@@ -3164,7 +3202,9 @@ cc_binary(
     srcs = glob([
         "tools/llvm-modextract/*.cpp",
     ]),
+    copts = llvm_copts,
     stamp = 0,
+    visibility = ["//visibility:public"],
     deps = [
         ":BitReader",
         ":BitWriter",
@@ -3190,7 +3230,9 @@ cc_binary(
         "tools/llvm-mt/*.cpp",
         "tools/llvm-mt/*.h",
     ]),
+    copts = llvm_copts,
     stamp = 0,
+    visibility = ["//visibility:public"],
     deps = [
         ":MtTableGen",
         ":Option",
@@ -3400,7 +3442,9 @@ cc_binary(
         "tools/llvm-rc/*.cpp",
         "tools/llvm-rc/*.h",
     ]),
+    copts = llvm_copts,
     stamp = 0,
+    visibility = ["//visibility:public"],
     deps = [
         ":Object",
         ":Option",
@@ -3416,7 +3460,9 @@ cc_binary(
         "tools/llvm-readobj/*.cpp",
         "tools/llvm-readobj/*.h",
     ]),
+    copts = llvm_copts,
     stamp = 0,
+    visibility = ["//visibility:public"],
     deps = [
         ":AllTargetsCodeGens",
         ":BinaryFormat",
@@ -3441,8 +3487,10 @@ cc_binary(
         "tools/llvm-reduce/**/*.cpp",
         "tools/llvm-reduce/**/*.h",
     ]),
+    copts = llvm_copts,
     includes = ["tools/llvm-reduce"],
     stamp = 0,
+    visibility = ["//visibility:public"],
     deps = [
         ":AllTargetsCodeGens",
         ":BitReader",
@@ -3456,7 +3504,9 @@ cc_binary(
         "tools/llvm-rtdyld/*.cpp",
         "tools/llvm-rtdyld/*.h",
     ]),
+    copts = llvm_copts,
     stamp = 0,
+    visibility = ["//visibility:public"],
     deps = [
         ":AllTargetsCodeGens",
         ":AllTargetsDisassemblers",
@@ -3476,7 +3526,9 @@ cc_binary(
         "tools/llvm-size/*.cpp",
         "tools/llvm-size/*.h",
     ]),
+    copts = llvm_copts,
     stamp = 0,
+    visibility = ["//visibility:public"],
     deps = [
         ":Object",
         ":Support",
@@ -3507,7 +3559,9 @@ cc_binary(
         "tools/llvm-strings/*.cpp",
         "tools/llvm-strings/*.h",
     ]),
+    copts = llvm_copts,
     stamp = 0,
+    visibility = ["//visibility:public"],
     deps = [
         ":Object",
         ":Support",
@@ -3531,7 +3585,9 @@ cc_binary(
         "tools/llvm-symbolizer/*.cpp",
         "tools/llvm-symbolizer/*.h",
     ]),
+    copts = llvm_copts,
     stamp = 0,
+    visibility = ["//visibility:public"],
     deps = [
         ":DebugInfoDWARF",
         ":DebugInfoPDB",
@@ -3570,7 +3626,9 @@ cc_binary(
         "tools/llvm-xray/*.cc",
         "tools/llvm-xray/*.h",
     ]),
+    copts = llvm_copts,
     stamp = 0,
+    visibility = ["//visibility:public"],
     deps = [
         ":DebugInfoDWARF",
         ":Object",
@@ -3616,7 +3674,9 @@ cc_binary(
         "tools/sancov/*.cpp",
         "tools/sancov/*.h",
     ]),
+    copts = llvm_copts,
     stamp = 0,
+    visibility = ["//visibility:public"],
     deps = [
         ":AllTargetsCodeGens",
         ":AllTargetsDisassemblers",
@@ -3636,7 +3696,9 @@ cc_binary(
         "tools/sanstats/*.cpp",
         "tools/sanstats/*.h",
     ]),
+    copts = llvm_copts,
     stamp = 0,
+    visibility = ["//visibility:public"],
     deps = [
         ":Support",
         ":Symbolize",
@@ -3650,7 +3712,9 @@ cc_binary(
         "tools/split-file/*.cpp",
         "tools/split-file/*.h",
     ]),
+    copts = llvm_copts,
     stamp = 0,
+    visibility = ["//visibility:public"],
     deps = [
         ":Support",
     ],
@@ -3664,6 +3728,7 @@ cc_library(
     testonly = 1,
     srcs = glob(["lib/FuzzMutate/*.cpp"]),
     hdrs = glob(["include/llvm/FuzzMutate/*.h"]),
+    copts = llvm_copts,
     includes = ["include"],
     deps = [
         ":Analysis",
@@ -3694,7 +3759,7 @@ cc_library(
     # really unfortunate. It is essentially baking in an implementation detail
     # of how Bazel runs the compiler when compiling LLVM in the exact
     # configuration we use.
-    copts = ["-Iexternal/llvm-project/llvm/utils/unittest/googletest"],
+    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/utils/unittest/googletest"],
     defines = [
         "GTEST_HAS_RTTI=0",
         "GTEST_USE_OWN_TR1_TUPLE",
@@ -3717,6 +3782,7 @@ cc_library(
     name = "gtest_main",
     testonly = 1,
     srcs = ["utils/unittest/UnitTestMain/TestMain.cpp"],
+    copts = llvm_copts,
     visibility = ["//visibility:public"],
     deps = [
         ":Support",
@@ -3740,7 +3806,7 @@ cc_library(
     # really unfortunate. It is essentially baking in an implementation detail
     # of how Bazel runs the compiler when compiling LLVM in the exact
     # configuration we use.
-    copts = ["-Iexternal/llvm-project/llvm/utils/unittest/googlemock"],
+    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/utils/unittest/googlemock"],
     includes = [
         "include",
         "utils/unittest/googlemock/include",
@@ -3750,7 +3816,7 @@ cc_library(
 )
 
 cc_library(
-    name = "testing_support",
+    name = "TestingSupport",
     testonly = 1,
     srcs = glob([
         "lib/Testing/Support/*.cpp",
@@ -3759,6 +3825,7 @@ cc_library(
     hdrs = glob([
         "include/llvm/Testing/Support/*.h",
     ]),
+    copts = llvm_copts,
     visibility = ["//visibility:public"],
     deps = [
         ":Support",
@@ -3778,6 +3845,7 @@ cc_binary(
         "utils/FileCheck/*.cpp",
         "utils/FileCheck/*.h",
     ]),
+    copts = llvm_copts,
     stamp = 0,
     deps = [":Support"],
 )
@@ -3788,6 +3856,7 @@ cc_binary(
         "tools/bugpoint/*.cpp",
         "tools/bugpoint/*.h",
     ]),
+    copts = llvm_copts,
     stamp = 0,
     deps = [
         ":AllTargetsAsmParsers",
@@ -3815,6 +3884,7 @@ cc_binary(
         "utils/count/*.c",
         "utils/count/*.h",
     ]),
+    copts = llvm_copts,
     stamp = 0,
 )
 
@@ -3827,6 +3897,7 @@ cc_binary(
     ]) + [
         "tools/lli/RemoteJITUtils.h",
     ],
+    copts = llvm_copts,
     # The tests load code into this binary that expect to see symbols
     # from libstdc++ such as __cxa_begin_catch and _ZTIi. The latter
     # isn't even used in the main binary, so we also need to force it
@@ -3853,6 +3924,7 @@ cc_binary(
         "tools/llvm-c-test/*.cpp",
         "tools/llvm-c-test/*.h",
     ]),
+    copts = llvm_copts,
     stamp = 0,
     deps = [
         ":AllTargetsAsmParsers",
@@ -3883,6 +3955,7 @@ cc_binary(
         "tools/llvm-diff/*.cpp",
         "tools/llvm-diff/*.h",
     ]),
+    copts = llvm_copts,
     stamp = 0,
     deps = [
         ":AsmParser",
@@ -3900,6 +3973,7 @@ cc_binary(
         "tools/llvm-isel-fuzzer/*.cpp",
         "tools/llvm-isel-fuzzer/*.h",
     ]),
+    copts = llvm_copts,
     stamp = 0,
     deps = [
         ":AllTargetsAsmParsers",
@@ -3937,6 +4011,7 @@ cc_binary(
         "utils/not/*.cpp",
         "utils/not/*.h",
     ]),
+    copts = llvm_copts,
     stamp = 0,
     deps = [":Support"],
 )
@@ -3947,6 +4022,7 @@ cc_binary(
     srcs = glob([
         "tools/llvm-opt-fuzzer/*.cpp",
     ]),
+    copts = llvm_copts,
     stamp = 0,
     deps = [
         ":AllTargetsCodeGens",
@@ -3969,6 +4045,7 @@ cc_binary(
         "tools/obj2yaml/*.cpp",
         "tools/obj2yaml/*.h",
     ]),
+    copts = llvm_copts,
     stamp = 0,
     deps = [
         ":BinaryFormat",
@@ -3986,6 +4063,7 @@ cc_binary(
         "tools/verify-uselistorder/*.cpp",
         "tools/verify-uselistorder/*.h",
     ]),
+    copts = llvm_copts,
     stamp = 0,
     deps = [
         ":AsmParser",
@@ -4004,6 +4082,7 @@ cc_binary(
         "tools/yaml2obj/*.cpp",
         "tools/yaml2obj/*.h",
     ]),
+    copts = llvm_copts,
     stamp = 0,
     deps = [
         ":BinaryFormat",
@@ -4021,6 +4100,7 @@ cc_binary(
     srcs = glob([
         "utils/yaml-bench/*.cpp",
     ]),
+    copts = llvm_copts,
     stamp = 0,
     deps = [
         ":Support",
