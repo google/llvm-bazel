@@ -1472,6 +1472,7 @@ filegroup(
 
 gentbl(
     name = "omp_gen",
+    library = False,
     tbl_outs = [("--gen-directive-decl", "include/llvm/Frontend/OpenMP/OMP.h.inc")],
     tblgen = ":llvm-tblgen",
     td_file = "include/llvm/Frontend/OpenMP/OMP.td",
@@ -1480,7 +1481,11 @@ gentbl(
 
 gentbl(
     name = "omp_gen_impl",
-    tbl_outs = [("--gen-directive-impl", "include/llvm/Frontend/OpenMP/OMP.cpp.inc")],
+    library = False,
+    tbl_outs = [
+        ("--gen-directive-gen", "include/llvm/Frontend/OpenMP/OMP.cpp.inc"),
+        ("--gen-directive-impl", "lib/Frontend/OpenMP/OMP.cpp"),
+    ],
     tblgen = ":llvm-tblgen",
     td_file = "include/llvm/Frontend/OpenMP/OMP.td",
     td_srcs = [":omp_td_files"],
@@ -1490,12 +1495,15 @@ cc_library(
     name = "FrontendOpenMP",
     srcs = glob([
         "lib/Frontend/OpenMP/*.cpp",
-    ]),
+    ]) + [
+        "include/llvm/Frontend/OpenMP/OMP.cpp.inc",
+        "lib/Frontend/OpenMP/OMP.cpp",
+    ],
     hdrs = glob([
         "include/llvm/Frontend/OpenMP/*.h",
         "include/llvm/Frontend/OpenMP/OMP/*.h",
         "include/llvm/Frontend/*.h",
-    ]),
+    ]) + ["include/llvm/Frontend/OpenMP/OMP.h.inc"],
     copts = llvm_copts,
     textual_hdrs = glob([
         "include/llvm/Frontend/OpenMP/*.def",
@@ -1505,8 +1513,6 @@ cc_library(
         ":Core",
         ":Support",
         ":TransformUtils",
-        ":omp_gen",
-        ":omp_gen_impl",
     ],
 )
 
