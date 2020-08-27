@@ -3884,7 +3884,6 @@ cc_binary(
         "utils/count/*.c",
         "utils/count/*.h",
     ]),
-    copts = llvm_copts,
     stamp = 0,
 )
 
@@ -3924,7 +3923,10 @@ cc_binary(
         "tools/llvm-c-test/*.cpp",
         "tools/llvm-c-test/*.h",
     ]),
-    copts = llvm_copts,
+    # Note that we cannot use the general LLVM options here as we mix C and C++
+    # code. However, we generally don't need to disable warnings here as
+    # headers included here shouldn't trigger warnings.
+    copts = [],
     stamp = 0,
     deps = [
         ":AllTargetsAsmParsers",
