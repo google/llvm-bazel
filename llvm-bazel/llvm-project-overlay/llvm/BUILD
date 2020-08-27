@@ -1047,6 +1047,17 @@ cc_library(
 )
 
 cc_library(
+    name = "remark_linker",
+    srcs = ["lib/Remarks/RemarkLinker.cpp"],
+    hdrs = ["include/llvm/Remarks/RemarkLinker.h"],
+    copts = llvm_copts,
+    deps = [
+        ":Object",
+        ":Support",
+    ],
+)
+
+cc_library(
     name = "Core",
     srcs = glob([
         "lib/IR/*.cpp",
@@ -2379,6 +2390,21 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "DWARFLinker",
+    srcs = glob([
+        "lib/DWARFLinker/*.cpp",
+        "lib/DWARFLinker/*.h",
+    ]),
+    hdrs = glob(["include/llvm/DWARFLinker/*.h"]),
+    copts = llvm_copts,
+    deps = [
+        ":CodeGen",
+        ":DebugInfoDWARF",
+        ":Support",
+    ],
+)
+
 gentbl(
     name = "DllOptionsTableGen",
     tbl_outs = [(
@@ -2428,8 +2454,141 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "InterfaceStub",
+    srcs = glob([
+        "lib/InterfaceStub/*.cpp",
+        "lib/InterfaceStub/*.h",
+    ]),
+    hdrs = glob([
+        "include/llvm/InterfaceStub/*.h",
+    ]),
+    copts = llvm_copts,
+    deps = [
+        ":Object",
+        ":Support",
+        ":config",
+    ],
+)
+
+cc_library(
+    name = "WindowsManifest",
+    srcs = glob([
+        "lib/WindowsManifest/*.cpp",
+    ]),
+    hdrs = glob([
+        "include/llvm/WindowsManifest/*.h",
+    ]),
+    copts = llvm_copts,
+    linkopts = [
+        # Libxml2 is required to process Windows manifests. Without this,
+        # lld uses Microsoft mt.exe instead, which is not cross-platform.
+        "-lxml2",
+    ],
+    deps = [
+        ":Support",
+        ":config",
+    ],
+)
+
+cc_library(
+    name = "MCA",
+    srcs = glob([
+        "lib/MCA/**/*.cpp",
+        "lib/MCA/**/*.h",
+    ]),
+    hdrs = glob([
+        "include/llvm/MCA/**/*.h",
+    ]),
+    copts = llvm_copts,
+    deps = [
+        ":MC",
+        ":MCDisassembler",
+        ":Object",
+        ":Support",
+    ],
+)
+
+cc_library(
+    name = "XRay",
+    srcs = glob([
+        "lib/XRay/*.cpp",
+        "lib/XRay/*.h",
+    ]),
+    hdrs = glob(["include/llvm/XRay/*.h"]),
+    copts = llvm_copts,
+    deps = [
+        ":Object",
+        ":Support",
+    ],
+)
+
+# FIXME: Add support for fetching and building libpfm4 and uncomment this.
+#cc_library(
+#    name = "llvm-exegesis-lib",
+#    srcs = glob([
+#        "tools/llvm-exegesis/lib/*.cpp",
+#        "tools/llvm-exegesis/lib/X86/*.cpp",
+#        "tools/llvm-exegesis/lib/X86/*.h",
+#    ]),
+#    hdrs = glob(["tools/llvm-exegesis/lib/*.h"]),
+#    copts = llvm_copts + ["-DHAVE_LIBPFM=1"],
+#    defines = ["LLVM_EXEGESIS_INITIALIZE_NATIVE_TARGET=InitializeX86ExegesisTarget"],
+#    deps = [
+#        ":AllTargetsAsmParsers",
+#        ":AllTargetsCodeGens",
+#        ":CodeGen",
+#        ":Core",
+#        ":ExecutionEngine",
+#        ":MC",
+#        ":MCDisassembler",
+#        ":MCJIT",
+#        ":Object",
+#        ":ObjectYAML",
+#        ":Support",
+#        ":Target",
+#        ":config",
+#    ],
+#)
+
 ################################################################################
 # LLVM toolchain and development binaries
+
+gentbl(
+    name = "DsymutilTableGen",
+    tbl_outs = [(
+        "-gen-opt-parser-defs",
+        "tools/dsymutil/Options.inc",
+    )],
+    tblgen = ":llvm-tblgen",
+    td_file = "tools/dsymutil/Options.td",
+    td_srcs = ["include/llvm/Option/OptParser.td"],
+)
+
+cc_binary(
+    name = "dsymutil",
+    srcs = glob([
+        "tools/dsymutil/*.cpp",
+        "tools/dsymutil/*.h",
+    ]),
+    stamp = 0,
+    deps = [
+        ":AllTargetsCodeGens",
+        ":BinaryFormat",
+        ":CodeGen",
+        ":DWARFLinker",
+        ":DebugInfo",
+        ":DebugInfoDWARF",
+        ":DsymutilTableGen",
+        ":MC",
+        ":Object",
+        ":Option",
+        ":Support",
+        ":Target",
+        ":config",
+        ":remark_linker",
+    ],
+)
 
 cc_binary(
     name = "llc",
@@ -2457,6 +2616,43 @@ cc_binary(
 )
 
 cc_binary(
+    name = "lli",
+    srcs = glob([
+        "tools/lli/*.cpp",
+        "tools/lli/*.h",
+    ]),
+    # ll scripts rely on symbols from dependent
+    # libraries being resolvable.
+    linkopts = [
+        "-Wl,--undefined=_ZTIi",
+        "-Wl,--export-dynamic-symbol=_ZTIi",
+        "-Wl,--export-dynamic-symbol=__cxa_begin_catch",
+        "-Wl,--export-dynamic-symbol=__cxa_end_catch",
+        "-Wl,--export-dynamic-symbol=__gxx_personality_v0",
+        "-Wl,--export-dynamic-symbol=__cxa_allocate_exception",
+        "-Wl,--export-dynamic-symbol=__cxa_throw",
+    ],
+    stamp = 0,
+    deps = [
+        ":AllTargetsAsmParsers",
+        ":AllTargetsCodeGens",
+        ":AsmParser",
+        ":BitReader",
+        ":CodeGen",
+        ":Core",
+        ":ExecutionEngine",
+        ":IRReader",
+        ":Instrumentation",
+        ":Interpreter",
+        ":MCJIT",
+        ":Object",
+        ":OrcJIT",
+        ":Support",
+        ":config",
+    ],
+)
+
+cc_binary(
     name = "llvm-ar",
     srcs = glob([
         "tools/llvm-ar/*.cpp",
@@ -2474,6 +2670,23 @@ cc_binary(
         ":Object",
         ":Support",
     ],
+)
+
+# We need to run llvm-ar with different basenames to make it run with
+# different behavior.
+sh_binary(
+    name = "llvm-dlltool",
+    srcs = [":llvm-ar"],
+)
+
+sh_binary(
+    name = "llvm-lib",
+    srcs = [":llvm-ar"],
+)
+
+sh_binary(
+    name = "llvm-ranlib",
+    srcs = [":llvm-ar"],
 )
 
 cc_binary(
@@ -2495,6 +2708,57 @@ cc_binary(
 )
 
 cc_binary(
+    name = "llvm-bcanalyzer",
+    srcs = glob([
+        "tools/llvm-bcanalyzer/*.cpp",
+        "tools/llvm-bcanalyzer/*.h",
+    ]),
+    stamp = 0,
+    deps = [
+        ":BitReader",
+        ":Support",
+    ],
+)
+
+cc_binary(
+    name = "llvm-cat",
+    srcs = glob([
+        "tools/llvm-cat/*.cpp",
+    ]),
+    stamp = 0,
+    deps = [
+        ":BitReader",
+        ":BitWriter",
+        ":Core",
+        ":IRReader",
+        ":Support",
+    ],
+)
+
+cc_binary(
+    name = "llvm-cfi-verify",
+    srcs = glob([
+        "tools/llvm-cfi-verify/*.cpp",
+        "tools/llvm-cfi-verify/lib/*.cpp",
+        "tools/llvm-cfi-verify/lib/*.h",
+    ]),
+    stamp = 0,
+    deps = [
+        ":AllTargetsAsmParsers",
+        ":AllTargetsCodeGens",
+        ":AllTargetsDisassemblers",
+        ":BinaryFormat",
+        ":DebugInfoDWARF",
+        ":MC",
+        ":MCDisassembler",
+        ":MCParser",
+        ":Object",
+        ":Support",
+        ":Symbolize",
+    ],
+)
+
+cc_binary(
     name = "llvm-cov",
     srcs = glob([
         "tools/llvm-cov/*.cpp",
@@ -2508,6 +2772,72 @@ cc_binary(
         ":Instrumentation",
         ":Object",
         ":ProfileData",
+        ":Support",
+    ],
+)
+
+gentbl(
+    name = "CvtResTableGen",
+    tbl_outs = [(
+        "-gen-opt-parser-defs",
+        "tools/llvm-cvtres/Opts.inc",
+    )],
+    tblgen = ":llvm-tblgen",
+    td_file = "tools/llvm-cvtres/Opts.td",
+    td_srcs = ["include/llvm/Option/OptParser.td"],
+)
+
+cc_binary(
+    name = "llvm-cvtres",
+    srcs = glob([
+        "tools/llvm-cvtres/*.cpp",
+        "tools/llvm-cvtres/*.h",
+    ]),
+    stamp = 0,
+    deps = [
+        ":CvtResTableGen",
+        ":Object",
+        ":Option",
+        ":Support",
+    ],
+)
+
+cc_binary(
+    name = "llvm-cxxdump",
+    srcs = glob([
+        "tools/llvm-cxxdump/*.cpp",
+        "tools/llvm-cxxdump/*.h",
+    ]),
+    stamp = 0,
+    deps = [
+        ":AllTargetsCodeGens",
+        ":BitReader",
+        ":Object",
+        ":Support",
+    ],
+)
+
+cc_binary(
+    name = "llvm-cxxmap",
+    srcs = glob([
+        "tools/llvm-cxxmap/*.cpp",
+        "tools/llvm-cxxmap/*.h",
+    ]),
+    stamp = 0,
+    deps = [
+        ":Support",
+    ],
+)
+
+cc_binary(
+    name = "llvm-cxxfilt",
+    srcs = glob([
+        "tools/llvm-cxxfilt/*.cpp",
+        "tools/llvm-cxxfilt/*.h",
+    ]),
+    stamp = 0,
+    deps = [
+        ":Demangle",
         ":Support",
     ],
 )
@@ -2530,6 +2860,95 @@ cc_binary(
 )
 
 cc_binary(
+    name = "llvm-dwarfdump",
+    srcs = glob([
+        "tools/llvm-dwarfdump/*.cpp",
+        "tools/llvm-dwarfdump/*.h",
+    ]),
+    stamp = 0,
+    deps = [
+        ":AllTargetsCodeGens",
+        ":BinaryFormat",
+        ":DebugInfo",
+        ":DebugInfoDWARF",
+        ":MC",
+        ":Object",
+        ":Support",
+    ],
+)
+
+cc_binary(
+    name = "llvm-dwp",
+    srcs = glob([
+        "tools/llvm-dwp/*.cpp",
+        "tools/llvm-dwp/*.h",
+    ]),
+    stamp = 0,
+    deps = [
+        ":AllTargetsCodeGens",
+        ":DebugInfoDWARF",
+        ":MC",
+        ":Object",
+        ":Support",
+        ":Target",
+    ],
+)
+
+cc_binary(
+    name = "llvm-elfabi",
+    srcs = glob([
+        "tools/llvm-elfabi/*.cpp",
+        "tools/llvm-elfabi/*.h",
+    ]),
+    stamp = 0,
+    deps = [
+        ":InterfaceStub",
+        ":Object",
+        ":Support",
+        ":TextAPI",
+    ],
+)
+
+# FIXME: Uncomment when the library builds.
+#cc_binary(
+#    name = "llvm-exegesis",
+#    srcs = [
+#        "tools/llvm-exegesis/llvm-exegesis.cpp",
+#    ],
+#    copts = ["-DHAVE_LIBPFM=0"],
+#    stamp = 0,
+#    deps = [
+#        ":AllTargetsAsmParsers",
+#        ":AllTargetsCodeGens",
+#        ":AllTargetsDisassemblers",
+#        ":MC",
+#        ":MCParser",
+#        ":Object",
+#        ":Support",
+#        ":config",
+#        ":llvm-exegesis-lib",
+#    ],
+#)
+
+cc_binary(
+    name = "llvm-extract",
+    srcs = glob([
+        "tools/llvm-extract/*.cpp",
+        "tools/llvm-extract/*.h",
+    ]),
+    stamp = 0,
+    deps = [
+        ":AsmParser",
+        ":BitReader",
+        ":BitWriter",
+        ":Core",
+        ":IPO",
+        ":IRReader",
+        ":Support",
+    ],
+)
+
+cc_binary(
     name = "llvm-ifs",
     srcs = glob([
         "tools/llvm-ifs/*.cpp",
@@ -2542,6 +2961,53 @@ cc_binary(
         ":ObjectYAML",
         ":Support",
         ":TextAPI",
+    ],
+)
+
+cc_binary(
+    name = "llvm-jitlink",
+    srcs = glob([
+        "tools/llvm-jitlink/*.cpp",
+        "tools/llvm-jitlink/*.h",
+    ]),
+    # Make symbols from the standard library dynamically resolvable.
+    linkopts = [
+        "-Wl,--undefined=_ZTIi",
+        "-Wl,--export-dynamic-symbol=_ZTIi",
+        "-Wl,--export-dynamic-symbol=__cxa_begin_catch",
+        "-Wl,--export-dynamic-symbol=__cxa_end_catch",
+        "-Wl,--export-dynamic-symbol=__gxx_personality_v0",
+        "-Wl,--export-dynamic-symbol=__cxa_allocate_exception",
+        "-Wl,--export-dynamic-symbol=__cxa_throw",
+    ],
+    stamp = 0,
+    deps = [
+        ":AllTargetsAsmParsers",
+        ":AllTargetsCodeGens",
+        ":AllTargetsDisassemblers",
+        ":AsmParser",
+        ":BitReader",
+        ":CodeGen",
+        ":ExecutionEngine",
+        ":MCJIT",
+        ":Object",
+        ":OrcJIT",
+        ":Support",
+        ":config",
+    ],
+)
+
+cc_binary(
+    name = "llvm-libtool-darwin",
+    srcs = glob([
+        "tools/llvm-libtool-darwin/*.cpp",
+        "tools/llvm-libtool-darwin/*.h",
+    ]),
+    stamp = 0,
+    deps = [
+        ":BinaryFormat",
+        ":Object",
+        ":Support",
     ],
 )
 
@@ -2565,6 +3031,31 @@ cc_binary(
         ":Object",
         ":Support",
         ":TransformUtils",
+    ],
+)
+
+gentbl(
+    name = "LipoOptsTableGen",
+    tbl_outs = [(
+        "-gen-opt-parser-defs",
+        "tools/llvm-lipo/LipoOpts.inc",
+    )],
+    tblgen = ":llvm-tblgen",
+    td_file = "tools/llvm-lipo/LipoOpts.td",
+    td_srcs = ["include/llvm/Option/OptParser.td"],
+)
+
+cc_binary(
+    name = "llvm-lipo",
+    srcs = [
+        "tools/llvm-lipo/llvm-lipo.cpp",
+    ],
+    stamp = 0,
+    deps = [
+        ":LipoOptsTableGen",
+        ":Object",
+        ":Option",
+        ":Support",
     ],
 )
 
@@ -2608,6 +3099,103 @@ cc_binary(
         ":Core",
         ":LTO",
         ":Support",
+    ],
+)
+
+cc_binary(
+    name = "llvm-mc",
+    srcs = glob([
+        "tools/llvm-mc/*.cpp",
+        "tools/llvm-mc/*.h",
+    ]),
+    stamp = 0,
+    deps = [
+        ":AllTargetsAsmParsers",
+        ":AllTargetsCodeGens",
+        ":AllTargetsDisassemblers",
+        ":MC",
+        ":MCDisassembler",
+        ":MCParser",
+        ":Object",
+        ":Support",
+    ],
+)
+
+cc_binary(
+    name = "llvm-mca",
+    srcs = glob([
+        "tools/llvm-mca/*.cpp",
+        "tools/llvm-mca/*.h",
+        "tools/llvm-mca/Views/*.cpp",
+        "tools/llvm-mca/Views/*.h",
+    ]),
+    copts = ["-Iexternal/llvm-project/llvm/tools/llvm-mca"],
+    stamp = 0,
+    deps = [
+        ":AllTargetsAsmParsers",
+        ":AllTargetsCodeGens",
+        ":AllTargetsDisassemblers",
+        ":MC",
+        ":MCA",
+        ":MCParser",
+        ":Support",
+    ],
+)
+
+cc_binary(
+    name = "llvm-ml",
+    srcs = glob([
+        "tools/llvm-ml/*.cpp",
+        "tools/llvm-ml/*.h",
+    ]),
+    stamp = 0,
+    deps = [
+        ":AllTargetsAsmParsers",
+        ":AllTargetsCodeGens",
+        ":AllTargetsDisassemblers",
+        ":MC",
+        ":MCParser",
+        ":Support",
+    ],
+)
+
+cc_binary(
+    name = "llvm-modextract",
+    srcs = glob([
+        "tools/llvm-modextract/*.cpp",
+    ]),
+    stamp = 0,
+    deps = [
+        ":BitReader",
+        ":BitWriter",
+        ":IRReader",
+        ":Support",
+    ],
+)
+
+gentbl(
+    name = "MtTableGen",
+    tbl_outs = [(
+        "-gen-opt-parser-defs",
+        "tools/llvm-mt/Opts.inc",
+    )],
+    tblgen = ":llvm-tblgen",
+    td_file = "tools/llvm-mt/Opts.td",
+    td_srcs = ["include/llvm/Option/OptParser.td"],
+)
+
+cc_binary(
+    name = "llvm-mt",
+    srcs = glob([
+        "tools/llvm-mt/*.cpp",
+        "tools/llvm-mt/*.h",
+    ]),
+    stamp = 0,
+    deps = [
+        ":MtTableGen",
+        ":Option",
+        ":Support",
+        ":WindowsManifest",
     ],
 )
 
@@ -2787,6 +3375,114 @@ cc_binary(
     ],
 )
 
+gentbl(
+    name = "RcTableGen",
+    tbl_outs = [(
+        "-gen-opt-parser-defs",
+        "tools/llvm-rc/Opts.inc",
+    )],
+    tblgen = ":llvm-tblgen",
+    td_file = "tools/llvm-rc/Opts.td",
+    td_srcs = ["include/llvm/Option/OptParser.td"],
+)
+
+# Workaround inability to put `.def` files into `srcs` with a library.
+cc_library(
+    name = "llvm-rc-defs-lib",
+    textual_hdrs = glob([
+        "tools/llvm-rc/*.def",
+    ]),
+)
+
+cc_binary(
+    name = "llvm-rc",
+    srcs = glob([
+        "tools/llvm-rc/*.cpp",
+        "tools/llvm-rc/*.h",
+    ]),
+    stamp = 0,
+    deps = [
+        ":Object",
+        ":Option",
+        ":RcTableGen",
+        ":Support",
+        ":llvm-rc-defs-lib",
+    ],
+)
+
+cc_binary(
+    name = "llvm-readobj",
+    srcs = glob([
+        "tools/llvm-readobj/*.cpp",
+        "tools/llvm-readobj/*.h",
+    ]),
+    stamp = 0,
+    deps = [
+        ":AllTargetsCodeGens",
+        ":BinaryFormat",
+        ":BitReader",
+        ":DebugInfoCodeView",
+        ":DebugInfoDWARF",
+        ":Demangle",
+        ":Object",
+        ":Support",
+    ],
+)
+
+# Create an 'llvm-readelf' named binary from the 'llvm-readobj' tool.
+sh_binary(
+    name = "llvm-readelf",
+    srcs = [":llvm-readobj"],
+)
+
+cc_binary(
+    name = "llvm-reduce",
+    srcs = glob([
+        "tools/llvm-reduce/**/*.cpp",
+        "tools/llvm-reduce/**/*.h",
+    ]),
+    includes = ["tools/llvm-reduce"],
+    stamp = 0,
+    deps = [
+        ":AllTargetsCodeGens",
+        ":BitReader",
+        ":Core",
+    ],
+)
+
+cc_binary(
+    name = "llvm-rtdyld",
+    srcs = glob([
+        "tools/llvm-rtdyld/*.cpp",
+        "tools/llvm-rtdyld/*.h",
+    ]),
+    stamp = 0,
+    deps = [
+        ":AllTargetsCodeGens",
+        ":AllTargetsDisassemblers",
+        ":DebugInfo",
+        ":DebugInfoDWARF",
+        ":ExecutionEngine",
+        ":MC",
+        ":MCDisassembler",
+        ":Object",
+        ":Support",
+    ],
+)
+
+cc_binary(
+    name = "llvm-size",
+    srcs = glob([
+        "tools/llvm-size/*.cpp",
+        "tools/llvm-size/*.h",
+    ]),
+    stamp = 0,
+    deps = [
+        ":Object",
+        ":Support",
+    ],
+)
+
 cc_binary(
     name = "llvm-split",
     srcs = glob([
@@ -2806,6 +3502,53 @@ cc_binary(
 )
 
 cc_binary(
+    name = "llvm-strings",
+    srcs = glob([
+        "tools/llvm-strings/*.cpp",
+        "tools/llvm-strings/*.h",
+    ]),
+    stamp = 0,
+    deps = [
+        ":Object",
+        ":Support",
+    ],
+)
+
+gentbl(
+    name = "SymbolizerOptsTableGen",
+    tbl_outs = [(
+        "-gen-opt-parser-defs",
+        "tools/llvm-symbolizer/Opts.inc",
+    )],
+    tblgen = ":llvm-tblgen",
+    td_file = "tools/llvm-symbolizer/Opts.td",
+    td_srcs = ["include/llvm/Option/OptParser.td"],
+)
+
+cc_binary(
+    name = "llvm-symbolizer",
+    srcs = glob([
+        "tools/llvm-symbolizer/*.cpp",
+        "tools/llvm-symbolizer/*.h",
+    ]),
+    stamp = 0,
+    deps = [
+        ":DebugInfoDWARF",
+        ":DebugInfoPDB",
+        ":Object",
+        ":Option",
+        ":Support",
+        ":Symbolize",
+        ":SymbolizerOptsTableGen",
+    ],
+)
+
+sh_binary(
+    name = "llvm-addr2line",
+    srcs = [":llvm-symbolizer"],
+)
+
+cc_binary(
     name = "llvm-undname",
     srcs = glob([
         "tools/llvm-undname/*.cpp",
@@ -2817,6 +3560,23 @@ cc_binary(
     deps = [
         ":Demangle",
         ":Support",
+    ],
+)
+
+cc_binary(
+    name = "llvm-xray",
+    srcs = glob([
+        "tools/llvm-xray/*.cpp",
+        "tools/llvm-xray/*.cc",
+        "tools/llvm-xray/*.h",
+    ]),
+    stamp = 0,
+    deps = [
+        ":DebugInfoDWARF",
+        ":Object",
+        ":Support",
+        ":Symbolize",
+        ":XRay",
     ],
 )
 
@@ -2850,8 +3610,70 @@ cc_binary(
     ],
 )
 
+cc_binary(
+    name = "sancov",
+    srcs = glob([
+        "tools/sancov/*.cpp",
+        "tools/sancov/*.h",
+    ]),
+    stamp = 0,
+    deps = [
+        ":AllTargetsCodeGens",
+        ":AllTargetsDisassemblers",
+        ":DebugInfoDWARF",
+        ":DebugInfoPDB",
+        ":MC",
+        ":MCDisassembler",
+        ":Object",
+        ":Support",
+        ":Symbolize",
+    ],
+)
+
+cc_binary(
+    name = "sanstats",
+    srcs = glob([
+        "tools/sanstats/*.cpp",
+        "tools/sanstats/*.h",
+    ]),
+    stamp = 0,
+    deps = [
+        ":Support",
+        ":Symbolize",
+        ":TransformUtils",
+    ],
+)
+
+cc_binary(
+    name = "split-file",
+    srcs = glob([
+        "tools/split-file/*.cpp",
+        "tools/split-file/*.h",
+    ]),
+    stamp = 0,
+    deps = [
+        ":Support",
+    ],
+)
+
 ################################################################################
 # Begin testonly libraries
+
+cc_library(
+    name = "FuzzMutate",
+    testonly = 1,
+    srcs = glob(["lib/FuzzMutate/*.cpp"]),
+    hdrs = glob(["include/llvm/FuzzMutate/*.h"]),
+    includes = ["include"],
+    deps = [
+        ":Analysis",
+        ":BitReader",
+        ":BitWriter",
+        ":Core",
+        ":Scalar",
+        ":Support",
+    ],
+)
 
 cc_library(
     name = "gtest",
@@ -2946,22 +3768,6 @@ cc_library(
     ],
 )
 
-cc_library(
-    name = "FuzzMutate",
-    testonly = 1,
-    srcs = glob(["lib/FuzzMutate/*.cpp"]),
-    hdrs = glob(["include/llvm/FuzzMutate/*.h"]),
-    includes = ["include"],
-    deps = [
-        ":Analysis",
-        ":BitReader",
-        ":BitWriter",
-        ":Core",
-        ":Scalar",
-        ":Support",
-    ],
-)
-
 ################################################################################
 # Begin testonly binary utilities
 
@@ -2977,6 +3783,32 @@ cc_binary(
 )
 
 cc_binary(
+    name = "bugpoint",
+    srcs = glob([
+        "tools/bugpoint/*.cpp",
+        "tools/bugpoint/*.h",
+    ]),
+    stamp = 0,
+    deps = [
+        ":AllTargetsAsmParsers",
+        ":AllTargetsCodeGens",
+        ":Analysis",
+        ":AsmParser",
+        ":BitReader",
+        ":BitWriter",
+        ":CodeGen",
+        ":Core",
+        ":IRReader",
+        ":Linker",
+        ":Passes",
+        ":Support",
+        ":TransformUtils",
+        ":common_transforms",
+        ":config",
+    ],
+)
+
+cc_binary(
     name = "count",
     testonly = 1,
     srcs = glob([
@@ -2984,6 +3816,33 @@ cc_binary(
         "utils/count/*.h",
     ]),
     stamp = 0,
+)
+
+cc_binary(
+    name = "lli-child-target",
+    testonly = 1,
+    srcs = glob([
+        "tools/lli/ChildTarget/*.cpp",
+        "tools/lli/ChildTarget/*.h",
+    ]) + [
+        "tools/lli/RemoteJITUtils.h",
+    ],
+    # The tests load code into this binary that expect to see symbols
+    # from libstdc++ such as __cxa_begin_catch and _ZTIi. The latter
+    # isn't even used in the main binary, so we also need to force it
+    # to be included.
+    linkopts = [
+        "-rdynamic",
+        "-u_ZTIi",
+    ],
+    stamp = 0,
+    deps = [
+        ":OrcJIT",
+        ":Support",
+        ":attributes_gen",
+        ":config",
+        ":intrinsic_enums_gen",
+    ],
 )
 
 cc_binary(
@@ -3018,6 +3877,23 @@ cc_binary(
 )
 
 cc_binary(
+    name = "llvm-diff",
+    testonly = 1,
+    srcs = glob([
+        "tools/llvm-diff/*.cpp",
+        "tools/llvm-diff/*.h",
+    ]),
+    stamp = 0,
+    deps = [
+        ":AsmParser",
+        ":BitReader",
+        ":Core",
+        ":IRReader",
+        ":Support",
+    ],
+)
+
+cc_binary(
     name = "llvm-isel-fuzzer",
     testonly = 1,
     srcs = glob([
@@ -3040,6 +3916,20 @@ cc_binary(
     ],
 )
 
+# This is really a Python script, but call it sh_binary to ignore the hyphen in
+# the path, which py_binary does not allow.
+# Also, note: llvm-locstats expects llvm-dwarfdump to be in the same directory
+# when executed.
+sh_binary(
+    name = "llvm-locstats",
+    testonly = 1,
+    srcs = glob([
+        "utils/llvm-locstats/*.py",
+    ]),
+    # llvm-locstats is a thin wrapper around llvm-dwarfdump.
+    data = [":llvm-dwarfdump"],
+)
+
 cc_binary(
     name = "not",
     testonly = 1,
@@ -3049,6 +3939,27 @@ cc_binary(
     ]),
     stamp = 0,
     deps = [":Support"],
+)
+
+cc_binary(
+    name = "llvm-opt-fuzzer",
+    testonly = 1,
+    srcs = glob([
+        "tools/llvm-opt-fuzzer/*.cpp",
+    ]),
+    stamp = 0,
+    deps = [
+        ":AllTargetsCodeGens",
+        ":Analysis",
+        ":BitReader",
+        ":BitWriter",
+        ":CodeGen",
+        ":Core",
+        ":Coroutines",
+        ":FuzzMutate",
+        ":Passes",
+        ":Support",
+    ],
 )
 
 cc_binary(
@@ -3065,6 +3976,23 @@ cc_binary(
         ":DebugInfoDWARF",
         ":Object",
         ":ObjectYAML",
+        ":Support",
+    ],
+)
+
+cc_binary(
+    name = "verify-uselistorder",
+    srcs = glob([
+        "tools/verify-uselistorder/*.cpp",
+        "tools/verify-uselistorder/*.h",
+    ]),
+    stamp = 0,
+    deps = [
+        ":AsmParser",
+        ":BitReader",
+        ":BitWriter",
+        ":Core",
+        ":IRReader",
         ":Support",
     ],
 )
