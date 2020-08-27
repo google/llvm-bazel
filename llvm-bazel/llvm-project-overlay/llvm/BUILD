@@ -858,7 +858,7 @@ cc_library(
 )
 
 cc_library(
-    name = "llvm_tblgen_lib",
+    name = "tblgen",
     srcs = glob([
         "utils/TableGen/*.cpp",
         "utils/TableGen/*.h",
@@ -881,7 +881,7 @@ cc_binary(
     copts = llvm_copts,
     stamp = 0,
     deps = [
-        ":llvm_tblgen_lib",
+        ":tblgen",
     ],
 )
 
@@ -1330,7 +1330,7 @@ cc_library(
 )
 
 gentbl(
-    name = "inst_combine_tablegen",
+    name = "InstCombineTableGen",
     tbl_outs = [(
         "-gen-searchable-tables",
         "lib/Target/AMDGPU/InstCombineTables.inc",
@@ -1358,11 +1358,11 @@ cc_library(
     deps = [
         ":Analysis",
         ":Core",
+        ":InstCombineTableGen",
         ":Support",
         ":Target",
         ":TransformUtils",
         ":config",
-        ":inst_combine_tablegen",
     ],
 )
 
@@ -2075,12 +2075,12 @@ gentbl(
             # Depending on `:CodeGen` headers in this library is almost
             # certainly a layering problem in numerous targets.
             ":CodeGen",
-            ":config",
             ":DebugInfoCodeView",
             ":MC",
             ":MCDisassembler",
             ":Support",
             ":Target",
+            ":config",
             ":" + target["name"] + "CommonTableGen",
             ":" + target["name"] + "Info",
         ],
@@ -2114,9 +2114,9 @@ gentbl(
             ":TransformUtils",
             ":Vectorize",
             ":config",
-            ":" + target["name"] + "UtilsAndDesc",
             ":" + target["name"] + "CommonTableGen",
             ":" + target["name"] + "Info",
+            ":" + target["name"] + "UtilsAndDesc",
         ],
     )],
     [cc_library(
@@ -2132,9 +2132,9 @@ gentbl(
             ":MCParser",
             ":Support",
             ":Target",
-            ":" + target["name"] + "UtilsAndDesc",
             ":" + target["name"] + "CodeGen",
             ":" + target["name"] + "CommonTableGen",
+            ":" + target["name"] + "UtilsAndDesc",
         ],
     )],
     [cc_library(
@@ -2152,9 +2152,9 @@ gentbl(
             ":MCDisassembler",
             ":Support",
             ":Target",
-            ":" + target["name"] + "UtilsAndDesc",
             ":" + target["name"] + "CodeGen",
             ":" + target["name"] + "CommonTableGen",
+            ":" + target["name"] + "UtilsAndDesc",
         ],
     )],
 ] for target in llvm_target_list]
