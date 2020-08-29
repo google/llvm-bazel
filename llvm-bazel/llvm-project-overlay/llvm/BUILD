@@ -303,7 +303,7 @@ template_rule(
         "#cmakedefine HAVE_ISATTY 1": "#define HAVE_ISATTY 1",
 
         # Define to 1 if you have the `edit' library (-ledit).
-        "#cmakedefine HAVE_LIBEDIT ${HAVE_LIBEDIT}": "#define HAVE_LIBEDIT 1",
+        "#cmakedefine HAVE_LIBEDIT ${HAVE_LIBEDIT}": "/* #undef HAVE_LIBEDIT */",
 
         # Define to 1 if you have the `pfm' library (-lpfm).
         "#cmakedefine HAVE_LIBPFM ${HAVE_LIBPFM}": "/* #undef HAVE_LIBPFM */",
@@ -642,7 +642,6 @@ cc_library(
     textual_hdrs = glob([
         "include/llvm/Support/*.def",
     ]),
-    visibility = ["//visibility:public"],
     deps = [
         ":Demangle",
         ":config",
@@ -657,7 +656,6 @@ cc_library(
     ]),
     hdrs = glob(["include/llvm/LineEditor/*.h"]),
     copts = llvm_copts,
-    visibility = ["//visibility:public"],
     deps = [
         ":Support",
         ":config",
@@ -1755,7 +1753,6 @@ llvm_target_list = [
     {
         "name": "AArch64",
         "short_name": "AArch64",
-        "dir_name": "AArch64",
         "tbl_outs": [
             ("-gen-register-bank", "lib/Target/AArch64/AArch64GenRegisterBank.inc"),
             ("-gen-register-info", "lib/Target/AArch64/AArch64GenRegisterInfo.inc"),
@@ -1779,7 +1776,6 @@ llvm_target_list = [
     {
         "name": "ARM",
         "short_name": "ARM",
-        "dir_name": "ARM",
         "tbl_outs": [
             ("-gen-register-bank", "lib/Target/ARM/ARMGenRegisterBank.inc"),
             ("-gen-register-info", "lib/Target/ARM/ARMGenRegisterInfo.inc"),
@@ -1800,7 +1796,6 @@ llvm_target_list = [
     {
         "name": "AMDGPU",
         "short_name": "AMDGPU",
-        "dir_name": "AMDGPU",
         "tbl_outs": [
             ("-gen-register-bank", "lib/Target/AMDGPU/AMDGPUGenRegisterBank.inc"),
             ("-gen-register-info", "lib/Target/AMDGPU/AMDGPUGenRegisterInfo.inc"),
@@ -1823,7 +1818,6 @@ llvm_target_list = [
     {
         "name": "BPF",
         "short_name": "BPF",
-        "dir_name": "BPF",
         "tbl_outs": [
             ("-gen-asm-writer", "lib/Target/BPF/BPFGenAsmWriter.inc"),
             ("-gen-asm-matcher", "lib/Target/BPF/BPFGenAsmMatcher.inc"),
@@ -1839,7 +1833,6 @@ llvm_target_list = [
     {
         "name": "Hexagon",
         "short_name": "Hexagon",
-        "dir_name": "Hexagon",
         "tbl_outs": [
             ("-gen-asm-matcher", "lib/Target/Hexagon/HexagonGenAsmMatcher.inc"),
             ("-gen-asm-writer", "lib/Target/Hexagon/HexagonGenAsmWriter.inc"),
@@ -1856,7 +1849,6 @@ llvm_target_list = [
     {
         "name": "Lanai",
         "short_name": "Lanai",
-        "dir_name": "Lanai",
         "tbl_outs": [
             ("-gen-asm-matcher", "lib/Target/Lanai/LanaiGenAsmMatcher.inc"),
             ("-gen-asm-writer", "lib/Target/Lanai/LanaiGenAsmWriter.inc"),
@@ -1872,7 +1864,6 @@ llvm_target_list = [
     {
         "name": "NVPTX",
         "short_name": "NVPTX",
-        "dir_name": "NVPTX",
         "tbl_outs": [
             ("-gen-register-info", "lib/Target/NVPTX/NVPTXGenRegisterInfo.inc"),
             ("-gen-instr-info", "lib/Target/NVPTX/NVPTXGenInstrInfo.inc"),
@@ -1884,7 +1875,6 @@ llvm_target_list = [
     {
         "name": "PowerPC",
         "short_name": "PPC",
-        "dir_name": "PowerPC",
         "tbl_outs": [
             ("-gen-asm-writer", "lib/Target/PowerPC/PPCGenAsmWriter.inc"),
             ("-gen-asm-matcher", "lib/Target/PowerPC/PPCGenAsmMatcher.inc"),
@@ -1901,7 +1891,6 @@ llvm_target_list = [
     {
         "name": "Sparc",
         "short_name": "Sparc",
-        "dir_name": "Sparc",
         "tbl_outs": [
             ("-gen-asm-writer", "lib/Target/Sparc/SparcGenAsmWriter.inc"),
             ("-gen-asm-matcher", "lib/Target/Sparc/SparcGenAsmMatcher.inc"),
@@ -1917,7 +1906,6 @@ llvm_target_list = [
     {
         "name": "RISCV",
         "short_name": "RISCV",
-        "dir_name": "RISCV",
         "tbl_outs": [
             ("-gen-asm-matcher", "lib/Target/RISCV/RISCVGenAsmMatcher.inc"),
             ("-gen-asm-writer", "lib/Target/RISCV/RISCVGenAsmWriter.inc"),
@@ -1937,7 +1925,6 @@ llvm_target_list = [
     {
         "name": "WebAssembly",
         "short_name": "WebAssembly",
-        "dir_name": "WebAssembly",
         "tbl_outs": [
             ("-gen-disassembler", "lib/Target/WebAssembly/WebAssemblyGenDisassemblerTables.inc"),
             ("-gen-asm-writer", "lib/Target/WebAssembly/WebAssemblyGenAsmWriter.inc"),
@@ -1953,7 +1940,6 @@ llvm_target_list = [
     {
         "name": "X86",
         "short_name": "X86",
-        "dir_name": "X86",
         "tbl_outs": [
             ("-gen-register-bank", "lib/Target/X86/X86GenRegisterBank.inc"),
             ("-gen-register-info", "lib/Target/X86/X86GenRegisterInfo.inc"),
@@ -2033,18 +2019,18 @@ gentbl(
         name = target["name"] + "CommonTableGen",
         tbl_outs = target["tbl_outs"],
         tblgen = ":llvm-tblgen",
-        td_file = "lib/Target/" + target["dir_name"] + "/" + target["short_name"] + ".td",
+        td_file = "lib/Target/" + target["name"] + "/" + target["short_name"] + ".td",
         td_srcs = [
             ":common_target_td_sources",
         ] + glob([
-            "lib/Target/" + target["dir_name"] + "/*.td",
+            "lib/Target/" + target["name"] + "/*.td",
         ]),
         deps = target.get("tbl_deps", []),
     )],
     [cc_library(
         name = target["name"] + "Info",
-        srcs = ["lib/Target/" + target["dir_name"] + "/TargetInfo/" + target["name"] + "TargetInfo.cpp"],
-        hdrs = glob(["lib/Target/" + target["dir_name"] + "/TargetInfo/*.h"]),
+        srcs = ["lib/Target/" + target["name"] + "/TargetInfo/" + target["name"] + "TargetInfo.cpp"],
+        hdrs = glob(["lib/Target/" + target["name"] + "/TargetInfo/*.h"]),
         copts = llvm_copts,
         deps = [
             ":" + target["name"] + "CommonTableGen",
@@ -2057,18 +2043,18 @@ gentbl(
     [cc_library(
         name = target["name"] + "UtilsAndDesc",
         srcs = glob([
-            "lib/Target/" + target["dir_name"] + "/MCTargetDesc/*.cpp",
-            "lib/Target/" + target["dir_name"] + "/Utils/*.cpp",
-            "lib/Target/" + target["dir_name"] + "/*.h",
+            "lib/Target/" + target["name"] + "/MCTargetDesc/*.cpp",
+            "lib/Target/" + target["name"] + "/Utils/*.cpp",
+            "lib/Target/" + target["name"] + "/*.h",
         ]),
         hdrs = glob([
-            "lib/Target/" + target["dir_name"] + "/MCTargetDesc/*.h",
-            "lib/Target/" + target["dir_name"] + "/Utils/*.h",
+            "lib/Target/" + target["name"] + "/MCTargetDesc/*.h",
+            "lib/Target/" + target["name"] + "/Utils/*.h",
         ]),
         copts = llvm_copts,
         textual_hdrs = glob([
-            "lib/Target/" + target["dir_name"] + "/*.def",
-            "lib/Target/" + target["dir_name"] + "/*.inc",
+            "lib/Target/" + target["name"] + "/*.def",
+            "lib/Target/" + target["name"] + "/*.inc",
         ]),
         deps = [
             ":BinaryFormat",
@@ -2088,16 +2074,16 @@ gentbl(
     [cc_library(
         name = target["name"] + "CodeGen",
         srcs = glob([
-            "lib/Target/" + target["dir_name"] + "/GISel/*.cpp",
-            "lib/Target/" + target["dir_name"] + "/GISel/*.h",
-            "lib/Target/" + target["dir_name"] + "/*.cpp",
-            "lib/Target/" + target["dir_name"] + "/*.h",
+            "lib/Target/" + target["name"] + "/GISel/*.cpp",
+            "lib/Target/" + target["name"] + "/GISel/*.h",
+            "lib/Target/" + target["name"] + "/*.cpp",
+            "lib/Target/" + target["name"] + "/*.h",
         ]),
-        hdrs = ["lib/Target/" + target["dir_name"] + "/" + target["short_name"] + ".h"],
+        hdrs = ["lib/Target/" + target["name"] + "/" + target["short_name"] + ".h"],
         copts = llvm_copts,
         textual_hdrs = glob([
-            "lib/Target/" + target["dir_name"] + "/*.def",
-            "lib/Target/" + target["dir_name"] + "/*.inc",
+            "lib/Target/" + target["name"] + "/*.def",
+            "lib/Target/" + target["name"] + "/*.inc",
         ]),
         deps = [
             ":Analysis",
@@ -2122,8 +2108,8 @@ gentbl(
     [cc_library(
         name = target["name"] + "AsmParser",
         srcs = glob([
-            "lib/Target/" + target["dir_name"] + "/AsmParser/*.cpp",
-            "lib/Target/" + target["dir_name"] + "/AsmParser/*.h",
+            "lib/Target/" + target["name"] + "/AsmParser/*.cpp",
+            "lib/Target/" + target["name"] + "/AsmParser/*.h",
         ]),
         copts = llvm_copts,
         deps = [
@@ -2140,9 +2126,9 @@ gentbl(
     [cc_library(
         name = target["name"] + "Disassembler",
         srcs = glob([
-            "lib/Target/" + target["dir_name"] + "/Disassembler/*.cpp",
-            "lib/Target/" + target["dir_name"] + "/Disassembler/*.c",
-            "lib/Target/" + target["dir_name"] + "/Disassembler/*.h",
+            "lib/Target/" + target["name"] + "/Disassembler/*.cpp",
+            "lib/Target/" + target["name"] + "/Disassembler/*.c",
+            "lib/Target/" + target["name"] + "/Disassembler/*.h",
         ]),
         copts = llvm_copts,
         deps = [
@@ -2573,7 +2559,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":AllTargetsCodeGens",
         ":BinaryFormat",
@@ -2600,7 +2585,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":AllTargetsAsmParsers",
         ":AllTargetsCodeGens",
@@ -2636,7 +2620,6 @@ cc_binary(
         "-Wl,--export-dynamic-symbol=__cxa_throw",
     ],
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":AllTargetsAsmParsers",
         ":AllTargetsCodeGens",
@@ -2664,7 +2647,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":AllTargetsAsmParsers",
         ":AllTargetsCodeGens",
@@ -2701,7 +2683,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":Analysis",
         ":AsmParser",
@@ -2719,7 +2700,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":BitReader",
         ":Support",
@@ -2733,7 +2713,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":BitReader",
         ":BitWriter",
@@ -2752,7 +2731,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":AllTargetsAsmParsers",
         ":AllTargetsCodeGens",
@@ -2776,7 +2754,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":Coverage",
         ":Instrumentation",
@@ -2805,7 +2782,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":CvtResTableGen",
         ":Object",
@@ -2822,7 +2798,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":AllTargetsCodeGens",
         ":BitReader",
@@ -2839,7 +2814,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":Support",
     ],
@@ -2853,7 +2827,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":Demangle",
         ":Support",
@@ -2868,7 +2841,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":Analysis",
         ":BitReader",
@@ -2885,7 +2857,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":AllTargetsCodeGens",
         ":BinaryFormat",
@@ -2905,7 +2876,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":AllTargetsCodeGens",
         ":DebugInfoDWARF",
@@ -2924,7 +2894,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":InterfaceStub",
         ":Object",
@@ -2941,7 +2910,6 @@ cc_binary(
 #    ],
 #    copts = llvm_copts + ["-DHAVE_LIBPFM=0"],
 #    stamp = 0,
-#    visibility = ["//visibility:public"],
 #    deps = [
 #        ":AllTargetsAsmParsers",
 #        ":AllTargetsCodeGens",
@@ -2963,7 +2931,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":AsmParser",
         ":BitReader",
@@ -2983,7 +2950,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":ObjectYAML",
         ":Support",
@@ -3009,7 +2975,6 @@ cc_binary(
         "-Wl,--export-dynamic-symbol=__cxa_throw",
     ],
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":AllTargetsAsmParsers",
         ":AllTargetsCodeGens",
@@ -3034,7 +2999,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":BinaryFormat",
         ":Object",
@@ -3050,7 +3014,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":AsmParser",
         ":BitReader",
@@ -3083,7 +3046,6 @@ cc_binary(
     ],
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":LipoOptsTableGen",
         ":Object",
@@ -3100,7 +3062,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":AllTargetsAsmParsers",
         ":AllTargetsCodeGens",
@@ -3123,7 +3084,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":AllTargetsAsmParsers",
         ":AllTargetsCodeGens",
@@ -3143,7 +3103,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":AllTargetsAsmParsers",
         ":AllTargetsCodeGens",
@@ -3166,7 +3125,6 @@ cc_binary(
     ]),
     copts = llvm_copts + ["-Iexternal/llvm-project/llvm/tools/llvm-mca"],
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":AllTargetsAsmParsers",
         ":AllTargetsCodeGens",
@@ -3186,7 +3144,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":AllTargetsAsmParsers",
         ":AllTargetsCodeGens",
@@ -3204,7 +3161,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":BitReader",
         ":BitWriter",
@@ -3232,7 +3188,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":MtTableGen",
         ":Option",
@@ -3249,7 +3204,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":AllTargetsAsmParsers",
         ":AllTargetsCodeGens",
@@ -3312,7 +3266,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":BinaryFormat",
         ":MC",
@@ -3345,7 +3298,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":AllTargetsAsmParsers",
         ":AllTargetsCodeGens",
@@ -3371,7 +3323,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":AllTargetsCodeGens",
         ":Demangle",
@@ -3388,7 +3339,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":BinaryFormat",
         ":DebugInfoCodeView",
@@ -3409,7 +3359,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":Core",
         ":ProfileData",
@@ -3444,7 +3393,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":Object",
         ":Option",
@@ -3462,7 +3410,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":AllTargetsCodeGens",
         ":BinaryFormat",
@@ -3490,7 +3437,6 @@ cc_binary(
     copts = llvm_copts,
     includes = ["tools/llvm-reduce"],
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":AllTargetsCodeGens",
         ":BitReader",
@@ -3506,7 +3452,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":AllTargetsCodeGens",
         ":AllTargetsDisassemblers",
@@ -3528,7 +3473,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":Object",
         ":Support",
@@ -3543,7 +3487,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":BitWriter",
         ":Core",
@@ -3561,7 +3504,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":Object",
         ":Support",
@@ -3587,7 +3529,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":DebugInfoDWARF",
         ":DebugInfoPDB",
@@ -3612,7 +3553,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":Demangle",
         ":Support",
@@ -3628,7 +3568,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":DebugInfoDWARF",
         ":Object",
@@ -3647,7 +3586,6 @@ cc_binary(
     copts = llvm_copts,
     linkopts = ["-Wl,--export-dynamic"],
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":AllTargetsAsmParsers",
         ":AllTargetsCodeGens",
@@ -3676,7 +3614,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":AllTargetsCodeGens",
         ":AllTargetsDisassemblers",
@@ -3698,7 +3635,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":Support",
         ":Symbolize",
@@ -3714,7 +3650,6 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    visibility = ["//visibility:public"],
     deps = [
         ":Support",
     ],
@@ -3774,7 +3709,6 @@ cc_library(
         "utils/unittest/googletest/include/gtest/gtest_pred_impl.h",
         "utils/unittest/googletest/src/gtest-internal-inl.h",
     ],
-    visibility = ["//visibility:public"],
     deps = [":Support"],
 )
 
@@ -3783,7 +3717,6 @@ cc_library(
     testonly = 1,
     srcs = ["utils/unittest/UnitTestMain/TestMain.cpp"],
     copts = llvm_copts,
-    visibility = ["//visibility:public"],
     deps = [
         ":Support",
         ":gmock",
@@ -3811,7 +3744,6 @@ cc_library(
         "include",
         "utils/unittest/googlemock/include",
     ],
-    visibility = ["//visibility:public"],
     deps = [":gtest"],
 )
 
@@ -3826,7 +3758,6 @@ cc_library(
         "include/llvm/Testing/Support/*.h",
     ]),
     copts = llvm_copts,
-    visibility = ["//visibility:public"],
     deps = [
         ":Support",
         ":config",
