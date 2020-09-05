@@ -15,7 +15,11 @@ exports_files(["LICENSE.TXT"])
 llvm_host_triple = "x86_64-unknown-linux_gnu"
 
 # FIXME: Would be nice to have a select here on the compiler so that we can use
-# a more minimal list for Clang than we need for GCC.
+# a more minimal list for Clang than we need for GCC. Currently this merges the
+# two lists. However, that results in warning flags that aren't understood by
+# the compiler. For GCC, this will only result in extra warning output when
+# a warning or error occurs for some other reason. For Clang, we disable
+# warning on unknown warning options.
 llvm_copts = [
     "$(STACK_FRAME_UNLIMITED)",
     "-Wno-unused-parameter",
@@ -23,6 +27,7 @@ llvm_copts = [
     "-Wno-class-memaccess",
     "-Wno-maybe-uninitialized",
     "-Wno-misleading-indentation",
+    "-Wno-unknown-warning-option",
 ]
 
 llvm_targets = [
@@ -105,7 +110,7 @@ template_rule(
 )
 
 # TODO: Need to replace this with something that actually extracts the git
-# commit from the LLVM submodule.
+# commit from the LLVM source (submodule or http_archive).
 genrule(
     name = "version_info_gen",
     outs = ["include/llvm/Config/VersionInfo.h"],
@@ -324,7 +329,8 @@ template_rule(
         "#cmakedefine HAVE_PTHREAD_SETNAME_NP ${HAVE_PTHREAD_SETNAME_NP}": "#define HAVE_PTHREAD_SETNAME_NP 1",
 
         # Define to 1 if you have the `z' library (-lz).
-        "#cmakedefine HAVE_LIBZ ${HAVE_LIBZ}": "#define HAVE_LIBZ 1",
+        # FIXME: Enable this by detecting the system library.
+        "#cmakedefine HAVE_LIBZ ${HAVE_LIBZ}": "/* #undef HAVE_LIBZ */",
 
         # Define to 1 if you have the <link.h> header file.
         "#cmakedefine HAVE_LINK_H ${HAVE_LINK_H}": "#define HAVE_LINK_H 1",
@@ -420,7 +426,8 @@ template_rule(
         "#cmakedefine HAVE_SYS_TYPES_H ${HAVE_SYS_TYPES_H}": "#define HAVE_SYS_TYPES_H 1",
 
         # Define if the setupterm() function is supported this platform.
-        "#cmakedefine HAVE_TERMINFO ${HAVE_TERMINFO}": "#define HAVE_TERMINFO 1",
+        # FIXME: Enable this correctly by detecting the system library if possible.
+        "#cmakedefine HAVE_TERMINFO ${HAVE_TERMINFO}": "/* #undef HAVE_TERMINFO */",
 
         # Define if the xar_open() function is supported this platform.
         "#cmakedefine HAVE_LIBXAR ${HAVE_LIBXAR}": "/* #undef HAVE_LIBXAR */",
@@ -435,7 +442,8 @@ template_rule(
         "#cmakedefine HAVE_VALGRIND_VALGRIND_H ${HAVE_VALGRIND_VALGRIND_H}": "/* #undef HAVE_VALGRIND_VALGRIND_H */",
 
         # Define to 1 if you have the <zlib.h> header file.
-        "#cmakedefine HAVE_ZLIB_H ${HAVE_ZLIB_H}": "#define HAVE_ZLIB_H 1",
+        # FIXME: Enable this by detecting the system library.
+        "#cmakedefine HAVE_ZLIB_H ${HAVE_ZLIB_H}": "/* #undef HAVE_ZLIB_H */",
 
         # Have host's _alloca
         "#cmakedefine HAVE__ALLOCA ${HAVE__ALLOCA}": "/* #undef HAVE__ALLOCA */",
@@ -505,7 +513,8 @@ template_rule(
         "#define LLVM_DEFAULT_TARGET_TRIPLE \"${LLVM_DEFAULT_TARGET_TRIPLE}\"": "#define LLVM_DEFAULT_TARGET_TRIPLE \"x86_64-unknown-linux-gnu\"",
 
         # Define if zlib compression is available
-        "#cmakedefine01 LLVM_ENABLE_ZLIB": "#define LLVM_ENABLE_ZLIB 1",
+        # FIXME: Enable this by detecting the system library.
+        "#cmakedefine01 LLVM_ENABLE_ZLIB": "/* #undef LLVM_ENABLE_ZLIB */",
 
         # Define if overriding target triple is enabled
         "#cmakedefine LLVM_TARGET_TRIPLE_ENV \"${LLVM_TARGET_TRIPLE_ENV}\"": "/* #undef LLVM_TARGET_TRIPLE_ENV */",
@@ -635,8 +644,6 @@ cc_library(
     copts = llvm_copts,
     includes = ["include"],
     linkopts = [
-        "-lz",
-        "-ltinfo",
         "-pthread",
     ],
     textual_hdrs = glob([
@@ -661,8 +668,6 @@ cc_library(
         ":config",
     ],
 )
-
-# exports_files(["include/llvm/Option/OptParser.td"])
 
 cc_library(
     name = "Option",
