@@ -263,10 +263,10 @@ template_rule(
         "#cmakedefine01 LLVM_ENABLE_DIA_SDK": "#define LLVM_ENABLE_DIA_SDK 0",
 
         # Define to 1 if you have the <dlfcn.h> header file.
-        "#cmakedefine HAVE_DLFCN_H ${HAVE_DLFCN_H}": "/* #undef HAVE_DLFCN_H */",
+        "#cmakedefine HAVE_DLFCN_H ${HAVE_DLFCN_H}": "#define HAVE_DLFCN_H 1",
 
         # Define if dlopen() is available on this platform.
-        "#cmakedefine HAVE_DLOPEN ${HAVE_DLOPEN}": "/* #undef HAVE_DLOPEN */",
+        "#cmakedefine HAVE_DLOPEN ${HAVE_DLOPEN}": "#define HAVE_DLOPEN 1",
 
         # Define if dladdr() is available on this platform.
         "#cmakedefine HAVE_DLADDR ${HAVE_DLADDR}": "/* #undef HAVE_DLADDR */",
