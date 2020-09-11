@@ -645,6 +645,7 @@ cc_library(
     includes = ["include"],
     linkopts = [
         "-pthread",
+        "-ldl",
     ],
     textual_hdrs = glob([
         "include/llvm/Support/*.def",
@@ -677,7 +678,6 @@ cc_library(
     ]),
     hdrs = glob(["include/llvm/Option/*.h"]),
     copts = llvm_copts,
-    linkopts = ["-ldl"],
     deps = [
         ":Support",
         ":config",
