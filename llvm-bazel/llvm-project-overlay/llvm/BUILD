@@ -425,9 +425,12 @@ template_rule(
         # Define to 1 if you have the <sys/types.h> header file.
         "#cmakedefine HAVE_SYS_TYPES_H ${HAVE_SYS_TYPES_H}": "#define HAVE_SYS_TYPES_H 1",
 
+        # Define to 1 if you have the <sysexits.h> header file.
+        "#cmakedefine HAVE_SYSEXITS_H ${HAVE_SYSEXITS_H}": "#define HAVE_SYSEXITS_H 1",
+
         # Define if the setupterm() function is supported this platform.
         # FIXME: Enable this correctly by detecting the system library if possible.
-        "#cmakedefine HAVE_TERMINFO ${HAVE_TERMINFO}": "/* #undef HAVE_TERMINFO */",
+        "#cmakedefine LLVM_ENABLE_TERMINFO ${LLVM_ENABLE_TERMINFO}": "/* #undef LLVM_ENABLE_TERMINFO */",
 
         # Define if the xar_open() function is supported this platform.
         "#cmakedefine HAVE_LIBXAR ${HAVE_LIBXAR}": "/* #undef HAVE_LIBXAR */",
@@ -526,7 +529,7 @@ template_rule(
         "#cmakedefine01 LLVM_VERSION_PRINTER_SHOW_HOST_TARGET_INFO": "#define LLVM_VERSION_PRINTER_SHOW_HOST_TARGET_INFO 1",
 
         # Define if libxml2 is supported on this platform.
-        "#cmakedefine LLVM_LIBXML2_ENABLED ${LLVM_LIBXML2_ENABLED}": "/* #undef LLVM_LIBXML2_ENABLED */",
+        "#cmakedefine LLVM_ENABLE_LIBXML2 ${LLVM_ENABLE_LIBXML2}": "/* #undef LLVM_ENABLE_LIBXML2 */",
 
         # Define to the extension used for shared libraries, say, \".so\".
         "#cmakedefine LTDL_SHLIB_EXT \"${LTDL_SHLIB_EXT}\"": "#define LTDL_SHLIB_EXT \".so\"",
@@ -652,6 +655,20 @@ cc_library(
     ]),
     deps = [
         ":Demangle",
+        ":config",
+    ],
+)
+
+cc_library(
+    name = "FileCheckLib",
+    srcs = glob([
+        "lib/FileCheck/*.cpp",
+        "lib/FileCheck/*.h",
+    ]),
+    hdrs = glob(["include/llvm/FileCheck/*.h"]),
+    copts = llvm_copts,
+    deps = [
+        ":Support",
         ":config",
     ],
 )
@@ -1881,6 +1898,7 @@ llvm_target_list = [
         "name": "PowerPC",
         "short_name": "PPC",
         "tbl_outs": [
+            ("-gen-register-bank", "lib/Target/PowerPC/PPCGenRegisterBank.inc"),
             ("-gen-asm-writer", "lib/Target/PowerPC/PPCGenAsmWriter.inc"),
             ("-gen-asm-matcher", "lib/Target/PowerPC/PPCGenAsmMatcher.inc"),
             ("-gen-emitter", "lib/Target/PowerPC/PPCGenMCCodeEmitter.inc"),
@@ -1888,6 +1906,7 @@ llvm_target_list = [
             ("-gen-instr-info", "lib/Target/PowerPC/PPCGenInstrInfo.inc"),
             ("-gen-dag-isel", "lib/Target/PowerPC/PPCGenDAGISel.inc"),
             ("-gen-fast-isel", "lib/Target/PowerPC/PPCGenFastISel.inc"),
+            ("-gen-global-isel", "lib/Target/PowerPC/PPCGenGlobalISel.inc"),
             ("-gen-callingconv", "lib/Target/PowerPC/PPCGenCallingConv.inc"),
             ("-gen-subtarget", "lib/Target/PowerPC/PPCGenSubtargetInfo.inc"),
             ("-gen-disassembler", "lib/Target/PowerPC/PPCGenDisassemblerTables.inc"),
@@ -2029,6 +2048,7 @@ gentbl(
             ":common_target_td_sources",
         ] + glob([
             "lib/Target/" + target["name"] + "/*.td",
+            "lib/Target/" + target["name"] + "/GISel/*.td",
         ]),
         deps = target.get("tbl_deps", []),
     )],
@@ -3783,7 +3803,7 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
-    deps = [":Support"],
+    deps = [":FileCheckLib"],
 )
 
 cc_binary(
