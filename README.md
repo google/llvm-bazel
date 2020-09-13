@@ -15,9 +15,14 @@ suitable for more general usage.
 
 # Status
 
-MLIR builds with Cuda and Vulkan support disabled.
+MLIR has Cuda and Vulkan support disabled.
 
-Building LLVM core has many issues with finding `.inc` files.
+The whole project builds, e.g.
+
+```shell
+cd llvm-bazel/
+bazel --config=generic_clang build @llvm-project//...
+```
 
 # Usage
 
@@ -41,7 +46,7 @@ submodules.
 You can build either of these demos with a command like
 
 ```shell
-bazel --config=generic_clang @llvm-project//mlir/...
+bazel --config=generic_clang build @llvm-project//...
 ```
 
 # License
