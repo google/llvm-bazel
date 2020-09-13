@@ -31,3 +31,6 @@ compile_commands.json
 # Submodule demo needs to stay in its own branch to avoid infinite submodule
 # recursion.
 submodule-demo/
+# http-archive-demo
+
+third_party/

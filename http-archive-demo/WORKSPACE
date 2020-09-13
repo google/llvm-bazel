@@ -6,11 +6,11 @@
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
-LLVM_COMMIT = "c558c22cab9a555d2e521102b775759381e9727f"
+LLVM_COMMIT = "0ece51c60c51f0d4c285dbda3b6cff794041bdd7"
 
 LLVM_BAZEL_TAG = "llvm-project-%s" % (LLVM_COMMIT,)
 
-LLVM_BAZEL_SHA256 = "df2cf04eaefa60b2a94d9e4b2faafeb47465a04051eb71bec2f2daf7536c190b"
+LLVM_BAZEL_SHA256 = "9fc25f8d101594db0b48dfd9496049a04e7cce203a9cf82942ad7d282bb7d2b0"
 
 http_archive(
     name = "llvm-bazel",
@@ -19,18 +19,7 @@ http_archive(
     url = "https://github.com/google/llvm-bazel/archive/{tag}.tar.gz".format(tag = LLVM_BAZEL_TAG),
 )
 
-http_archive(
-    name = "zlib",
-    build_file = "@llvm-bazel//third_party_build:zlib.BUILD",
-    sha256 = "c3e5e9fdd5004dcb542feda5ee4f0ff0744628baf8ed2dd5d66f8ca1197cb1a1",
-    strip_prefix = "zlib-1.2.11",
-    urls = [
-        "https://storage.googleapis.com/mirror.tensorflow.org/zlib.net/zlib-1.2.11.tar.gz",
-        "https://zlib.net/zlib-1.2.11.tar.gz",
-    ],
-)
-
-LLVM_SHA256 = "b3651e78f4f3b372273c71cb58e0d0767b61e7d9c93b79fd399065c1148089f5"
+LLVM_SHA256 = "720147842a645a922ff2b4fcf866101ddb7ef76844988ea78639fe8fed774b41"
 
 LLVM_URLS = [
     "https://storage.googleapis.com/mirror.tensorflow.org/github.com/llvm/llvm-project/archive/{commit}.tar.gz".format(commit = LLVM_COMMIT),
