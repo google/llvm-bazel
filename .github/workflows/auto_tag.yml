@@ -1,0 +1,31 @@
+# This file is licensed under the Apache License v2.0 with LLVM Exceptions.
+# See https://llvm.org/LICENSE.txt for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+# Tags the HEAD commit on main with the corresponding LLVM commit
+
+name: Auto Tag
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  auto_integrate:
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Checking out repository
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Tagging head commit
+        run: ./scripts/tag_rev.sh
+      - name: Fetching integration branch
+      - name: Pushing changes
+        uses: ad-m/github-push-action@v0.6.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
+          tags: true
+          # Override existing tags
+          force: true
