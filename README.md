@@ -15,9 +15,10 @@ suitable for more general usage.
 
 # Status
 
-MLIR has Cuda and Vulkan support disabled.
+MLIR has Cuda and Vulkan support disabled. LLVM does not yet have configuration detection and hardcodes
+values in the config.
 
-The whole project builds, e.g.
+You can build the project with:
 
 ```shell
 cd llvm-bazel/
