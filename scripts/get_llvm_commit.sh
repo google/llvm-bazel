@@ -4,6 +4,10 @@
 # See https://llvm.org/LICENSE.txt for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-# Walks commits in the LLVM submodule creating new commits for each update.
+# Returns the current submodule revision used for LLVM.
 
-./scripts/traverse_llvm_revs.sh ./scripts/commit_and_tag.sh
+set -e
+set -o pipefail
+
+SUBMODULE_DIR="third_party/llvm-project"
+git submodule status -- ${SUBMODULE_DIR?} | awk '{print $1}' | tr -d '+'

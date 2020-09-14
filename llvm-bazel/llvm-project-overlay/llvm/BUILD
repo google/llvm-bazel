@@ -1,25 +1,9 @@
 # This file is licensed under the Apache License v2.0 with LLVM Exceptions.
 # See https://llvm.org/LICENSE.txt for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-#
-# This BUILD file is auto-generated; do not edit!
-# See generate_bazel_build.py
 
-load(
-    "//llvm:llvm.bzl",
-    "cmake_var_string",
-    "expand_cmake_vars",
-    "gentbl",
-    "llvm_all_cmake_vars",
-    "llvm_copts",
-    "llvm_defines",
-    "llvm_linkopts",
-    "llvm_support_platform_specific_srcs_glob",
-)
-load(
-    "//llvm:template_rule.bzl",
-    "template_rule",
-)
+load("//llvm:template_rule.bzl", "template_rule")
+load("//llvm:tblgen.bzl", "gentbl")
 
 package(
     default_visibility = ["//visibility:public"],
@@ -30,71 +14,43 @@ exports_files(["LICENSE.TXT"])
 
 llvm_host_triple = "x86_64-unknown-linux_gnu"
 
+# FIXME: Would be nice to have a select here on the compiler so that we can use
+# a more minimal list for Clang than we need for GCC. Currently this merges the
+# two lists. However, that results in warning flags that aren't understood by
+# the compiler. For GCC, this will only result in extra warning output when
+# a warning or error occurs for some other reason. For Clang, we disable
+# warning on unknown warning options.
+llvm_copts = [
+    "$(STACK_FRAME_UNLIMITED)",
+    "-Wno-unused-parameter",
+    "-Wno-comment",
+    "-Wno-class-memaccess",
+    "-Wno-maybe-uninitialized",
+    "-Wno-misleading-indentation",
+    "-Wno-unknown-warning-option",
+]
+
 llvm_targets = [
     "AArch64",
     "AMDGPU",
     "ARM",
+    "BPF",
+    "Hexagon",
+    "Lanai",
     "NVPTX",
     "PowerPC",
-    "SystemZ",
+    "RISCV",
+    "Sparc",
+    "WebAssembly",
     "X86",
 ]
 
-py_binary(
-    name = "expand_cmake_vars",
-    srcs = ["expand_cmake_vars.py"],
-    srcs_version = "PY2AND3",
-    visibility = ["@llvm-project//:__subpackages__"],
-)
-
-llvm_target_asm_parsers = llvm_targets
-
-llvm_target_asm_printers = llvm_targets
-
-llvm_target_disassemblers = llvm_targets
-
-# Performs CMake variable substitutions on configuration header files.
-expand_cmake_vars(
-    name = "config_gen",
-    src = "include/llvm/Config/config.h.cmake",
-    cmake_vars = llvm_all_cmake_vars,
-    dst = "include/llvm/Config/config.h",
-)
-
-expand_cmake_vars(
-    name = "llvm_config_gen",
-    src = "include/llvm/Config/llvm-config.h.cmake",
-    cmake_vars = llvm_all_cmake_vars,
-    dst = "include/llvm/Config/llvm-config.h",
-)
-
-expand_cmake_vars(
-    name = "abi_breaking_gen",
-    src = "include/llvm/Config/abi-breaking.h.cmake",
-    cmake_vars = llvm_all_cmake_vars,
-    dst = "include/llvm/Config/abi-breaking.h",
-)
-
-# Performs macro expansions on .def.in files
 template_rule(
     name = "targets_def_gen",
     src = "include/llvm/Config/Targets.def.in",
     out = "include/llvm/Config/Targets.def",
     substitutions = {
-        "@LLVM_ENUM_TARGETS@": "\n".join(
-            ["LLVM_TARGET({})".format(t) for t in llvm_targets],
-        ),
-    },
-)
-
-template_rule(
-    name = "asm_parsers_def_gen",
-    src = "include/llvm/Config/AsmParsers.def.in",
-    out = "include/llvm/Config/AsmParsers.def",
-    substitutions = {
-        "@LLVM_ENUM_ASM_PARSERS@": "\n".join(
-            ["LLVM_ASM_PARSER({})".format(t) for t in llvm_target_asm_parsers],
-        ),
+        "@LLVM_ENUM_TARGETS@": "\n".join(["LLVM_TARGET({})".format(t) for t in llvm_targets]),
     },
 )
 
@@ -103,278 +59,855 @@ template_rule(
     src = "include/llvm/Config/AsmPrinters.def.in",
     out = "include/llvm/Config/AsmPrinters.def",
     substitutions = {
-        "@LLVM_ENUM_ASM_PRINTERS@": "\n".join(
-            ["LLVM_ASM_PRINTER({})".format(t) for t in llvm_target_asm_printers],
-        ),
+        "@LLVM_ENUM_ASM_PRINTERS@": "\n".join(["LLVM_ASM_PRINTER({})".format(t) for t in llvm_targets]),
     },
 )
+
+llvm_target_asm_parsers = [
+    "AArch64",
+    "AMDGPU",
+    "ARM",
+    "BPF",
+    "Hexagon",
+    "Lanai",
+    "PowerPC",
+    "RISCV",
+    "Sparc",
+    "WebAssembly",
+    "X86",
+]
+
+template_rule(
+    name = "asm_parsers_def_gen",
+    src = "include/llvm/Config/AsmParsers.def.in",
+    out = "include/llvm/Config/AsmParsers.def",
+    substitutions = {
+        "@LLVM_ENUM_ASM_PARSERS@": "\n".join(["LLVM_ASM_PARSER({})".format(t) for t in llvm_target_asm_parsers]),
+    },
+)
+
+llvm_target_disassemblers = [
+    "AArch64",
+    "AMDGPU",
+    "ARM",
+    "BPF",
+    "Hexagon",
+    "Lanai",
+    "PowerPC",
+    "RISCV",
+    "Sparc",
+    "WebAssembly",
+    "X86",
+]
 
 template_rule(
     name = "disassemblers_def_gen",
     src = "include/llvm/Config/Disassemblers.def.in",
     out = "include/llvm/Config/Disassemblers.def",
     substitutions = {
-        "@LLVM_ENUM_DISASSEMBLERS@": "\n".join(
-            ["LLVM_DISASSEMBLER({})".format(t) for t in llvm_target_disassemblers],
-        ),
+        "@LLVM_ENUM_DISASSEMBLERS@": "\n".join(["LLVM_DISASSEMBLER({})".format(t) for t in llvm_target_disassemblers]),
     },
 )
 
-# A common library that all LLVM targets depend on.
-# TODO(b/113996071): We need to glob all potentially #included files and stage
-# them here because LLVM's build files are not strict headers clean, and remote
-# build execution requires all inputs to be depended upon.
+# TODO: Need to replace this with something that actually extracts the git
+# commit from the LLVM source (submodule or http_archive).
+genrule(
+    name = "version_info_gen",
+    outs = ["include/llvm/Config/VersionInfo.h"],
+    cmd = "echo \"#define LLVM_VERSION_INFO \\\"git\\\"\" > $@",
+)
+
+# These rules substitute fairly generic Linux and x86 flavored configs
+# currently. We could extend it in-place with selects-style switching on
+# platforms, or by extracting parts of the dictionary to be computed in with
+# a separate starlark function where the config switching can be managed.
+#
+# TODO: Priority list of enhancements needed here:
+# - Reflect `opt`, `dbg`, etc. features.
+# - Basic port to Mac for convenience.
+# - Extract into something cleaner based on Starlark.
+
+template_rule(
+    name = "llvm_config_h_gen",
+    src = "include/llvm/Config/llvm-config.h.cmake",
+    out = "include/llvm/Config/llvm-config.h",
+    substitutions = {
+        # Define if LLVM_ENABLE_DUMP is enabled
+        "#cmakedefine LLVM_ENABLE_DUMP": "/* #undef LLVM_ENABLE_DUMP */",
+
+        # Target triple LLVM will generate code for by default
+        "#cmakedefine LLVM_DEFAULT_TARGET_TRIPLE \"${LLVM_DEFAULT_TARGET_TRIPLE}\"": "#define LLVM_DEFAULT_TARGET_TRIPLE \"x86_64-unknown-linux-gnu\"",
+
+        # Define if threads enabled
+        "#cmakedefine01 LLVM_ENABLE_THREADS": "#define LLVM_ENABLE_THREADS 1",
+
+        # Has gcc/MSVC atomic intrinsics
+        "#cmakedefine01 LLVM_HAS_ATOMICS": "#define LLVM_HAS_ATOMICS 1",
+
+        # Host triple LLVM will be executed on
+        "#cmakedefine LLVM_HOST_TRIPLE \"${LLVM_HOST_TRIPLE}\"": "#define LLVM_HOST_TRIPLE \"x86_64-unknown-linux-gnu\"",
+
+        # LLVM architecture name for the native architecture, if available
+        "#cmakedefine LLVM_NATIVE_ARCH ${LLVM_NATIVE_ARCH}": "#define LLVM_NATIVE_ARCH X86",
+
+        # LLVM name for the native AsmParser init function, if available
+        "#cmakedefine LLVM_NATIVE_ASMPARSER LLVMInitialize${LLVM_NATIVE_ARCH}AsmParser": "#define LLVM_NATIVE_ASMPARSER LLVMInitializeX86AsmParser",
+
+        # LLVM name for the native AsmPrinter init function, if available
+        "#cmakedefine LLVM_NATIVE_ASMPRINTER LLVMInitialize${LLVM_NATIVE_ARCH}AsmPrinter": "#define LLVM_NATIVE_ASMPRINTER LLVMInitializeX86AsmPrinter",
+
+        # LLVM name for the native Disassembler init function, if available
+        "#cmakedefine LLVM_NATIVE_DISASSEMBLER LLVMInitialize${LLVM_NATIVE_ARCH}Disassembler": "#define LLVM_NATIVE_DISASSEMBLER LLVMInitializeX86Disassembler",
+
+        # LLVM name for the native Target init function, if available
+        "#cmakedefine LLVM_NATIVE_TARGET LLVMInitialize${LLVM_NATIVE_ARCH}Target": "#define LLVM_NATIVE_TARGET LLVMInitializeX86Target",
+
+        # LLVM name for the native TargetInfo init function, if available
+        "#cmakedefine LLVM_NATIVE_TARGETINFO LLVMInitialize${LLVM_NATIVE_ARCH}TargetInfo": "#define LLVM_NATIVE_TARGETINFO LLVMInitializeX86TargetInfo",
+
+        # LLVM name for the native target MC init function, if available
+        "#cmakedefine LLVM_NATIVE_TARGETMC LLVMInitialize${LLVM_NATIVE_ARCH}TargetMC": "#define LLVM_NATIVE_TARGETMC LLVMInitializeX86TargetMC",
+
+        # Define if this is Unixish platform
+        "#cmakedefine LLVM_ON_UNIX ${LLVM_ON_UNIX}": "#define LLVM_ON_UNIX 1",
+
+        # Define if we have the Intel JIT API runtime support library
+        "#cmakedefine01 LLVM_USE_INTEL_JITEVENTS": "#define LLVM_USE_INTEL_JITEVENTS 0",
+
+        # Define if we have the oprofile JIT-support library
+        "#cmakedefine01 LLVM_USE_OPROFILE": "#define LLVM_USE_OPROFILE 0",
+
+        # Define if we have the perf JIT-support library
+        "#cmakedefine01 LLVM_USE_PERF": "#define LLVM_USE_PERF 0",
+
+        # Major version of the LLVM API
+        "#define LLVM_VERSION_MAJOR ${LLVM_VERSION_MAJOR}": "#define LLVM_VERSION_MAJOR 11",
+
+        # Minor version of the LLVM API
+        "#define LLVM_VERSION_MINOR ${LLVM_VERSION_MINOR}": "#define LLVM_VERSION_MINOR 0",
+
+        # Patch version of the LLVM API
+        "#define LLVM_VERSION_PATCH ${LLVM_VERSION_PATCH}": "#define LLVM_VERSION_PATCH 0",
+
+        # LLVM version string
+        "#define LLVM_VERSION_STRING \"${PACKAGE_VERSION}\"": "#define LLVM_VERSION_STRING \"11.0.0git\"",
+
+        # Whether LLVM records statistics for use with GetStatistics(),
+        # PrintStatistics() or PrintStatisticsJSON()
+        "#cmakedefine01 LLVM_FORCE_ENABLE_STATS": "#define LLVM_FORCE_ENABLE_STATS 0",
+
+        # Define if we have z3 and want to build it */
+        "#cmakedefine LLVM_WITH_Z3 ${LLVM_WITH_Z3}": "/* #undef LLVM_WITH_Z3 */",
+
+        # Define if LLVM was built with a dependency to the libtensorflow dynamic library */
+        "#cmakedefine LLVM_HAVE_TF_API": "/* #undef LLVM_HAVE_TF_API */",
+
+        # Define if LLVM was built with a dependency to the tensorflow compiler */
+        "#cmakedefine LLVM_HAVE_TF_AOT": "/* #undef LLVM_HAVE_TF_AOT */",
+    },
+)
+
+template_rule(
+    name = "abi_breaking_h_gen",
+    src = "include/llvm/Config/abi-breaking.h.cmake",
+    out = "include/llvm/Config/abi-breaking.h",
+    substitutions = {
+        # Define to enable checks that alter the LLVM C++ ABI
+        "#cmakedefine01 LLVM_ENABLE_ABI_BREAKING_CHECKS": "#define LLVM_ENABLE_ABI_BREAKING_CHECKS 0",
+
+        # Define to enable reverse iteration of unordered llvm containers
+        "#cmakedefine01 LLVM_ENABLE_REVERSE_ITERATION": "#define LLVM_ENABLE_REVERSE_ITERATION 0",
+    },
+)
+
+template_rule(
+    name = "config_h_gen",
+    src = "include/llvm/Config/config.h.cmake",
+    out = "include/llvm/Config/config.h",
+    substitutions = {
+        # Bug report URL.
+        "#define BUG_REPORT_URL \"${BUG_REPORT_URL}\"": "#define BUG_REPORT_URL \"https://bugs.llvm.org/\"",
+
+        # Define to 1 to enable backtraces, and to 0 otherwise.
+        "#cmakedefine01 ENABLE_BACKTRACES": "#define ENABLE_BACKTRACES 1",
+
+        # Define to 1 to enable crash overrides, and to 0 otherwise.
+        "#cmakedefine01 ENABLE_CRASH_OVERRIDES": "#define ENABLE_CRASH_OVERRIDES 1",
+
+        # Define to 1 to enable crash memory dumps, and to 0 otherwise.
+        "#cmakedefine01 LLVM_ENABLE_CRASH_DUMPS": "#define LLVM_ENABLE_CRASH_DUMPS 0",
+
+        # Define to 1 if you have the `backtrace' function.
+        "#cmakedefine HAVE_BACKTRACE ${HAVE_BACKTRACE}": "#define HAVE_BACKTRACE TRUE",
+        "#define BACKTRACE_HEADER <${BACKTRACE_HEADER}>": "#define BACKTRACE_HEADER <execinfo.h>",
+
+        # Define to 1 if you have the <CrashReporterClient.h> header file.
+        "#cmakedefine HAVE_CRASHREPORTERCLIENT_H": "/* #undef HAVE_CRASHREPORTERCLIENT_H */",
+
+        # can use __crashreporter_info__
+        "#cmakedefine01 HAVE_CRASHREPORTER_INFO": "#define HAVE_CRASHREPORTER_INFO 0",
+
+        # Define to 1 if you have the declaration of `arc4random', and to 0 if you don't.
+        "#cmakedefine01 HAVE_DECL_ARC4RANDOM": "#define HAVE_DECL_ARC4RANDOM 0",
+
+        # Define to 1 if you have the declaration of `FE_ALL_EXCEPT', and to 0 if you don't.
+        "#cmakedefine01 HAVE_DECL_FE_ALL_EXCEPT": "#define HAVE_DECL_FE_ALL_EXCEPT 1",
+
+        # Define to 1 if you have the declaration of `FE_INEXACT', and to 0 if you don't.
+        "#cmakedefine01 HAVE_DECL_FE_INEXACT": "#define HAVE_DECL_FE_INEXACT 1",
+
+        # Define to 1 if you have the declaration of `strerror_s', and to 0 if you don't.
+        "#cmakedefine01 HAVE_DECL_STRERROR_S": "#define HAVE_DECL_STRERROR_S 0",
+
+        # Define to 1 if you have the DIA SDK installed, and to 0 if you don't.
+        "#cmakedefine01 LLVM_ENABLE_DIA_SDK": "#define LLVM_ENABLE_DIA_SDK 0",
+
+        # Define to 1 if you have the <dlfcn.h> header file.
+        "#cmakedefine HAVE_DLFCN_H ${HAVE_DLFCN_H}": "#define HAVE_DLFCN_H 1",
+
+        # Define if dlopen() is available on this platform.
+        "#cmakedefine HAVE_DLOPEN ${HAVE_DLOPEN}": "#define HAVE_DLOPEN 1",
+
+        # Define if dladdr() is available on this platform.
+        "#cmakedefine HAVE_DLADDR ${HAVE_DLADDR}": "/* #undef HAVE_DLADDR */",
+
+        # Define to 1 if you have the <errno.h> header file.
+        "#cmakedefine HAVE_ERRNO_H ${HAVE_ERRNO_H}": "#define HAVE_ERRNO_H 1",
+
+        # Define to 1 if you have the <fcntl.h> header file.
+        "#cmakedefine HAVE_FCNTL_H ${HAVE_FCNTL_H}": "#define HAVE_FCNTL_H 1",
+
+        # Define to 1 if you have the <fenv.h> header file.
+        "#cmakedefine HAVE_FENV_H ${HAVE_FENV_H}": "#define HAVE_FENV_H 1",
+
+        # Define if libffi is available on this platform.
+        "#cmakedefine HAVE_FFI_CALL ${HAVE_FFI_CALL}": "/* #undef HAVE_FFI_CALL */",
+
+        # Define to 1 if you have the <ffi/ffi.h> header file.
+        "#cmakedefine HAVE_FFI_FFI_H ${HAVE_FFI_FFI_H}": "/* #undef HAVE_FFI_FFI_H */",
+
+        # Define to 1 if you have the <ffi.h> header file.
+        "#cmakedefine HAVE_FFI_H ${HAVE_FFI_H}": "/* #undef HAVE_FFI_H */",
+
+        # Define to 1 if you have the `futimens' function.
+        "#cmakedefine HAVE_FUTIMENS ${HAVE_FUTIMENS}": "#define HAVE_FUTIMENS 1",
+
+        # Define to 1 if you have the `futimes' function.
+        "#cmakedefine HAVE_FUTIMES ${HAVE_FUTIMES}": "#define HAVE_FUTIMES 1",
+
+        # Define to 1 if you have the `getpagesize' function.
+        "#cmakedefine HAVE_GETPAGESIZE ${HAVE_GETPAGESIZE}": "#define HAVE_GETPAGESIZE 1",
+
+        # Define to 1 if you have the `getrlimit' function.
+        "#cmakedefine HAVE_GETRLIMIT ${HAVE_GETRLIMIT}": "#define HAVE_GETRLIMIT 1",
+
+        # Define to 1 if you have the `getrusage' function.
+        "#cmakedefine HAVE_GETRUSAGE ${HAVE_GETRUSAGE}": "#define HAVE_GETRUSAGE 1",
+
+        # Define to 1 if you have the `isatty' function.
+        "#cmakedefine HAVE_ISATTY 1": "#define HAVE_ISATTY 1",
+
+        # Define to 1 if you have the `edit' library (-ledit).
+        "#cmakedefine HAVE_LIBEDIT ${HAVE_LIBEDIT}": "/* #undef HAVE_LIBEDIT */",
+
+        # Define to 1 if you have the `pfm' library (-lpfm).
+        "#cmakedefine HAVE_LIBPFM ${HAVE_LIBPFM}": "/* #undef HAVE_LIBPFM */",
+
+        # Define to 1 if the `perf_branch_entry' struct has field cycles.
+        "#cmakedefine LIBPFM_HAS_FIELD_CYCLES ${LIBPFM_HAS_FIELD_CYCLES}": "/* #undef LIBPFM_HAS_FIELD_CYCLES */",
+
+        # Define to 1 if you have the `psapi' library (-lpsapi).
+        "#cmakedefine HAVE_LIBPSAPI ${HAVE_LIBPSAPI}": "/* #undef HAVE_LIBPSAPI */",
+
+        # Define to 1 if you have the `pthread' library (-lpthread).
+        "#cmakedefine HAVE_LIBPTHREAD ${HAVE_LIBPTHREAD}": "#define HAVE_LIBPTHREAD 1",
+
+        # Define to 1 if you have the `pthread_getname_np' function.
+        "#cmakedefine HAVE_PTHREAD_GETNAME_NP ${HAVE_PTHREAD_GETNAME_NP}": "#define HAVE_PTHREAD_GETNAME_NP 1",
+
+        # Define to 1 if you have the `pthread_setname_np' function.
+        "#cmakedefine HAVE_PTHREAD_SETNAME_NP ${HAVE_PTHREAD_SETNAME_NP}": "#define HAVE_PTHREAD_SETNAME_NP 1",
+
+        # Define to 1 if you have the `z' library (-lz).
+        # FIXME: Enable this by detecting the system library.
+        "#cmakedefine HAVE_LIBZ ${HAVE_LIBZ}": "/* #undef HAVE_LIBZ */",
+
+        # Define to 1 if you have the <link.h> header file.
+        "#cmakedefine HAVE_LINK_H ${HAVE_LINK_H}": "#define HAVE_LINK_H 1",
+
+        # Define to 1 if you have the `lseek64' function.
+        "#cmakedefine HAVE_LSEEK64 ${HAVE_LSEEK64}": "#define HAVE_LSEEK64 1",
+
+        # Define to 1 if you have the <mach/mach.h> header file.
+        "#cmakedefine HAVE_MACH_MACH_H ${HAVE_MACH_MACH_H}": "/* #undef HAVE_MACH_MACH_H */",
+
+        # Define to 1 if you have the `mallctl' function.
+        "#cmakedefine HAVE_MALLCTL ${HAVE_MALLCTL}": "/* #undef HAVE_MALLCTL */",
+
+        # Define to 1 if you have the `mallinfo' function.
+        "#cmakedefine HAVE_MALLINFO ${HAVE_MALLINFO}": "#define HAVE_MALLINFO 1",
+
+        # Define to 1 if you have the <malloc/malloc.h> header file.
+        "#cmakedefine HAVE_MALLOC_MALLOC_H ${HAVE_MALLOC_MALLOC_H}": "/* #undef HAVE_MALLOC_MALLOC_H */",
+
+        # Define to 1 if you have the `malloc_zone_statistics' function.
+        "#cmakedefine HAVE_MALLOC_ZONE_STATISTICS ${HAVE_MALLOC_ZONE_STATISTICS}": "/* #undef HAVE_MALLOC_ZONE_STATISTICS */",
+
+        # Define to 1 if you have the `posix_fallocate' function.
+        "#cmakedefine HAVE_POSIX_FALLOCATE ${HAVE_POSIX_FALLOCATE}": "#define HAVE_POSIX_FALLOCATE 1",
+
+        # Define to 1 if you have the `posix_spawn' function.
+        "#cmakedefine HAVE_POSIX_SPAWN ${HAVE_POSIX_SPAWN}": "#define HAVE_POSIX_SPAWN 1",
+
+        # Define to 1 if you have the `pread' function.
+        "#cmakedefine HAVE_PREAD ${HAVE_PREAD}": "#define HAVE_PREAD 1",
+
+        # Have pthread_getspecific
+        "#cmakedefine HAVE_PTHREAD_GETSPECIFIC ${HAVE_PTHREAD_GETSPECIFIC}": "#define HAVE_PTHREAD_GETSPECIFIC 1",
+
+        # Define to 1 if you have the <pthread.h> header file.
+        "#cmakedefine HAVE_PTHREAD_H ${HAVE_PTHREAD_H}": "#define HAVE_PTHREAD_H 1",
+
+        # Have pthread_mutex_lock
+        "#cmakedefine HAVE_PTHREAD_MUTEX_LOCK ${HAVE_PTHREAD_MUTEX_LOCK}": "#define HAVE_PTHREAD_MUTEX_LOCK 1",
+
+        # Have pthread_rwlock_init
+        "#cmakedefine HAVE_PTHREAD_RWLOCK_INIT ${HAVE_PTHREAD_RWLOCK_INIT}": "#define HAVE_PTHREAD_RWLOCK_INIT 1",
+
+        # Define to 1 if you have the `sbrk' function.
+        "#cmakedefine HAVE_SBRK ${HAVE_SBRK}": "#define HAVE_SBRK 1",
+
+        # Define to 1 if you have the `setenv' function.
+        "#cmakedefine HAVE_SETENV ${HAVE_SETENV}": "#define HAVE_SETENV 1",
+
+        # Define to 1 if you have the `setrlimit' function.
+        "#cmakedefine HAVE_SETRLIMIT ${HAVE_SETRLIMIT}": "#define HAVE_SETRLIMIT 1",
+
+        # Define to 1 if you have the `sigaltstack' function.
+        "#cmakedefine HAVE_SIGALTSTACK ${HAVE_SIGALTSTACK}": "#define HAVE_SIGALTSTACK 1",
+
+        # Define to 1 if you have the <signal.h> header file.
+        "#cmakedefine HAVE_SIGNAL_H ${HAVE_SIGNAL_H}": "#define HAVE_SIGNAL_H 1",
+
+        # Define to 1 if you have the `strerror' function.
+        "#cmakedefine HAVE_STRERROR ${HAVE_STRERROR}": "#define HAVE_STRERROR 1",
+
+        # Define to 1 if you have the `strerror_r' function.
+        "#cmakedefine HAVE_STRERROR_R ${HAVE_STRERROR_R}": "#define HAVE_STRERROR_R 1",
+
+        # Define to 1 if you have the `sysconf' function.
+        "#cmakedefine HAVE_SYSCONF ${HAVE_SYSCONF}": "#define HAVE_SYSCONF 1",
+
+        # Define to 1 if you have the <sys/ioctl.h> header file.
+        "#cmakedefine HAVE_SYS_IOCTL_H ${HAVE_SYS_IOCTL_H}": "#define HAVE_SYS_IOCTL_H 1",
+
+        # Define to 1 if you have the <sys/mman.h> header file.
+        "#cmakedefine HAVE_SYS_MMAN_H ${HAVE_SYS_MMAN_H}": "#define HAVE_SYS_MMAN_H 1",
+
+        # Define to 1 if you have the <sys/param.h> header file.
+        "#cmakedefine HAVE_SYS_PARAM_H ${HAVE_SYS_PARAM_H}": "#define HAVE_SYS_PARAM_H 1",
+
+        # Define to 1 if you have the <sys/resource.h> header file.
+        "#cmakedefine HAVE_SYS_RESOURCE_H ${HAVE_SYS_RESOURCE_H}": "#define HAVE_SYS_RESOURCE_H 1",
+
+        # Define to 1 if you have the <sys/stat.h> header file.
+        "#cmakedefine HAVE_SYS_STAT_H ${HAVE_SYS_STAT_H}": "#define HAVE_SYS_STAT_H 1",
+
+        # Define to 1 if you have the <sys/time.h> header file.
+        "#cmakedefine HAVE_SYS_TIME_H ${HAVE_SYS_TIME_H}": "#define HAVE_SYS_TIME_H 1",
+
+        # Define to 1 if stat struct has st_mtimespec member .
+        "#cmakedefine HAVE_STRUCT_STAT_ST_MTIMESPEC_TV_NSEC ${HAVE_STRUCT_STAT_ST_MTIMESPEC_TV_NSEC}": "/* #undef HAVE_STRUCT_STAT_ST_MTIMESPEC_TV_NSEC */",
+
+        # Define to 1 if stat struct has st_mtim member.
+        "#cmakedefine HAVE_STRUCT_STAT_ST_MTIM_TV_NSEC ${HAVE_STRUCT_STAT_ST_MTIM_TV_NSEC}": "#define HAVE_STRUCT_STAT_ST_MTIM_TV_NSEC 1",
+
+        # Define to 1 if you have the <sys/types.h> header file.
+        "#cmakedefine HAVE_SYS_TYPES_H ${HAVE_SYS_TYPES_H}": "#define HAVE_SYS_TYPES_H 1",
+
+        # Define to 1 if you have the <sysexits.h> header file.
+        "#cmakedefine HAVE_SYSEXITS_H ${HAVE_SYSEXITS_H}": "#define HAVE_SYSEXITS_H 1",
+
+        # Define if the setupterm() function is supported this platform.
+        # FIXME: Enable this correctly by detecting the system library if possible.
+        "#cmakedefine LLVM_ENABLE_TERMINFO ${LLVM_ENABLE_TERMINFO}": "/* #undef LLVM_ENABLE_TERMINFO */",
+
+        # Define if the xar_open() function is supported this platform.
+        "#cmakedefine HAVE_LIBXAR ${HAVE_LIBXAR}": "/* #undef HAVE_LIBXAR */",
+
+        # Define to 1 if you have the <termios.h> header file.
+        "#cmakedefine HAVE_TERMIOS_H ${HAVE_TERMIOS_H}": "#define HAVE_TERMIOS_H 1",
+
+        # Define to 1 if you have the <unistd.h> header file.
+        "#cmakedefine HAVE_UNISTD_H ${HAVE_UNISTD_H}": "#define HAVE_UNISTD_H 1",
+
+        # Define to 1 if you have the <valgrind/valgrind.h> header file.
+        "#cmakedefine HAVE_VALGRIND_VALGRIND_H ${HAVE_VALGRIND_VALGRIND_H}": "/* #undef HAVE_VALGRIND_VALGRIND_H */",
+
+        # Define to 1 if you have the <zlib.h> header file.
+        # FIXME: Enable this by detecting the system library.
+        "#cmakedefine HAVE_ZLIB_H ${HAVE_ZLIB_H}": "/* #undef HAVE_ZLIB_H */",
+
+        # Have host's _alloca
+        "#cmakedefine HAVE__ALLOCA ${HAVE__ALLOCA}": "/* #undef HAVE__ALLOCA */",
+
+        # Define to 1 if you have the `_chsize_s' function.
+        "#cmakedefine HAVE__CHSIZE_S ${HAVE__CHSIZE_S}": "/* #undef HAVE__CHSIZE_S */",
+
+        # Define to 1 if you have the `_Unwind_Backtrace' function.
+        "#cmakedefine HAVE__UNWIND_BACKTRACE ${HAVE__UNWIND_BACKTRACE}": "#define HAVE__UNWIND_BACKTRACE 1",
+
+        # Have host's __alloca
+        "#cmakedefine HAVE___ALLOCA ${HAVE___ALLOCA}": "/* #undef HAVE___ALLOCA */",
+
+        # Have host's __ashldi3
+        "#cmakedefine HAVE___ASHLDI3 ${HAVE___ASHLDI3}": "/* #undef HAVE___ASHLDI3 */",
+
+        # Have host's __ashrdi3
+        "#cmakedefine HAVE___ASHRDI3 ${HAVE___ASHRDI3}": "/* #undef HAVE___ASHRDI3 */",
+
+        # Have host's __chkstk
+        "#cmakedefine HAVE___CHKSTK ${HAVE___CHKSTK}": "/* #undef HAVE___CHKSTK */",
+
+        # Have host's __chkstk_ms
+        "#cmakedefine HAVE___CHKSTK_MS ${HAVE___CHKSTK_MS}": "/* #undef HAVE___CHKSTK_MS */",
+
+        # Have host's __cmpdi2
+        "#cmakedefine HAVE___CMPDI2 ${HAVE___CMPDI2}": "/* #undef HAVE___CMPDI2 */",
+
+        # Have host's __divdi3
+        "#cmakedefine HAVE___DIVDI3 ${HAVE___DIVDI3}": "/* #undef HAVE___DIVDI3 */",
+
+        # Have host's __fixdfdi
+        "#cmakedefine HAVE___FIXDFDI ${HAVE___FIXDFDI}": "/* #undef HAVE___FIXDFDI */",
+
+        # Have host's __fixsfdi
+        "#cmakedefine HAVE___FIXSFDI ${HAVE___FIXSFDI}": "/* #undef HAVE___FIXSFDI */",
+
+        # Have host's __floatdidf
+        "#cmakedefine HAVE___FLOATDIDF ${HAVE___FLOATDIDF}": "/* #undef HAVE___FLOATDIDF */",
+
+        # Have host's __lshrdi3
+        "#cmakedefine HAVE___LSHRDI3 ${HAVE___LSHRDI3}": "/* #undef HAVE___LSHRDI3 */",
+
+        # Have host's __main
+        "#cmakedefine HAVE___MAIN ${HAVE___MAIN}": "/* #undef HAVE___MAIN */",
+
+        # Have host's __moddi3
+        "#cmakedefine HAVE___MODDI3 ${HAVE___MODDI3}": "/* #undef HAVE___MODDI3 */",
+
+        # Have host's __udivdi3
+        "#cmakedefine HAVE___UDIVDI3 ${HAVE___UDIVDI3}": "/* #undef HAVE___UDIVDI3 */",
+
+        # Have host's __umoddi3
+        "#cmakedefine HAVE___UMODDI3 ${HAVE___UMODDI3}": "/* #undef HAVE___UMODDI3 */",
+
+        # Have host's ___chkstk
+        "#cmakedefine HAVE____CHKSTK ${HAVE____CHKSTK}": "/* #undef HAVE____CHKSTK */",
+
+        # Have host's ___chkstk_ms
+        "#cmakedefine HAVE____CHKSTK_MS ${HAVE____CHKSTK_MS}": "/* #undef HAVE____CHKSTK_MS */",
+
+        # Linker version detected at compile time.
+        "#cmakedefine HOST_LINK_VERSION \"${HOST_LINK_VERSION}\"": "/* #undef HOST_LINK_VERSION */",
+
+        # Target triple LLVM will generate code for by default
+        # Doesn't use `cmakedefine` because it is allowed to be empty.
+        "#define LLVM_DEFAULT_TARGET_TRIPLE \"${LLVM_DEFAULT_TARGET_TRIPLE}\"": "#define LLVM_DEFAULT_TARGET_TRIPLE \"x86_64-unknown-linux-gnu\"",
+
+        # Define if zlib compression is available
+        # FIXME: Enable this by detecting the system library.
+        "#cmakedefine01 LLVM_ENABLE_ZLIB": "/* #undef LLVM_ENABLE_ZLIB */",
+
+        # Define if overriding target triple is enabled
+        "#cmakedefine LLVM_TARGET_TRIPLE_ENV \"${LLVM_TARGET_TRIPLE_ENV}\"": "/* #undef LLVM_TARGET_TRIPLE_ENV */",
+
+        # LLVM version information
+        "#cmakedefine LLVM_VERSION_INFO \"${LLVM_VERSION_INFO}\"": "/* #undef LLVM_VERSION_INFO */",
+
+        # Whether tools show host and target info when invoked with --version
+        "#cmakedefine01 LLVM_VERSION_PRINTER_SHOW_HOST_TARGET_INFO": "#define LLVM_VERSION_PRINTER_SHOW_HOST_TARGET_INFO 1",
+
+        # Define if libxml2 is supported on this platform.
+        "#cmakedefine LLVM_ENABLE_LIBXML2 ${LLVM_ENABLE_LIBXML2}": "/* #undef LLVM_ENABLE_LIBXML2 */",
+
+        # Define to the extension used for shared libraries, say, \".so\".
+        "#cmakedefine LTDL_SHLIB_EXT \"${LTDL_SHLIB_EXT}\"": "#define LTDL_SHLIB_EXT \".so\"",
+
+        # Define to the address where bug reports for this package should be sent.
+        "#cmakedefine PACKAGE_BUGREPORT \"${PACKAGE_BUGREPORT}\"": "#define PACKAGE_BUGREPORT \"https://bugs.llvm.org/\"",
+
+        # Define to the full name of this package.
+        "#cmakedefine PACKAGE_NAME \"${PACKAGE_NAME}\"": "#define PACKAGE_NAME \"LLVM\"",
+
+        # Define to the full name and version of this package.
+        "#cmakedefine PACKAGE_STRING \"${PACKAGE_STRING}\"": "#define PACKAGE_STRING \"LLVM 11.0.0git\"",
+
+        # Define to the version of this package.
+        "#cmakedefine PACKAGE_VERSION \"${PACKAGE_VERSION}\"": "#define PACKAGE_VERSION \"11.0.0git\"",
+
+        # Define to the vendor of this package.
+        "#cmakedefine PACKAGE_VENDOR \"${PACKAGE_VENDOR}\"": "/* #undef PACKAGE_VENDOR */",
+
+        # Define as the return type of signal handlers (`int' or `void').
+        "#cmakedefine RETSIGTYPE ${RETSIGTYPE}": "#define RETSIGTYPE void",
+
+        # Define if std::is_trivially_copyable is supported
+        "#cmakedefine HAVE_STD_IS_TRIVIALLY_COPYABLE ${HAVE_STD_IS_TRIVIALLY_COPYABLE}": "#define HAVE_STD_IS_TRIVIALLY_COPYABLE 1",
+
+        # Define to a function implementing stricmp
+        "#cmakedefine stricmp ${stricmp}": "/* #undef stricmp */",
+
+        # Define to a function implementing strdup
+        "#cmakedefine strdup ${strdup}": "/* #undef strdup */",
+
+        # Whether GlobalISel rule coverage is being collected
+        "#cmakedefine01 LLVM_GISEL_COV_ENABLED": "#define LLVM_GISEL_COV_ENABLED 0",
+
+        # Define if we have z3 and want to build it
+        "#cmakedefine LLVM_WITH_Z3 ${LLVM_WITH_Z3}": "/* #undef LLVM_WITH_Z3 */",
+
+        # Define to the default GlobalISel coverage file prefix
+        "#cmakedefine LLVM_GISEL_COV_PREFIX \"${LLVM_GISEL_COV_PREFIX}\"": "/* #undef LLVM_GISEL_COV_PREFIX */",
+
+        # Whether Timers signpost passes in Xcode Instruments
+        "#cmakedefine01 LLVM_SUPPORT_XCODE_SIGNPOSTS": "#define LLVM_SUPPORT_XCODE_SIGNPOSTS 0",
+    },
+)
+
 cc_library(
     name = "config",
-    hdrs = glob([
-        "**/*.h",
-        "**/*.def",
-        "**/*.inc.cpp",
-    ]) + [
-        "include/llvm/Config/AsmParsers.def",
-        "include/llvm/Config/AsmPrinters.def",
-        "include/llvm/Config/Disassemblers.def",
-        "include/llvm/Config/Targets.def",
-        "include/llvm/Config/config.h",
-        "include/llvm/Config/llvm-config.h",
+    hdrs = [
+        "include/llvm/Config/VersionInfo.h",
         "include/llvm/Config/abi-breaking.h",
+        "include/llvm/Config/llvm-config.h",
     ],
-    defines = llvm_defines,
+    copts = llvm_copts,
     includes = ["include"],
+    textual_hdrs = [
+        "include/llvm/Config/Targets.def",
+        "include/llvm/Config/AsmPrinters.def",
+        "include/llvm/Config/AsmParsers.def",
+        "include/llvm/Config/Disassemblers.def",
+        # Needed for include scanner to find execinfo.h
+        "include/llvm/Config/config.h",
+    ],
 )
 
-# A creator of an empty file include/llvm/Support/VCSRevision.h.
-# This is usually populated by the upstream build infrastructure, but in this
-# case we leave it blank. See upstream revision r300160.
+cc_library(
+    name = "Demangle",
+    srcs = glob([
+        "lib/Demangle/*.cpp",
+        "lib/Demangle/*.h",
+    ]),
+    hdrs = glob(["include/llvm/Demangle/*.h"]),
+    copts = llvm_copts,
+    deps = [":config"],
+)
+
 genrule(
-    name = "vcs_revision_gen",
-    srcs = [],
+    name = "generate_vcs_revision",
     outs = ["include/llvm/Support/VCSRevision.h"],
-    cmd = "echo '' > \"$@\"",
+    cmd = "echo '#define LLVM_REVISION \"git\"' >> $@\n" +
+          "echo '#undef LLVM_REPOSITORY' >> $@\n",
 )
 
-# Rules that apply the LLVM tblgen tool.
-gentbl(
-    name = "attributes_gen",
-    tbl_outs = [("-gen-attrs", "include/llvm/IR/Attributes.inc")],
-    tblgen = ":llvm-tblgen",
-    td_file = "include/llvm/IR/Attributes.td",
-    td_srcs = ["include/llvm/IR/Attributes.td"],
+genrule(
+    name = "generate_static_extension_registry",
+    outs = ["include/llvm/Support/Extension.def"],
+    cmd = "echo -e '// extension handlers' >> $@\n" +
+          "echo -e '#undef HANDLE_EXTENSION' >> $@\n",
 )
 
-gentbl(
-    name = "InstCombineTableGen",
-    tbl_outs = [(
-        "-gen-searchable-tables",
-        "lib/Target/AMDGPU/InstCombineTables.inc",
-    )],
-    tblgen = ":llvm-tblgen",
-    td_file = "lib/Target/AMDGPU/InstCombineTables.td",
-    td_srcs = glob([
-        "include/llvm/CodeGen/*.td",
-        "include/llvm/IR/Intrinsics*.td",
-    ]) + ["include/llvm/TableGen/SearchableTable.td"],
+cc_library(
+    name = "Support",
+    srcs = glob([
+        "lib/Support/*.c",
+        "lib/Support/*.cpp",
+        "lib/Support/*.h",
+        "lib/Support/*.inc",
+        "lib/Support/Unix/*.h",
+        "lib/Support/Unix/*.inc",
+    ]),
+    hdrs = glob([
+        "include/llvm/Support/*.h",
+        "include/llvm/ADT/*.h",
+    ]) + [
+        "include/llvm/Support/VCSRevision.h",
+        "include/llvm/Support/Extension.def",
+        "include/llvm-c/Core.h",
+        "include/llvm-c/DataTypes.h",
+        "include/llvm-c/DisassemblerTypes.h",
+        "include/llvm-c/Error.h",
+        "include/llvm-c/ExternC.h",
+        "include/llvm-c/ErrorHandling.h",
+        "include/llvm-c/Support.h",
+        "include/llvm-c/Types.h",
+    ],
+    copts = llvm_copts,
+    includes = ["include"],
+    linkopts = [
+        "-pthread",
+        "-ldl",
+    ],
+    textual_hdrs = glob([
+        "include/llvm/Support/*.def",
+    ]),
+    deps = [
+        ":Demangle",
+        ":config",
+    ],
+)
+
+cc_library(
+    name = "FileCheckLib",
+    srcs = glob([
+        "lib/FileCheck/*.cpp",
+        "lib/FileCheck/*.h",
+    ]),
+    hdrs = glob(["include/llvm/FileCheck/*.h"]),
+    copts = llvm_copts,
+    deps = [
+        ":Support",
+        ":config",
+    ],
+)
+
+cc_library(
+    name = "LineEditor",
+    srcs = glob([
+        "lib/LineEditor/*.cpp",
+        "lib/LineEditor/*.h",
+    ]),
+    hdrs = glob(["include/llvm/LineEditor/*.h"]),
+    copts = llvm_copts,
+    deps = [
+        ":Support",
+        ":config",
+    ],
+)
+
+cc_library(
+    name = "Option",
+    srcs = glob([
+        "lib/Option/*.cpp",
+        "lib/Option/*.h",
+    ]),
+    hdrs = glob(["include/llvm/Option/*.h"]),
+    copts = llvm_copts,
+    deps = [
+        ":Support",
+        ":config",
+    ],
+)
+
+cc_library(
+    name = "TableGen",
+    srcs = glob([
+        "lib/TableGen/*.cpp",
+        "lib/TableGen/*.h",
+    ]),
+    hdrs = glob(["include/llvm/TableGen/*.h"]),
+    copts = llvm_copts,
+    deps = [
+        ":Support",
+        ":config",
+    ],
+)
+
+# This exists to avoid circular dependencies.
+cc_library(
+    name = "ir_headers",
+    hdrs = glob(
+        [
+            "include/llvm/*.h",
+            "include/llvm/IR/*.h",
+        ],
+        exclude = [
+            "include/llvm/LinkAllPasses.h",
+        ],
+    ) + [
+        "include/llvm/IR/Value.def",
+        "include/llvm-c/Comdat.h",
+        "include/llvm-c/DebugInfo.h",
+    ],
+    copts = llvm_copts,
+)
+
+cc_library(
+    name = "BinaryFormat",
+    srcs = glob([
+        "lib/BinaryFormat/*.cpp",
+        "lib/BinaryFormat/*.def",
+        "lib/BinaryFormat/*.h",
+    ]),
+    hdrs = glob([
+        "include/llvm/BinaryFormat/*.h",
+    ]),
+    copts = llvm_copts,
+    includes = ["include"],
+    textual_hdrs = glob([
+        "include/llvm/BinaryFormat/*.def",
+        "include/llvm/BinaryFormat/ELFRelocs/*.def",
+    ]),
+    deps = [
+        ":Support",
+    ],
+)
+
+cc_library(
+    name = "DebugInfo",
+    hdrs = glob(["include/llvm/DebugInfo/*.h"]),
+    copts = llvm_copts,
+    deps = [
+        ":Object",
+        ":Support",
+    ],
+)
+
+cc_library(
+    name = "DebugInfoMSF",
+    srcs = glob([
+        "lib/DebugInfo/MSF/*.cpp",
+        "lib/DebugInfo/MSF/*.h",
+    ]),
+    hdrs = glob(["include/llvm/DebugInfo/MSF/*.h"]),
+    copts = llvm_copts,
+    deps = [":Support"],
+)
+
+cc_library(
+    name = "DebugInfoCodeView",
+    srcs = glob([
+        "lib/DebugInfo/CodeView/*.cpp",
+        "lib/DebugInfo/CodeView/*.h",
+    ]),
+    hdrs = glob([
+        "include/llvm/DebugInfo/CodeView/*.h",
+    ]),
+    copts = llvm_copts,
+    textual_hdrs = glob([
+        "include/llvm/DebugInfo/CodeView/*.def",
+    ]),
+    deps = [
+        ":BinaryFormat",
+        ":DebugInfoMSF",
+        ":Support",
+    ],
+)
+
+cc_library(
+    name = "DebugInfoPDB",
+    srcs = glob([
+        "lib/DebugInfo/PDB/*.cpp",
+        "lib/DebugInfo/PDB/*.h",
+        "lib/DebugInfo/PDB/Native/*.cpp",
+        "lib/DebugInfo/PDB/Native/*.h",
+    ]),
+    hdrs = glob([
+        "include/llvm/DebugInfo/PDB/*.h",
+        "include/llvm/DebugInfo/PDB/Native/*.h",
+    ]),
+    copts = llvm_copts,
+    deps = [
+        ":BinaryFormat",
+        ":DebugInfo",
+        ":DebugInfoCodeView",
+        ":DebugInfoMSF",
+        ":Object",
+        ":Support",
+        ":config",
+    ],
+)
+
+cc_library(
+    name = "MC",
+    srcs = glob([
+        "lib/MC/*.cpp",
+        "lib/MC/*.h",
+    ]),
+    hdrs = glob([
+        "include/llvm/MC/*.h",
+        "include/llvm/MC/*.def",
+        "include/llvm/MC/*.inc",
+    ]),
+    copts = llvm_copts,
+    deps = [
+        ":BinaryFormat",
+        ":DebugInfoCodeView",
+        ":Support",
+        ":config",
+        ":ir_headers",
+    ],
+)
+
+cc_library(
+    name = "DebugInfoDWARF",
+    srcs = glob([
+        "lib/DebugInfo/DWARF/*.cpp",
+        "lib/DebugInfo/DWARF/*.h",
+    ]),
+    hdrs = glob(["include/llvm/DebugInfo/DWARF/*.h"]),
+    copts = llvm_copts,
+    deps = [
+        ":BinaryFormat",
+        ":DebugInfo",
+        ":MC",
+        ":Object",
+        ":Support",
+    ],
+)
+
+cc_library(
+    name = "Symbolize",
+    srcs = glob([
+        "lib/DebugInfo/Symbolize/*.cpp",
+        "lib/DebugInfo/Symbolize/*.h",
+    ]),
+    hdrs = glob(["include/llvm/DebugInfo/Symbolize/*.h"]),
+    copts = llvm_copts,
+    deps = [
+        ":BinaryFormat",
+        ":DebugInfo",
+        ":DebugInfoDWARF",
+        ":DebugInfoPDB",
+        ":Demangle",
+        ":Object",
+        ":Support",
+    ],
+)
+
+cc_library(
+    name = "tblgen",
+    srcs = glob([
+        "utils/TableGen/*.cpp",
+        "utils/TableGen/*.h",
+        "utils/TableGen/GlobalISel/*.cpp",
+    ]),
+    hdrs = glob([
+        "utils/TableGen/GlobalISel/*.h",
+    ]),
+    copts = llvm_copts,
+    deps = [
+        ":MC",
+        ":Support",
+        ":TableGen",
+        ":config",
+    ],
+)
+
+cc_binary(
+    name = "llvm-tblgen",
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":tblgen",
+    ],
 )
 
 gentbl(
     name = "intrinsic_enums_gen",
     tbl_outs = [("-gen-intrinsic-enums", "include/llvm/IR/IntrinsicEnums.inc")],
-    tblgen = ":llvm-tblgen",
-    td_file = "include/llvm/IR/Intrinsics.td",
-    td_srcs = glob([
-        "include/llvm/CodeGen/*.td",
-        "include/llvm/IR/Intrinsics*.td",
-    ]),
-)
-
-gentbl(
-    name = "aarch64_enums_gen",
-    tbl_outs = [(
-        "-gen-intrinsic-enums -intrinsic-prefix=aarch64",
-        "include/llvm/IR/IntrinsicsAArch64.h",
-    )],
-    tblgen = ":llvm-tblgen",
-    td_file = "include/llvm/IR/Intrinsics.td",
-    td_srcs = glob([
-        "include/llvm/CodeGen/*.td",
-        "include/llvm/IR/Intrinsics*.td",
-    ]),
-)
-
-gentbl(
-    name = "amdgcn_enums_gen",
-    tbl_outs = [(
-        "-gen-intrinsic-enums -intrinsic-prefix=amdgcn",
-        "include/llvm/IR/IntrinsicsAMDGPU.h",
-    )],
-    tblgen = ":llvm-tblgen",
-    td_file = "include/llvm/IR/Intrinsics.td",
-    td_srcs = glob([
-        "include/llvm/CodeGen/*.td",
-        "include/llvm/IR/Intrinsics*.td",
-    ]),
-)
-
-gentbl(
-    name = "arm_enums_gen",
-    tbl_outs = [(
-        "-gen-intrinsic-enums -intrinsic-prefix=arm",
-        "include/llvm/IR/IntrinsicsARM.h",
-    )],
-    tblgen = ":llvm-tblgen",
-    td_file = "include/llvm/IR/Intrinsics.td",
-    td_srcs = glob([
-        "include/llvm/CodeGen/*.td",
-        "include/llvm/IR/Intrinsics*.td",
-    ]),
-)
-
-gentbl(
-    name = "bpf_enums_gen",
-    tbl_outs = [(
-        "-gen-intrinsic-enums -intrinsic-prefix=bpf",
-        "include/llvm/IR/IntrinsicsBPF.h",
-    )],
-    tblgen = ":llvm-tblgen",
-    td_file = "include/llvm/IR/Intrinsics.td",
-    td_srcs = glob([
-        "include/llvm/CodeGen/*.td",
-        "include/llvm/IR/Intrinsics*.td",
-    ]),
-)
-
-gentbl(
-    name = "hexagon_enums_gen",
-    tbl_outs = [(
-        "-gen-intrinsic-enums -intrinsic-prefix=hexagon",
-        "include/llvm/IR/IntrinsicsHexagon.h",
-    )],
-    tblgen = ":llvm-tblgen",
-    td_file = "include/llvm/IR/Intrinsics.td",
-    td_srcs = glob([
-        "include/llvm/CodeGen/*.td",
-        "include/llvm/IR/Intrinsics*.td",
-    ]),
-)
-
-gentbl(
-    name = "mips_enums_gen",
-    tbl_outs = [(
-        "-gen-intrinsic-enums -intrinsic-prefix=mips",
-        "include/llvm/IR/IntrinsicsMips.h",
-    )],
-    tblgen = ":llvm-tblgen",
-    td_file = "include/llvm/IR/Intrinsics.td",
-    td_srcs = glob([
-        "include/llvm/CodeGen/*.td",
-        "include/llvm/IR/Intrinsics*.td",
-    ]),
-)
-
-gentbl(
-    name = "nvvm_enums_gen",
-    tbl_outs = [(
-        "-gen-intrinsic-enums -intrinsic-prefix=nvvm",
-        "include/llvm/IR/IntrinsicsNVPTX.h",
-    )],
-    tblgen = ":llvm-tblgen",
-    td_file = "include/llvm/IR/Intrinsics.td",
-    td_srcs = glob([
-        "include/llvm/CodeGen/*.td",
-        "include/llvm/IR/Intrinsics*.td",
-    ]),
-)
-
-gentbl(
-    name = "ppc_enums_gen",
-    tbl_outs = [(
-        "-gen-intrinsic-enums -intrinsic-prefix=ppc",
-        "include/llvm/IR/IntrinsicsPowerPC.h",
-    )],
-    tblgen = ":llvm-tblgen",
-    td_file = "include/llvm/IR/Intrinsics.td",
-    td_srcs = glob([
-        "include/llvm/CodeGen/*.td",
-        "include/llvm/IR/Intrinsics*.td",
-    ]),
-)
-
-gentbl(
-    name = "r600_enums_gen",
-    tbl_outs = [(
-        "-gen-intrinsic-enums -intrinsic-prefix=r600",
-        "include/llvm/IR/IntrinsicsR600.h",
-    )],
-    tblgen = ":llvm-tblgen",
-    td_file = "include/llvm/IR/Intrinsics.td",
-    td_srcs = glob([
-        "include/llvm/CodeGen/*.td",
-        "include/llvm/IR/Intrinsics*.td",
-    ]),
-)
-
-gentbl(
-    name = "riscv_enums_gen",
-    tbl_outs = [(
-        "-gen-intrinsic-enums -intrinsic-prefix=riscv",
-        "include/llvm/IR/IntrinsicsRISCV.h",
-    )],
-    tblgen = ":llvm-tblgen",
-    td_file = "include/llvm/IR/Intrinsics.td",
-    td_srcs = glob([
-        "include/llvm/CodeGen/*.td",
-        "include/llvm/IR/Intrinsics*.td",
-    ]),
-)
-
-gentbl(
-    name = "s390_enums_gen",
-    tbl_outs = [(
-        "-gen-intrinsic-enums -intrinsic-prefix=s390",
-        "include/llvm/IR/IntrinsicsS390.h",
-    )],
-    tblgen = ":llvm-tblgen",
-    td_file = "include/llvm/IR/Intrinsics.td",
-    td_srcs = glob([
-        "include/llvm/CodeGen/*.td",
-        "include/llvm/IR/Intrinsics*.td",
-    ]),
-)
-
-gentbl(
-    name = "wasm_enums_gen",
-    tbl_outs = [(
-        "-gen-intrinsic-enums -intrinsic-prefix=wasm",
-        "include/llvm/IR/IntrinsicsWebAssembly.h",
-    )],
-    tblgen = ":llvm-tblgen",
-    td_file = "include/llvm/IR/Intrinsics.td",
-    td_srcs = glob([
-        "include/llvm/CodeGen/*.td",
-        "include/llvm/IR/Intrinsics*.td",
-    ]),
-)
-
-gentbl(
-    name = "x86_enums_gen",
-    tbl_outs = [(
-        "-gen-intrinsic-enums -intrinsic-prefix=x86",
-        "include/llvm/IR/IntrinsicsX86.h",
-    )],
-    tblgen = ":llvm-tblgen",
-    td_file = "include/llvm/IR/Intrinsics.td",
-    td_srcs = glob([
-        "include/llvm/CodeGen/*.td",
-        "include/llvm/IR/Intrinsics*.td",
-    ]),
-)
-
-gentbl(
-    name = "xcore_enums_gen",
-    tbl_outs = [(
-        "-gen-intrinsic-enums -intrinsic-prefix=xcore",
-        "include/llvm/IR/IntrinsicsXCore.h",
-    )],
     tblgen = ":llvm-tblgen",
     td_file = "include/llvm/IR/Intrinsics.td",
     td_srcs = glob([
@@ -394,61 +927,854 @@ gentbl(
     ]),
 )
 
+llvm_target_intrinsics_list = [
+    {
+        "name": "AArch64",
+        "intrinsic_prefix": "aarch64",
+    },
+    {
+        "name": "AMDGPU",
+        "intrinsic_prefix": "amdgcn",
+    },
+    {
+        "name": "ARM",
+        "intrinsic_prefix": "arm",
+    },
+    {
+        "name": "BPF",
+        "intrinsic_prefix": "bpf",
+    },
+    {
+        "name": "Hexagon",
+        "intrinsic_prefix": "hexagon",
+    },
+    {
+        "name": "Mips",
+        "intrinsic_prefix": "mips",
+    },
+    {
+        "name": "NVPTX",
+        "intrinsic_prefix": "nvvm",
+    },
+    {
+        "name": "PowerPC",
+        "intrinsic_prefix": "ppc",
+    },
+    {
+        "name": "R600",
+        "intrinsic_prefix": "r600",
+    },
+    {
+        "name": "RISCV",
+        "intrinsic_prefix": "riscv",
+    },
+    {
+        "name": "S390",
+        "intrinsic_prefix": "s390",
+    },
+    {
+        "name": "WebAssembly",
+        "intrinsic_prefix": "wasm",
+    },
+    {
+        "name": "X86",
+        "intrinsic_prefix": "x86",
+    },
+    {
+        "name": "XCore",
+        "intrinsic_prefix": "xcore",
+    },
+]
+
+[[
+    gentbl(
+        name = "intrinsic_" + target["name"] + "_gen",
+        tbl_outs = [(
+            "-gen-intrinsic-enums -intrinsic-prefix=" + target["intrinsic_prefix"],
+            "include/llvm/IR/Intrinsics" + target["name"] + ".h",
+        )],
+        tblgen = ":llvm-tblgen",
+        td_file = "include/llvm/IR/Intrinsics.td",
+        td_srcs = glob([
+            "include/llvm/CodeGen/*.td",
+            "include/llvm/IR/*.td",
+        ]),
+    ),
+] for target in llvm_target_intrinsics_list]
+
+gentbl(
+    name = "attributes_gen",
+    tbl_outs = [("-gen-attrs", "include/llvm/IR/Attributes.inc")],
+    tblgen = ":llvm-tblgen",
+    td_file = "include/llvm/IR/Attributes.td",
+    td_srcs = ["include/llvm/IR/Attributes.td"],
+)
+
 cc_library(
-    name = "tblgen",
+    name = "BitstreamReader",
     srcs = glob([
-        "utils/TableGen/*.cpp",
-        "utils/TableGen/*.h",
-        "utils/TableGen/GlobalISel/*.cpp",
+        "lib/Bitstream/Reader/*.cpp",
+        "lib/Bitstream/Reader/*.h",
+    ]),
+    hdrs = [
+        "include/llvm/Bitstream/BitCodes.h",
+        "include/llvm/Bitstream/BitstreamReader.h",
+    ],
+    copts = llvm_copts,
+    deps = [
+        ":Support",
+    ],
+)
+
+cc_library(
+    name = "BitstreamWriter",
+    srcs = glob([
+        "lib/Bitstream/Writer/*.h",
+    ]),
+    hdrs = [
+        "include/llvm/Bitstream/BitCodes.h",
+        "include/llvm/Bitstream/BitstreamWriter.h",
+    ],
+    copts = llvm_copts,
+    deps = [
+        ":Support",
+    ],
+)
+
+cc_library(
+    name = "Remarks",
+    srcs = glob(
+        [
+            "lib/Remarks/*.cpp",
+            "lib/Remarks/*.h",
+        ],
+        exclude = ["lib/Remarks/RemarkLinker.cpp"],
+    ),
+    hdrs = glob(
+        [
+            "include/llvm/Remarks/*.h",
+        ],
+        exclude = ["include/llvm/Remarks/RemarkLinker.h"],
+    ) + [
+        "include/llvm-c/Remarks.h",
+    ],
+    copts = llvm_copts,
+    deps = [
+        ":BitstreamReader",
+        ":BitstreamWriter",
+        ":Support",
+    ],
+)
+
+cc_library(
+    name = "remark_linker",
+    srcs = ["lib/Remarks/RemarkLinker.cpp"],
+    hdrs = ["include/llvm/Remarks/RemarkLinker.h"],
+    copts = llvm_copts,
+    deps = [
+        ":Object",
+        ":Support",
+    ],
+)
+
+cc_library(
+    name = "Core",
+    srcs = glob([
+        "lib/IR/*.cpp",
+        "lib/IR/*.h",
+    ]),
+    hdrs = glob(
+        [
+            "include/llvm/*.h",
+            "include/llvm/IR/*.h",
+        ],
+        exclude = [
+            "include/llvm/LinkAllPasses.h",
+        ],
+    ) + [
+        "include/llvm-c/Comdat.h",
+        "include/llvm-c/DebugInfo.h",
+    ] + ["include/llvm/IR/Intrinsics" + target["name"] + ".h" for target in llvm_target_intrinsics_list],
+    copts = llvm_copts,
+    textual_hdrs = glob(["include/llvm/IR/*.def"]),
+    deps = [
+        ":BinaryFormat",
+        ":Remarks",
+        ":Support",
+        ":attributes_gen",
+        ":config",
+        ":intrinsic_enums_gen",
+        ":intrinsics_impl_gen",
+    ],
+)
+
+cc_library(
+    name = "BitReader",
+    srcs = glob([
+        "lib/Bitcode/Reader/*.cpp",
+        "lib/Bitcode/Reader/*.h",
+    ]),
+    hdrs = [
+        "include/llvm-c/BitReader.h",
+        "include/llvm/Bitcode/BitcodeAnalyzer.h",
+        "include/llvm/Bitcode/BitcodeCommon.h",
+        "include/llvm/Bitcode/BitcodeReader.h",
+        "include/llvm/Bitcode/LLVMBitCodes.h",
+    ],
+    copts = llvm_copts,
+    deps = [
+        ":BitstreamReader",
+        ":Core",
+        ":Support",
+        ":config",
+    ],
+)
+
+cc_library(
+    name = "MCParser",
+    srcs = glob([
+        "lib/MC/MCParser/*.cpp",
+        "lib/MC/MCParser/*.h",
+    ]),
+    hdrs = glob(["include/llvm/MC/MCParser/*.h"]),
+    copts = llvm_copts,
+    deps = [
+        ":BinaryFormat",
+        ":MC",
+        ":Support",
+        ":config",
+    ],
+)
+
+cc_library(
+    name = "TextAPI",
+    srcs = glob([
+        "lib/TextAPI/**/*.cpp",
     ]),
     hdrs = glob([
-        "utils/TableGen/GlobalISel/*.h",
+        "include/llvm/TextAPI/**/*.h",
+        "include/llvm/TextAPI/**/*.def",
+        "lib/TextAPI/MachO/*.h",
     ]),
+    copts = llvm_copts,
+    deps = [
+        ":BinaryFormat",
+        ":Support",
+        ":config",
+    ],
+)
+
+cc_library(
+    name = "Object",
+    srcs = glob([
+        "lib/Object/*.cpp",
+        "lib/Object/*.h",
+    ]),
+    hdrs = glob([
+        "include/llvm/Object/*.h",
+    ]) + [
+        "include/llvm-c/Object.h",
+    ],
+    copts = llvm_copts,
+    deps = [
+        ":BinaryFormat",
+        ":BitReader",
+        ":Core",
+        ":MC",
+        ":MCParser",
+        ":Support",
+        ":TextAPI",
+        ":config",
+    ],
+)
+
+cc_library(
+    name = "ObjectYAML",
+    srcs = glob([
+        "lib/ObjectYAML/*.cpp",
+        "lib/ObjectYAML/*.h",
+    ]),
+    hdrs = glob(["include/llvm/ObjectYAML/*.h"]),
+    copts = llvm_copts,
+    deps = [
+        ":BinaryFormat",
+        ":DebugInfoCodeView",
+        ":Object",
+        ":Support",
+    ],
+)
+
+cc_library(
+    name = "ProfileData",
+    srcs = glob([
+        "lib/ProfileData/*.cpp",
+        "lib/ProfileData/*.h",
+    ]),
+    hdrs = glob([
+        "include/llvm/ProfileData/*.h",
+        "include/llvm/ProfileData/*.inc",
+    ]),
+    copts = llvm_copts,
+    deps = [
+        ":Core",
+        ":Support",
+        ":config",
+    ],
+)
+
+cc_library(
+    name = "Coverage",
+    srcs = glob([
+        "lib/ProfileData/Coverage/*.cpp",
+        "lib/ProfileData/Coverage/*.h",
+    ]),
+    hdrs = glob(["include/llvm/ProfileData/Coverage/*.h"]),
+    copts = llvm_copts,
+    deps = [
+        ":Object",
+        ":ProfileData",
+        ":Support",
+    ],
+)
+
+cc_library(
+    name = "Analysis",
+    srcs = glob(
+        [
+            "lib/Analysis/*.cpp",
+            "lib/Analysis/*.h",
+            "lib/Analysis/*.def",
+        ],
+        exclude = [
+            # TODO: Add these files to the build.
+            "lib/Analysis/MLInlineAdvisor.cpp",
+            "lib/Analysis/ReleaseModeModelRunner.cpp",
+            "lib/Analysis/TFUtils.cpp",
+        ],
+    ),
+    hdrs = glob(
+        [
+            "include/llvm/Analysis/*.h",
+            "include/llvm/Analysis/Utils/*.h",
+        ],
+        exclude = [
+            # TODO: Add this file to the build.
+            "include/llvm/Analysis/Utils/TFUtils.h",
+        ],
+    ) + [
+        "include/llvm-c/Analysis.h",
+        "include/llvm-c/Initialization.h",
+    ],
+    copts = llvm_copts,
+    textual_hdrs = glob([
+        "include/llvm/Analysis/*.def",
+    ]),
+    deps = [
+        ":BinaryFormat",
+        ":Core",
+        ":Object",
+        ":ProfileData",
+        ":Support",
+        ":config",
+    ],
+)
+
+cc_library(
+    name = "BitWriter",
+    srcs = glob([
+        "lib/Bitcode/Writer/*.cpp",
+        "lib/Bitcode/Writer/*.h",
+    ]),
+    hdrs = [
+        "include/llvm-c/BitWriter.h",
+        "include/llvm/Bitcode/BitcodeCommon.h",
+        "include/llvm/Bitcode/BitcodeWriter.h",
+        "include/llvm/Bitcode/BitcodeWriterPass.h",
+        "include/llvm/Bitcode/LLVMBitCodes.h",
+    ],
+    copts = llvm_copts,
+    deps = [
+        ":Analysis",
+        ":BitstreamWriter",
+        ":Core",
+        ":MC",
+        ":Object",
+        ":Support",
+        ":config",
+    ],
+)
+
+cc_library(
+    name = "Target",
+    srcs = glob([
+        "lib/Target/*.cpp",
+        "lib/Target/*.h",
+    ]),
+    hdrs = glob([
+        "include/llvm/Target/*.h",
+    ]) + [
+        "include/llvm-c/Target.h",
+        "include/llvm-c/TargetMachine.h",
+    ],
+    copts = llvm_copts,
+    deps = [
+        ":Analysis",
+        ":BinaryFormat",
+        ":Core",
+        ":MC",
+        ":Support",
+        ":config",
+    ],
+)
+
+cc_library(
+    name = "TransformUtils",
+    srcs = glob([
+        "lib/Transforms/Utils/*.cpp",
+        "lib/Transforms/Utils/*.h",
+    ]),
+    hdrs = glob(["include/llvm/Transforms/Utils/*.h"]) + [
+        "include/llvm/Transforms/Utils.h",
+        "include/llvm-c/Transforms/Utils.h",
+    ],
+    copts = llvm_copts,
+    deps = [
+        ":Analysis",
+        ":BinaryFormat",
+        ":BitWriter",
+        ":Core",
+        ":Support",
+        ":Target",
+        ":config",
+    ],
+)
+
+gentbl(
+    name = "InstCombineTableGen",
+    tbl_outs = [(
+        "-gen-searchable-tables",
+        "lib/Target/AMDGPU/InstCombineTables.inc",
+    )],
+    tblgen = ":llvm-tblgen",
+    td_file = "lib/Target/AMDGPU/InstCombineTables.td",
+    td_srcs = glob([
+        "include/llvm/CodeGen/*.td",
+        "include/llvm/IR/Intrinsics*.td",
+    ]) + [
+        "include/llvm/TableGen/SearchableTable.td",
+    ],
+)
+
+cc_library(
+    name = "InstCombine",
+    srcs = glob([
+        "lib/Transforms/InstCombine/*.cpp",
+        "lib/Transforms/InstCombine/*.h",
+    ]),
+    hdrs = glob(["include/llvm/Transforms/InstCombine/*.h"]) + [
+        "include/llvm-c/Transforms/InstCombine.h",
+    ],
+    copts = llvm_copts,
+    deps = [
+        ":Analysis",
+        ":Core",
+        ":InstCombineTableGen",
+        ":Support",
+        ":Target",
+        ":TransformUtils",
+        ":config",
+    ],
+)
+
+cc_library(
+    name = "AggressiveInstCombine",
+    srcs = glob([
+        "lib/Transforms/AggressiveInstCombine/*.cpp",
+        "lib/Transforms/AggressiveInstCombine/*.h",
+    ]),
+    hdrs = [
+        "include/llvm-c/Transforms/AggressiveInstCombine.h",
+        "include/llvm/Transforms/AggressiveInstCombine/AggressiveInstCombine.h",
+    ],
+    copts = llvm_copts,
+    deps = [
+        ":Analysis",
+        ":Core",
+        ":Support",
+        ":TransformUtils",
+    ],
+)
+
+cc_library(
+    name = "Instrumentation",
+    srcs = glob([
+        "lib/Transforms/Instrumentation/*.cpp",
+        "lib/Transforms/Instrumentation/*.h",
+        "lib/Transforms/Instrumentation/*.inc",
+    ]),
+    hdrs = glob(["include/llvm/Transforms/Instrumentation/*.h"]) + [
+        "include/llvm/Transforms/Instrumentation.h",
+    ],
+    copts = llvm_copts,
+    deps = [
+        ":Analysis",
+        ":BinaryFormat",
+        ":Core",
+        ":MC",
+        ":ProfileData",
+        ":Support",
+        ":TransformUtils",
+        ":config",
+    ],
+)
+
+cc_library(
+    name = "ObjCARC",
+    srcs = glob([
+        "lib/Transforms/ObjCARC/*.cpp",
+        "lib/Transforms/ObjCARC/*.h",
+    ]),
+    hdrs = ["include/llvm/Transforms/ObjCARC.h"],
+    copts = llvm_copts,
+    deps = [
+        ":Analysis",
+        ":Core",
+        ":Support",
+        ":Target",
+        ":TransformUtils",
+        ":config",
+    ],
+)
+
+cc_library(
+    name = "Scalar",
+    srcs = glob([
+        "lib/Transforms/Scalar/*.cpp",
+        "lib/Transforms/Scalar/*.h",
+    ]),
+    hdrs = glob(["include/llvm/Transforms/Scalar/*.h"]) + [
+        "include/llvm-c/Transforms/Scalar.h",
+        "include/llvm/Transforms/Scalar.h",
+    ],
+    copts = llvm_copts,
+    deps = [
+        ":AggressiveInstCombine",
+        ":Analysis",
+        ":Core",
+        ":InstCombine",
+        ":ProfileData",
+        ":Support",
+        ":Target",
+        ":TransformUtils",
+        ":config",
+    ],
+)
+
+cc_library(
+    name = "Vectorize",
+    srcs = glob([
+        "lib/Transforms/Vectorize/*.cpp",
+        "lib/Transforms/Vectorize/*.h",
+    ]),
+    hdrs = glob([
+        "include/llvm/Transforms/Vectorize/*.h",
+    ]) + [
+        "include/llvm-c/Transforms/Vectorize.h",
+        "include/llvm/Transforms/Vectorize.h",
+    ],
+    copts = llvm_copts,
+    deps = [
+        ":Analysis",
+        ":Core",
+        ":Support",
+        ":Target",
+        ":TransformUtils",
+        ":config",
+    ],
+)
+
+filegroup(
+    name = "omp_td_files",
+    srcs = glob([
+        "include/llvm/Frontend/OpenMP/*.td",
+        "include/llvm/Frontend/Directive/*.td",
+    ]),
+)
+
+gentbl(
+    name = "omp_gen",
+    library = False,
+    tbl_outs = [("--gen-directive-decl", "include/llvm/Frontend/OpenMP/OMP.h.inc")],
+    tblgen = ":llvm-tblgen",
+    td_file = "include/llvm/Frontend/OpenMP/OMP.td",
+    td_srcs = [":omp_td_files"],
+)
+
+gentbl(
+    name = "omp_gen_impl",
+    library = False,
+    tbl_outs = [
+        ("--gen-directive-gen", "include/llvm/Frontend/OpenMP/OMP.cpp.inc"),
+        ("--gen-directive-impl", "lib/Frontend/OpenMP/OMP.cpp"),
+    ],
+    tblgen = ":llvm-tblgen",
+    td_file = "include/llvm/Frontend/OpenMP/OMP.td",
+    td_srcs = [":omp_td_files"],
+)
+
+cc_library(
+    name = "FrontendOpenMP",
+    srcs = glob([
+        "lib/Frontend/OpenMP/*.cpp",
+    ]) + [
+        "include/llvm/Frontend/OpenMP/OMP.cpp.inc",
+        "lib/Frontend/OpenMP/OMP.cpp",
+    ],
+    hdrs = glob([
+        "include/llvm/Frontend/OpenMP/*.h",
+        "include/llvm/Frontend/OpenMP/OMP/*.h",
+        "include/llvm/Frontend/*.h",
+    ]) + ["include/llvm/Frontend/OpenMP/OMP.h.inc"],
+    copts = llvm_copts,
+    textual_hdrs = glob([
+        "include/llvm/Frontend/OpenMP/*.def",
+    ]),
+    deps = [
+        ":Analysis",
+        ":Core",
+        ":Support",
+        ":TransformUtils",
+    ],
+)
+
+cc_library(
+    name = "AsmParser",
+    srcs = glob([
+        "lib/AsmParser/*.cpp",
+        "lib/AsmParser/*.h",
+    ]),
+    hdrs = [
+        "include/llvm/AsmParser/Parser.h",
+        "include/llvm/AsmParser/SlotMapping.h",
+    ],
+    copts = llvm_copts,
+    deps = [
+        ":BinaryFormat",
+        ":Core",
+        ":Support",
+    ],
+)
+
+cc_library(
+    name = "IRReader",
+    srcs = glob([
+        "lib/IRReader/*.cpp",
+        "lib/IRReader/*.h",
+    ]),
+    hdrs = glob([
+        "include/llvm/IRReader/*.h",
+    ]) + [
+        "include/llvm-c/IRReader.h",
+    ],
+    copts = llvm_copts,
+    deps = [
+        ":AsmParser",
+        ":BitReader",
+        ":Core",
+        ":Support",
+        ":config",
+    ],
+)
+
+cc_library(
+    name = "Linker",
+    srcs = glob([
+        "lib/Linker/*.cpp",
+        "lib/Linker/*.h",
+    ]),
+    hdrs = glob([
+        "include/llvm/Linker/*.h",
+    ]) + [
+        "include/llvm-c/Linker.h",
+    ],
+    copts = llvm_copts,
+    deps = [
+        ":Core",
+        ":Support",
+        ":TransformUtils",
+        ":config",
+    ],
+)
+
+cc_library(
+    name = "IPO",
+    srcs = glob([
+        "lib/Transforms/IPO/*.cpp",
+        "lib/Transforms/IPO/*.h",
+    ]),
+    hdrs = glob([
+        "include/llvm/Transforms/IPO/*.h",
+    ]) + [
+        "include/llvm-c/Transforms/IPO.h",
+        "include/llvm-c/Transforms/PassManagerBuilder.h",
+        "include/llvm/Transforms/IPO.h",
+    ],
+    copts = llvm_copts,
+    deps = [
+        ":AggressiveInstCombine",
+        ":Analysis",
+        ":BinaryFormat",
+        ":BitReader",
+        ":BitWriter",
+        ":Core",
+        ":FrontendOpenMP",
+        ":IRReader",
+        ":InstCombine",
+        ":Instrumentation",
+        ":Linker",
+        ":ObjCARC",
+        ":Object",
+        ":ProfileData",
+        ":Scalar",
+        ":Support",
+        ":Target",
+        ":TransformUtils",
+        ":Vectorize",
+        ":config",
+    ],
+)
+
+cc_library(
+    name = "CFGuard",
+    srcs = glob([
+        "lib/Transforms/CFGuard/*.cpp",
+        "lib/Transforms/CFGuard/*.h",
+    ]),
+    hdrs = ["include/llvm/Transforms/CFGuard.h"],
+    copts = llvm_copts,
+    deps = [
+        ":Core",
+        ":Support",
+        ":config",
+    ],
+)
+
+cc_library(
+    name = "Coroutines",
+    srcs = glob([
+        "lib/Transforms/Coroutines/*.cpp",
+        "lib/Transforms/Coroutines/*.h",
+    ]),
+    hdrs = [
+        "include/llvm-c/Transforms/Coroutines.h",
+        "include/llvm/Transforms/Coroutines.h",
+        "include/llvm/Transforms/Coroutines/CoroCleanup.h",
+        "include/llvm/Transforms/Coroutines/CoroEarly.h",
+        "include/llvm/Transforms/Coroutines/CoroElide.h",
+        "include/llvm/Transforms/Coroutines/CoroSplit.h",
+    ],
+    copts = llvm_copts,
+    deps = [
+        ":Analysis",
+        ":Core",
+        ":IPO",
+        ":Scalar",
+        ":Support",
+        ":TransformUtils",
+        ":config",
+    ],
+)
+
+# Meta-target for clients which depend on all of the transforms libraries.
+cc_library(
+    name = "common_transforms",
+    deps = [
+        ":AggressiveInstCombine",
+        ":CFGuard",
+        ":Coroutines",
+        ":IPO",
+        ":InstCombine",
+        ":Instrumentation",
+        ":ObjCARC",
+        ":Scalar",
+        ":Vectorize",
+    ],
+)
+
+cc_library(
+    name = "asm_printer_defs",
+    copts = llvm_copts,
+    textual_hdrs = glob(["lib/CodeGen/AsmPrinter/*.def"]),
+)
+
+cc_library(
+    name = "CodeGen",
+    srcs = glob(
+        [
+            "lib/CodeGen/**/*.cpp",
+            "lib/CodeGen/**/*.h",
+            "lib/CodeGen/SelectionDAG/*.cpp",
+            "lib/CodeGen/SelectionDAG/*.h",
+        ],
+    ),
+    hdrs = [
+        "include/llvm/LinkAllPasses.h",
+    ] + glob(
+        [
+            "include/llvm/CodeGen/**/*.h",
+        ],
+    ),
+    copts = llvm_copts,
+    textual_hdrs = glob([
+        "include/llvm/CodeGen/**/*.def",
+        "include/llvm/CodeGen/**/*.inc",
+    ]),
+    deps = [
+        ":Analysis",
+        ":AsmParser",
+        ":BinaryFormat",
+        ":BitReader",
+        ":BitWriter",
+        ":Core",
+        ":DebugInfoCodeView",
+        ":DebugInfoDWARF",
+        ":IPO",
+        ":MC",
+        ":MCParser",
+        ":ProfileData",
+        ":Remarks",
+        ":Scalar",
+        ":Support",
+        ":Target",
+        ":TransformUtils",
+        ":asm_printer_defs",
+        ":config",
+    ],
+)
+
+cc_library(
+    name = "MCDisassembler",
+    srcs = glob([
+        "lib/MC/MCDisassembler/*.cpp",
+        "lib/MC/MCDisassembler/*.h",
+    ]),
+    hdrs = glob([
+        "include/llvm/MC/MCDisassembler/*.h",
+    ]) + [
+        "include/llvm-c/Disassembler.h",
+    ],
+    copts = llvm_copts,
     deps = [
         ":MC",
         ":Support",
-        ":TableGen",
         ":config",
     ],
-)
-
-# Binary targets used by Tensorflow.
-cc_binary(
-    name = "llvm-tblgen",
-    srcs = glob([
-        "utils/TableGen/*.cpp",
-        "utils/TableGen/*.h",
-    ]),
-    copts = llvm_copts,
-    linkopts = llvm_linkopts,
-    stamp = 0,
-    deps = [
-        ":Support",
-        ":TableGen",
-        ":config",
-        ":tblgen",
-    ],
-)
-
-cc_binary(
-    name = "FileCheck",
-    testonly = 1,
-    srcs = glob([
-        "utils/FileCheck/*.cpp",
-        "utils/FileCheck/*.h",
-    ]),
-    copts = llvm_copts,
-    linkopts = llvm_linkopts,
-    stamp = 0,
-    deps = [":Support"],
 )
 
 llvm_target_list = [
     {
         "name": "AArch64",
-        "lower_name": "aarch64",
         "short_name": "AArch64",
-        "dir_name": "AArch64",
         "tbl_outs": [
             ("-gen-register-bank", "lib/Target/AArch64/AArch64GenRegisterBank.inc"),
             ("-gen-register-info", "lib/Target/AArch64/AArch64GenRegisterInfo.inc"),
@@ -470,33 +1796,8 @@ llvm_target_list = [
         ],
     },
     {
-        "name": "AMDGPU",
-        "lower_name": "amdgpu",
-        "short_name": "AMDGPU",
-        "dir_name": "AMDGPU",
-        "tbl_outs": [
-            ("-gen-register-bank", "lib/Target/AMDGPU/AMDGPUGenRegisterBank.inc"),
-            ("-gen-register-info", "lib/Target/AMDGPU/AMDGPUGenRegisterInfo.inc"),
-            ("-gen-instr-info", "lib/Target/AMDGPU/AMDGPUGenInstrInfo.inc"),
-            ("-gen-emitter", "lib/Target/AMDGPU/AMDGPUGenMCCodeEmitter.inc"),
-            ("-gen-pseudo-lowering", "lib/Target/AMDGPU/AMDGPUGenMCPseudoLowering.inc"),
-            ("-gen-asm-writer", "lib/Target/AMDGPU/AMDGPUGenAsmWriter.inc"),
-            ("-gen-asm-matcher", "lib/Target/AMDGPU/AMDGPUGenAsmMatcher.inc"),
-            ("-gen-dag-isel", "lib/Target/AMDGPU/AMDGPUGenDAGISel.inc"),
-            ("-gen-callingconv", "lib/Target/AMDGPU/AMDGPUGenCallingConv.inc"),
-            ("-gen-subtarget", "lib/Target/AMDGPU/AMDGPUGenSubtargetInfo.inc"),
-            ("-gen-disassembler", "lib/Target/AMDGPU/AMDGPUGenDisassemblerTables.inc"),
-            ("-gen-searchable-tables", "lib/Target/AMDGPU/AMDGPUGenSearchableTables.inc"),
-        ],
-        "tbl_deps": [
-            ":amdgpu_isel_target_gen",
-        ],
-    },
-    {
         "name": "ARM",
-        "lower_name": "arm",
         "short_name": "ARM",
-        "dir_name": "ARM",
         "tbl_outs": [
             ("-gen-register-bank", "lib/Target/ARM/ARMGenRegisterBank.inc"),
             ("-gen-register-info", "lib/Target/ARM/ARMGenRegisterInfo.inc"),
@@ -515,10 +1816,76 @@ llvm_target_list = [
         ],
     },
     {
+        "name": "AMDGPU",
+        "short_name": "AMDGPU",
+        "tbl_outs": [
+            ("-gen-register-bank", "lib/Target/AMDGPU/AMDGPUGenRegisterBank.inc"),
+            ("-gen-register-info", "lib/Target/AMDGPU/AMDGPUGenRegisterInfo.inc"),
+            ("-gen-instr-info", "lib/Target/AMDGPU/AMDGPUGenInstrInfo.inc"),
+            ("-gen-emitter", "lib/Target/AMDGPU/AMDGPUGenMCCodeEmitter.inc"),
+            ("-gen-pseudo-lowering", "lib/Target/AMDGPU/AMDGPUGenMCPseudoLowering.inc"),
+            ("-gen-asm-writer", "lib/Target/AMDGPU/AMDGPUGenAsmWriter.inc"),
+            ("-gen-asm-matcher", "lib/Target/AMDGPU/AMDGPUGenAsmMatcher.inc"),
+            ("-gen-dag-isel", "lib/Target/AMDGPU/AMDGPUGenDAGISel.inc"),
+            ("-gen-callingconv", "lib/Target/AMDGPU/AMDGPUGenCallingConv.inc"),
+            ("-gen-subtarget", "lib/Target/AMDGPU/AMDGPUGenSubtargetInfo.inc"),
+            ("-gen-disassembler", "lib/Target/AMDGPU/AMDGPUGenDisassemblerTables.inc"),
+            ("-gen-searchable-tables", "lib/Target/AMDGPU/AMDGPUGenSearchableTables.inc"),
+        ],
+        "tbl_deps": [
+            ":amdgpu_isel_target_gen",
+            ":r600_target_gen",
+        ],
+    },
+    {
+        "name": "BPF",
+        "short_name": "BPF",
+        "tbl_outs": [
+            ("-gen-asm-writer", "lib/Target/BPF/BPFGenAsmWriter.inc"),
+            ("-gen-asm-matcher", "lib/Target/BPF/BPFGenAsmMatcher.inc"),
+            ("-gen-callingconv", "lib/Target/BPF/BPFGenCallingConv.inc"),
+            ("-gen-dag-isel", "lib/Target/BPF/BPFGenDAGISel.inc"),
+            ("-gen-disassembler", "lib/Target/BPF/BPFGenDisassemblerTables.inc"),
+            ("-gen-emitter", "lib/Target/BPF/BPFGenMCCodeEmitter.inc"),
+            ("-gen-instr-info", "lib/Target/BPF/BPFGenInstrInfo.inc"),
+            ("-gen-register-info", "lib/Target/BPF/BPFGenRegisterInfo.inc"),
+            ("-gen-subtarget", "lib/Target/BPF/BPFGenSubtargetInfo.inc"),
+        ],
+    },
+    {
+        "name": "Hexagon",
+        "short_name": "Hexagon",
+        "tbl_outs": [
+            ("-gen-asm-matcher", "lib/Target/Hexagon/HexagonGenAsmMatcher.inc"),
+            ("-gen-asm-writer", "lib/Target/Hexagon/HexagonGenAsmWriter.inc"),
+            ("-gen-callingconv", "lib/Target/Hexagon/HexagonGenCallingConv.inc"),
+            ("-gen-dag-isel", "lib/Target/Hexagon/HexagonGenDAGISel.inc"),
+            ("-gen-dfa-packetizer", "lib/Target/Hexagon/HexagonGenDFAPacketizer.inc"),
+            ("-gen-disassembler", "lib/Target/Hexagon/HexagonGenDisassemblerTables.inc"),
+            ("-gen-instr-info", "lib/Target/Hexagon/HexagonGenInstrInfo.inc"),
+            ("-gen-emitter", "lib/Target/Hexagon/HexagonGenMCCodeEmitter.inc"),
+            ("-gen-register-info", "lib/Target/Hexagon/HexagonGenRegisterInfo.inc"),
+            ("-gen-subtarget", "lib/Target/Hexagon/HexagonGenSubtargetInfo.inc"),
+        ],
+    },
+    {
+        "name": "Lanai",
+        "short_name": "Lanai",
+        "tbl_outs": [
+            ("-gen-asm-matcher", "lib/Target/Lanai/LanaiGenAsmMatcher.inc"),
+            ("-gen-asm-writer", "lib/Target/Lanai/LanaiGenAsmWriter.inc"),
+            ("-gen-callingconv", "lib/Target/Lanai/LanaiGenCallingConv.inc"),
+            ("-gen-dag-isel", "lib/Target/Lanai/LanaiGenDAGISel.inc"),
+            ("-gen-disassembler", "lib/Target/Lanai/LanaiGenDisassemblerTables.inc"),
+            ("-gen-emitter", "lib/Target/Lanai/LanaiGenMCCodeEmitter.inc"),
+            ("-gen-instr-info", "lib/Target/Lanai/LanaiGenInstrInfo.inc"),
+            ("-gen-register-info", "lib/Target/Lanai/LanaiGenRegisterInfo.inc"),
+            ("-gen-subtarget", "lib/Target/Lanai/LanaiGenSubtargetInfo.inc"),
+        ],
+    },
+    {
         "name": "NVPTX",
-        "lower_name": "nvptx",
         "short_name": "NVPTX",
-        "dir_name": "NVPTX",
         "tbl_outs": [
             ("-gen-register-info", "lib/Target/NVPTX/NVPTXGenRegisterInfo.inc"),
             ("-gen-instr-info", "lib/Target/NVPTX/NVPTXGenInstrInfo.inc"),
@@ -529,10 +1896,9 @@ llvm_target_list = [
     },
     {
         "name": "PowerPC",
-        "lower_name": "powerpc",
         "short_name": "PPC",
-        "dir_name": "PowerPC",
         "tbl_outs": [
+            ("-gen-register-bank", "lib/Target/PowerPC/PPCGenRegisterBank.inc"),
             ("-gen-asm-writer", "lib/Target/PowerPC/PPCGenAsmWriter.inc"),
             ("-gen-asm-matcher", "lib/Target/PowerPC/PPCGenAsmMatcher.inc"),
             ("-gen-emitter", "lib/Target/PowerPC/PPCGenMCCodeEmitter.inc"),
@@ -540,33 +1906,64 @@ llvm_target_list = [
             ("-gen-instr-info", "lib/Target/PowerPC/PPCGenInstrInfo.inc"),
             ("-gen-dag-isel", "lib/Target/PowerPC/PPCGenDAGISel.inc"),
             ("-gen-fast-isel", "lib/Target/PowerPC/PPCGenFastISel.inc"),
+            ("-gen-global-isel", "lib/Target/PowerPC/PPCGenGlobalISel.inc"),
             ("-gen-callingconv", "lib/Target/PowerPC/PPCGenCallingConv.inc"),
             ("-gen-subtarget", "lib/Target/PowerPC/PPCGenSubtargetInfo.inc"),
             ("-gen-disassembler", "lib/Target/PowerPC/PPCGenDisassemblerTables.inc"),
         ],
     },
     {
-        "name": "SystemZ",
-        "lower_name": "system_z",
-        "short_name": "SystemZ",
-        "dir_name": "SystemZ",
+        "name": "Sparc",
+        "short_name": "Sparc",
         "tbl_outs": [
-            ("-gen-asm-writer", "lib/Target/SystemZ/SystemZGenAsmWriter.inc"),
-            ("-gen-asm-matcher", "lib/Target/SystemZ/SystemZGenAsmMatcher.inc"),
-            ("-gen-emitter", "lib/Target/SystemZ/SystemZGenMCCodeEmitter.inc"),
-            ("-gen-register-info", "lib/Target/SystemZ/SystemZGenRegisterInfo.inc"),
-            ("-gen-instr-info", "lib/Target/SystemZ/SystemZGenInstrInfo.inc"),
-            ("-gen-dag-isel", "lib/Target/SystemZ/SystemZGenDAGISel.inc"),
-            ("-gen-callingconv", "lib/Target/SystemZ/SystemZGenCallingConv.inc"),
-            ("-gen-subtarget", "lib/Target/SystemZ/SystemZGenSubtargetInfo.inc"),
-            ("-gen-disassembler", "lib/Target/SystemZ/SystemZGenDisassemblerTables.inc"),
+            ("-gen-asm-writer", "lib/Target/Sparc/SparcGenAsmWriter.inc"),
+            ("-gen-asm-matcher", "lib/Target/Sparc/SparcGenAsmMatcher.inc"),
+            ("-gen-emitter", "lib/Target/Sparc/SparcGenMCCodeEmitter.inc"),
+            ("-gen-register-info", "lib/Target/Sparc/SparcGenRegisterInfo.inc"),
+            ("-gen-instr-info", "lib/Target/Sparc/SparcGenInstrInfo.inc"),
+            ("-gen-dag-isel", "lib/Target/Sparc/SparcGenDAGISel.inc"),
+            ("-gen-callingconv", "lib/Target/Sparc/SparcGenCallingConv.inc"),
+            ("-gen-subtarget", "lib/Target/Sparc/SparcGenSubtargetInfo.inc"),
+            ("-gen-disassembler", "lib/Target/Sparc/SparcGenDisassemblerTables.inc"),
+        ],
+    },
+    {
+        "name": "RISCV",
+        "short_name": "RISCV",
+        "tbl_outs": [
+            ("-gen-asm-matcher", "lib/Target/RISCV/RISCVGenAsmMatcher.inc"),
+            ("-gen-asm-writer", "lib/Target/RISCV/RISCVGenAsmWriter.inc"),
+            ("-gen-compress-inst-emitter", "lib/Target/RISCV/RISCVGenCompressInstEmitter.inc"),
+            ("-gen-dag-isel", "lib/Target/RISCV/RISCVGenDAGISel.inc"),
+            ("-gen-disassembler", "lib/Target/RISCV/RISCVGenDisassemblerTables.inc"),
+            ("-gen-global-isel", "lib/Target/RISCV/RISCVGenGlobalISel.inc"),
+            ("-gen-instr-info", "lib/Target/RISCV/RISCVGenInstrInfo.inc"),
+            ("-gen-emitter", "lib/Target/RISCV/RISCVGenMCCodeEmitter.inc"),
+            ("-gen-pseudo-lowering", "lib/Target/RISCV/RISCVGenMCPseudoLowering.inc"),
+            ("-gen-register-bank", "lib/Target/RISCV/RISCVGenRegisterBank.inc"),
+            ("-gen-register-info", "lib/Target/RISCV/RISCVGenRegisterInfo.inc"),
+            ("-gen-subtarget", "lib/Target/RISCV/RISCVGenSubtargetInfo.inc"),
+            ("-gen-searchable-tables", "lib/Target/RISCV/RISCVGenSystemOperands.inc"),
+        ],
+    },
+    {
+        "name": "WebAssembly",
+        "short_name": "WebAssembly",
+        "tbl_outs": [
+            ("-gen-disassembler", "lib/Target/WebAssembly/WebAssemblyGenDisassemblerTables.inc"),
+            ("-gen-asm-writer", "lib/Target/WebAssembly/WebAssemblyGenAsmWriter.inc"),
+            ("-gen-instr-info", "lib/Target/WebAssembly/WebAssemblyGenInstrInfo.inc"),
+            ("-gen-dag-isel", "lib/Target/WebAssembly/WebAssemblyGenDAGISel.inc"),
+            ("-gen-fast-isel", "lib/Target/WebAssembly/WebAssemblyGenFastISel.inc"),
+            ("-gen-emitter", "lib/Target/WebAssembly/WebAssemblyGenMCCodeEmitter.inc"),
+            ("-gen-register-info", "lib/Target/WebAssembly/WebAssemblyGenRegisterInfo.inc"),
+            ("-gen-subtarget", "lib/Target/WebAssembly/WebAssemblyGenSubtargetInfo.inc"),
+            ("-gen-asm-matcher", "lib/Target/WebAssembly/WebAssemblyGenAsmMatcher.inc"),
         ],
     },
     {
         "name": "X86",
-        "lower_name": "x86",
         "short_name": "X86",
-        "dir_name": "X86",
         "tbl_outs": [
             ("-gen-register-bank", "lib/Target/X86/X86GenRegisterBank.inc"),
             ("-gen-register-info", "lib/Target/X86/X86GenRegisterInfo.inc"),
@@ -585,6 +1982,11 @@ llvm_target_list = [
         ],
     },
 ]
+
+cc_library(
+    name = "x86_target_layering_problem_hdrs",
+    textual_hdrs = ["lib/Target/X86/X86InstrInfo.h"],
+)
 
 filegroup(
     name = "common_target_td_sources",
@@ -636,1434 +2038,241 @@ gentbl(
     ]),
 )
 
-[gentbl(
-    name = target["name"] + "CommonTableGen",
-    tbl_outs = target["tbl_outs"],
-    tblgen = ":llvm-tblgen",
-    td_file = "lib/Target/" + target["dir_name"] + "/" + target["short_name"] + ".td",
-    td_srcs = [
-        ":common_target_td_sources",
-    ] + glob([
-        "lib/Target/" + target["dir_name"] + "/*.td",
-    ]),
-    deps = target.get("tbl_deps", []),
-) for target in llvm_target_list]
-
-# This target is used to provide *.def files to x86_code_gen.
-# Files with '.def' extension are not allowed in 'srcs' of 'cc_library' rule.
-cc_library(
-    name = "x86_defs",
-    hdrs = glob([
-        "lib/Target/X86/*.def",
-    ]),
-    visibility = ["//visibility:private"],
-)
-
-# This filegroup provides the docker build script in LLVM repo
-filegroup(
-    name = "docker",
-    srcs = glob([
-        "utils/docker/build_docker_image.sh",
-    ]),
-    visibility = ["//visibility:public"],
-)
-
-py_binary(
-    name = "lit",
-    srcs = ["utils/lit/lit.py"] + glob(["utils/lit/lit/**/*.py"]),
-)
-
-cc_binary(
-    name = "count",
-    srcs = ["utils/count/count.c"],
-)
-
-cc_binary(
-    name = "not",
-    srcs = ["utils/not/not.cpp"],
-    copts = llvm_copts,
-    linkopts = llvm_linkopts,
-    deps = [
-        ":Support",
-    ],
-)
+[[
+    [gentbl(
+        name = target["name"] + "CommonTableGen",
+        tbl_outs = target["tbl_outs"],
+        tblgen = ":llvm-tblgen",
+        td_file = "lib/Target/" + target["name"] + "/" + target["short_name"] + ".td",
+        td_srcs = [
+            ":common_target_td_sources",
+        ] + glob([
+            "lib/Target/" + target["name"] + "/*.td",
+            "lib/Target/" + target["name"] + "/GISel/*.td",
+        ]),
+        deps = target.get("tbl_deps", []),
+    )],
+    [cc_library(
+        name = target["name"] + "Info",
+        srcs = ["lib/Target/" + target["name"] + "/TargetInfo/" + target["name"] + "TargetInfo.cpp"],
+        hdrs = glob(["lib/Target/" + target["name"] + "/TargetInfo/*.h"]),
+        copts = llvm_copts,
+        deps = [
+            ":" + target["name"] + "CommonTableGen",
+            ":Support",
+            ":Target",
+        ],
+    )],
+    # We cannot separate the `Utils` and `MCTargetDesc` sublibraries of
+    # a number of targets due to criss crossing inclusion of headers.
+    [cc_library(
+        name = target["name"] + "UtilsAndDesc",
+        srcs = glob([
+            "lib/Target/" + target["name"] + "/MCTargetDesc/*.cpp",
+            "lib/Target/" + target["name"] + "/Utils/*.cpp",
+            "lib/Target/" + target["name"] + "/*.h",
+        ]),
+        hdrs = glob([
+            "lib/Target/" + target["name"] + "/MCTargetDesc/*.h",
+            "lib/Target/" + target["name"] + "/Utils/*.h",
+        ]),
+        copts = llvm_copts,
+        textual_hdrs = glob([
+            "lib/Target/" + target["name"] + "/*.def",
+            "lib/Target/" + target["name"] + "/*.inc",
+        ]),
+        deps = [
+            ":BinaryFormat",
+            # Depending on `:CodeGen` headers in this library is almost
+            # certainly a layering problem in numerous targets.
+            ":CodeGen",
+            ":DebugInfoCodeView",
+            ":MC",
+            ":MCDisassembler",
+            ":Support",
+            ":Target",
+            ":config",
+            ":" + target["name"] + "CommonTableGen",
+            ":" + target["name"] + "Info",
+        ],
+    )],
+    [cc_library(
+        name = target["name"] + "CodeGen",
+        srcs = glob([
+            "lib/Target/" + target["name"] + "/GISel/*.cpp",
+            "lib/Target/" + target["name"] + "/GISel/*.h",
+            "lib/Target/" + target["name"] + "/*.cpp",
+            "lib/Target/" + target["name"] + "/*.h",
+        ]),
+        hdrs = ["lib/Target/" + target["name"] + "/" + target["short_name"] + ".h"],
+        copts = llvm_copts,
+        textual_hdrs = glob([
+            "lib/Target/" + target["name"] + "/*.def",
+            "lib/Target/" + target["name"] + "/*.inc",
+        ]),
+        deps = [
+            ":Analysis",
+            ":BinaryFormat",
+            ":CFGuard",
+            ":CodeGen",
+            ":Core",
+            ":IPO",
+            ":MC",
+            ":ProfileData",
+            ":Scalar",
+            ":Support",
+            ":Target",
+            ":TransformUtils",
+            ":Vectorize",
+            ":config",
+            ":" + target["name"] + "CommonTableGen",
+            ":" + target["name"] + "Info",
+            ":" + target["name"] + "UtilsAndDesc",
+        ],
+    )],
+    [cc_library(
+        name = target["name"] + "AsmParser",
+        srcs = glob([
+            "lib/Target/" + target["name"] + "/AsmParser/*.cpp",
+            "lib/Target/" + target["name"] + "/AsmParser/*.h",
+        ]),
+        copts = llvm_copts,
+        deps = [
+            ":BinaryFormat",
+            ":MC",
+            ":MCParser",
+            ":Support",
+            ":Target",
+            ":" + target["name"] + "CodeGen",
+            ":" + target["name"] + "CommonTableGen",
+            ":" + target["name"] + "UtilsAndDesc",
+        ],
+    )],
+    [cc_library(
+        name = target["name"] + "Disassembler",
+        srcs = glob([
+            "lib/Target/" + target["name"] + "/Disassembler/*.cpp",
+            "lib/Target/" + target["name"] + "/Disassembler/*.c",
+            "lib/Target/" + target["name"] + "/Disassembler/*.h",
+        ]),
+        copts = llvm_copts,
+        deps = [
+            ":CodeGen",
+            ":Core",
+            ":MC",
+            ":MCDisassembler",
+            ":Support",
+            ":Target",
+            ":" + target["name"] + "CodeGen",
+            ":" + target["name"] + "CommonTableGen",
+            ":" + target["name"] + "UtilsAndDesc",
+        ],
+    )],
+] for target in llvm_target_list]
 
 cc_library(
     name = "AllTargetsCodeGens",
+    copts = llvm_copts,
     deps = [
         target["name"] + "CodeGen"
         for target in llvm_target_list
     ],
 )
 
-exports_files([
-    "include/llvm/Frontend/OpenMP/OMP.td",
-])
-
-filegroup(
-    name = "omp_td_files",
-    srcs = glob([
-        "include/llvm/Frontend/OpenMP/*.td",
-        "include/llvm/Frontend/Directive/*.td",
-    ]),
-)
-
-gentbl(
-    name = "omp_gen",
-    tbl_outs = [("--gen-directive-decl", "include/llvm/Frontend/OpenMP/OMP.h.inc")],
-    tblgen = ":llvm-tblgen",
-    td_file = "include/llvm/Frontend/OpenMP/OMP.td",
-    td_srcs = [
-        ":omp_td_files",
-    ],
-)
-
-gentbl(
-    name = "omp_gen_impl",
-    tbl_outs = [("--gen-directive-impl", "include/llvm/Frontend/OpenMP/OMP.cpp")],
-    tblgen = ":llvm-tblgen",
-    td_file = "include/llvm/Frontend/OpenMP/OMP.td",
-    td_srcs = [
-        ":omp_td_files",
-    ],
-)
-
-# TODO(b/159809163): autogenerate this after enabling release-mode ML
-# InlineAdvisor
 cc_library(
-    name = "Analysis",
-    srcs = glob(
-        [
-            "lib/Analysis/*.c",
-            "lib/Analysis/*.cpp",
-            "lib/Analysis/*.inc",
-            "include/llvm/Transforms/Utils/Local.h",
-            "include/llvm/Transforms/Scalar.h",
-            "lib/Analysis/*.h",
-        ],
-        exclude = [
-            "lib/Analysis/DevelopmentModeInlineAdvisor.cpp",
-            "lib/Analysis/MLInlineAdvisor.cpp",
-            "lib/Analysis/ReleaseModeModelRunner.cpp",
-            "lib/Analysis/TFUtils.cpp",
-        ],
-    ),
+    name = "AllTargetsAsmParsers",
+    copts = llvm_copts,
+    deps = [
+        target["name"] + "AsmParser"
+        for target in llvm_target_list
+    ],
+)
+
+cc_library(
+    name = "AllTargetsDisassemblers",
+    copts = llvm_copts,
+    deps = [
+        target["name"] + "Disassembler"
+        for target in llvm_target_list
+    ],
+)
+
+cc_library(
+    name = "pass_registry_def",
+    copts = llvm_copts,
+    textual_hdrs = ["lib/Passes/PassRegistry.def"],
+)
+
+cc_library(
+    name = "MLPolicies",
+    srcs = glob([
+        "lib/Analysis/ML/*.cpp",
+        "lib/Analysis/ML/*.h",
+    ]),
     hdrs = glob([
-        "include/llvm/Analysis/*.h",
-        "include/llvm/Analysis/*.def",
-        "include/llvm/Analysis/*.inc",
+        "include/llvm/Analysis/ML/*.h",
     ]),
     copts = llvm_copts,
     deps = [
-        ":BinaryFormat",
-        ":Core",
-        ":Object",
-        ":ProfileData",
-        ":Support",
-        ":config",
-    ],
-)
-
-########################## Begin autogenerated content #########################
-###  This content is autogenerated by generate_bazel_build.py. Do not edit!  ###
-################################################################################
-cc_library(
-    name = "AArch64AsmParser",
-    srcs = glob([
-        "lib/Target/AArch64/AsmParser/*.c",
-        "lib/Target/AArch64/AsmParser/*.cpp",
-        "lib/Target/AArch64/AsmParser/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/AArch64/AsmParser/*.h",
-        "include/llvm/Target/AArch64/AsmParser/*.def",
-        "include/llvm/Target/AArch64/AsmParser/*.inc",
-        "lib/Target/AArch64/AsmParser/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/AArch64"],
-    deps = [
-        ":AArch64Desc",
-        ":AArch64Info",
-        ":AArch64Utils",
-        ":MC",
-        ":MCParser",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "AArch64CodeGen",
-    srcs = glob([
-        "lib/Target/AArch64/*.c",
-        "lib/Target/AArch64/*.cpp",
-        "lib/Target/AArch64/*.inc",
-        "lib/Target/AArch64/GISel/*.cpp",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/AArch64/*.h",
-        "include/llvm/Target/AArch64/*.def",
-        "include/llvm/Target/AArch64/*.inc",
-        "lib/Target/AArch64/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/AArch64"],
-    deps = [
-        ":AArch64Desc",
-        ":AArch64Info",
-        ":AArch64Utils",
         ":Analysis",
-        ":AsmPrinter",
-        ":CFGuard",
+        ":Core",
+        ":Support",
+    ],
+)
+
+cc_library(
+    name = "Passes",
+    srcs = glob([
+        "lib/Passes/*.cpp",
+        "lib/Passes/*.h",
+    ]),
+    hdrs = glob(["include/llvm/Passes/*.h"]),
+    copts = llvm_copts,
+    deps = [
+        ":Analysis",
         ":CodeGen",
         ":Core",
-        ":GlobalISel",
-        ":MC",
-        ":Scalar",
-        ":SelectionDAG",
+        ":Coroutines",
+        ":MLPolicies",
         ":Support",
         ":Target",
         ":TransformUtils",
+        ":common_transforms",
         ":config",
+        ":pass_registry_def",
     ],
 )
 
 cc_library(
-    name = "AArch64Desc",
+    name = "LTO",
     srcs = glob([
-        "lib/Target/AArch64/MCTargetDesc/*.c",
-        "lib/Target/AArch64/MCTargetDesc/*.cpp",
-        "lib/Target/AArch64/MCTargetDesc/*.inc",
+        "lib/LTO/*.cpp",
+        "lib/LTO/*.h",
     ]),
     hdrs = glob([
-        "include/llvm/Target/AArch64/MCTargetDesc/*.h",
-        "include/llvm/Target/AArch64/MCTargetDesc/*.def",
-        "include/llvm/Target/AArch64/MCTargetDesc/*.inc",
-        "lib/Target/AArch64/MCTargetDesc/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/AArch64"],
-    deps = [
-        ":AArch64CommonTableGen",
-        ":AArch64Info",
-        ":AArch64Utils",
-        ":BinaryFormat",
-        ":MC",
-        ":Support",
-        ":attributes_gen",
-        ":config",
-        ":intrinsic_enums_gen",
-        ":intrinsics_impl_gen",
+        "include/llvm/LTO/*.h",
+        "include/llvm/LTO/legacy/*.h",
+    ]) + [
+        "include/llvm-c/LinkTimeOptimizer.h",
+        "include/llvm-c/lto.h",
     ],
-)
-
-cc_library(
-    name = "AArch64Disassembler",
-    srcs = glob([
-        "lib/Target/AArch64/Disassembler/*.c",
-        "lib/Target/AArch64/Disassembler/*.cpp",
-        "lib/Target/AArch64/Disassembler/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/AArch64/Disassembler/*.h",
-        "include/llvm/Target/AArch64/Disassembler/*.def",
-        "include/llvm/Target/AArch64/Disassembler/*.inc",
-        "lib/Target/AArch64/Disassembler/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/AArch64"],
-    deps = [
-        ":AArch64Desc",
-        ":AArch64Info",
-        ":AArch64Utils",
-        ":MC",
-        ":MCDisassembler",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "AArch64Info",
-    srcs = glob([
-        "lib/Target/AArch64/TargetInfo/*.c",
-        "lib/Target/AArch64/TargetInfo/*.cpp",
-        "lib/Target/AArch64/TargetInfo/*.inc",
-        "lib/Target/AArch64/MCTargetDesc/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/AArch64/TargetInfo/*.h",
-        "include/llvm/Target/AArch64/TargetInfo/*.def",
-        "include/llvm/Target/AArch64/TargetInfo/*.inc",
-        "lib/Target/AArch64/*.def",
-        "lib/Target/AArch64/AArch64*.h",
-        "lib/Target/AArch64/TargetInfo/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/AArch64"],
-    deps = [
-        ":CodeGen",
-        ":Support",
-        ":Target",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "AArch64Utils",
-    srcs = glob([
-        "lib/Target/AArch64/Utils/*.c",
-        "lib/Target/AArch64/Utils/*.cpp",
-        "lib/Target/AArch64/Utils/*.inc",
-        "lib/Target/AArch64/MCTargetDesc/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/AArch64/Utils/*.h",
-        "include/llvm/Target/AArch64/Utils/*.def",
-        "include/llvm/Target/AArch64/Utils/*.inc",
-        "lib/Target/AArch64/Utils/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/AArch64"],
-    deps = [
-        ":AArch64CommonTableGen",
-        ":MC",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "AMDGPUAsmParser",
-    srcs = glob([
-        "lib/Target/AMDGPU/AsmParser/*.c",
-        "lib/Target/AMDGPU/AsmParser/*.cpp",
-        "lib/Target/AMDGPU/AsmParser/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/AMDGPU/AsmParser/*.h",
-        "include/llvm/Target/AMDGPU/AsmParser/*.def",
-        "include/llvm/Target/AMDGPU/AsmParser/*.inc",
-        "lib/Target/AMDGPU/AsmParser/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/AMDGPU"],
-    deps = [
-        ":AMDGPUDesc",
-        ":AMDGPUInfo",
-        ":AMDGPUUtils",
-        ":MC",
-        ":MCParser",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "AMDGPUCodeGen",
-    srcs = glob([
-        "lib/Target/AMDGPU/*.c",
-        "lib/Target/AMDGPU/*.cpp",
-        "lib/Target/AMDGPU/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/AMDGPU/*.h",
-        "include/llvm/Target/AMDGPU/*.def",
-        "include/llvm/Target/AMDGPU/*.inc",
-        "lib/Target/AMDGPU/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/AMDGPU"],
-    deps = [
-        ":AMDGPUDesc",
-        ":AMDGPUInfo",
-        ":AMDGPUUtils",
-        ":Analysis",
-        ":AsmPrinter",
-        ":BinaryFormat",
-        ":CodeGen",
-        ":Core",
-        ":GlobalISel",
-        ":IPO",
-        ":MC",
-        ":MIRParser",
-        ":Scalar",
-        ":SelectionDAG",
-        ":Support",
-        ":Target",
-        ":TransformUtils",
-        ":Vectorize",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "AMDGPUDesc",
-    srcs = glob([
-        "lib/Target/AMDGPU/MCTargetDesc/*.c",
-        "lib/Target/AMDGPU/MCTargetDesc/*.cpp",
-        "lib/Target/AMDGPU/MCTargetDesc/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/AMDGPU/MCTargetDesc/*.h",
-        "include/llvm/Target/AMDGPU/MCTargetDesc/*.def",
-        "include/llvm/Target/AMDGPU/MCTargetDesc/*.inc",
-        "lib/Target/AMDGPU/MCTargetDesc/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/AMDGPU"],
-    deps = [
-        ":AMDGPUInfo",
-        ":AMDGPUUtils",
-        ":BinaryFormat",
-        ":Core",
-        ":MC",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "AMDGPUDisassembler",
-    srcs = glob([
-        "lib/Target/AMDGPU/Disassembler/*.c",
-        "lib/Target/AMDGPU/Disassembler/*.cpp",
-        "lib/Target/AMDGPU/Disassembler/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/AMDGPU/Disassembler/*.h",
-        "include/llvm/Target/AMDGPU/Disassembler/*.def",
-        "include/llvm/Target/AMDGPU/Disassembler/*.inc",
-        "lib/Target/AMDGPU/Disassembler/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/AMDGPU"],
-    deps = [
-        ":AMDGPUDesc",
-        ":AMDGPUInfo",
-        ":AMDGPUUtils",
-        ":MC",
-        ":MCDisassembler",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "AMDGPUInfo",
-    srcs = glob([
-        "lib/Target/AMDGPU/TargetInfo/*.c",
-        "lib/Target/AMDGPU/TargetInfo/*.cpp",
-        "lib/Target/AMDGPU/TargetInfo/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/AMDGPU/TargetInfo/*.h",
-        "include/llvm/Target/AMDGPU/TargetInfo/*.def",
-        "include/llvm/Target/AMDGPU/TargetInfo/*.inc",
-        "lib/Target/AMDGPU/TargetInfo/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/AMDGPU"],
-    deps = [
-        ":AMDGPUCommonTableGen",
-        ":Core",
-        ":Support",
-        ":config",
-        ":r600_target_gen",
-    ],
-)
-
-cc_library(
-    name = "AMDGPUUtils",
-    srcs = glob([
-        "lib/Target/AMDGPU/Utils/*.c",
-        "lib/Target/AMDGPU/Utils/*.cpp",
-        "lib/Target/AMDGPU/Utils/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/AMDGPU/Utils/*.h",
-        "include/llvm/Target/AMDGPU/Utils/*.def",
-        "include/llvm/Target/AMDGPU/Utils/*.inc",
-        "lib/Target/AMDGPU/Utils/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/AMDGPU"],
-    deps = [
-        ":AMDGPUCommonTableGen",
-        ":BinaryFormat",
-        ":Core",
-        ":MC",
-        ":Support",
-        ":config",
-        ":r600_target_gen",
-    ],
-)
-
-cc_library(
-    name = "ARCCodeGen",
-    srcs = glob([
-        "lib/Target/ARC/*.c",
-        "lib/Target/ARC/*.cpp",
-        "lib/Target/ARC/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/ARC/*.h",
-        "include/llvm/Target/ARC/*.def",
-        "include/llvm/Target/ARC/*.inc",
-        "lib/Target/ARC/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/ARC"],
-    deps = [
-        ":ARCDesc",
-        ":ARCInfo",
-        ":Analysis",
-        ":AsmPrinter",
-        ":CodeGen",
-        ":Core",
-        ":MC",
-        ":SelectionDAG",
-        ":Support",
-        ":Target",
-        ":TransformUtils",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "ARCDesc",
-    srcs = glob([
-        "lib/Target/ARC/MCTargetDesc/*.c",
-        "lib/Target/ARC/MCTargetDesc/*.cpp",
-        "lib/Target/ARC/MCTargetDesc/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/ARC/MCTargetDesc/*.h",
-        "include/llvm/Target/ARC/MCTargetDesc/*.def",
-        "include/llvm/Target/ARC/MCTargetDesc/*.inc",
-        "lib/Target/ARC/MCTargetDesc/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/ARC"],
-    deps = [
-        ":ARCInfo",
-        ":MC",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "ARCDisassembler",
-    srcs = glob([
-        "lib/Target/ARC/Disassembler/*.c",
-        "lib/Target/ARC/Disassembler/*.cpp",
-        "lib/Target/ARC/Disassembler/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/ARC/Disassembler/*.h",
-        "include/llvm/Target/ARC/Disassembler/*.def",
-        "include/llvm/Target/ARC/Disassembler/*.inc",
-        "lib/Target/ARC/Disassembler/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/ARC"],
-    deps = [
-        ":ARCInfo",
-        ":MCDisassembler",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "ARCInfo",
-    srcs = glob([
-        "lib/Target/ARC/TargetInfo/*.c",
-        "lib/Target/ARC/TargetInfo/*.cpp",
-        "lib/Target/ARC/TargetInfo/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/ARC/TargetInfo/*.h",
-        "include/llvm/Target/ARC/TargetInfo/*.def",
-        "include/llvm/Target/ARC/TargetInfo/*.inc",
-        "lib/Target/ARC/TargetInfo/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/ARC"],
-    deps = [
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "ARMAsmParser",
-    srcs = glob([
-        "lib/Target/ARM/AsmParser/*.c",
-        "lib/Target/ARM/AsmParser/*.cpp",
-        "lib/Target/ARM/AsmParser/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/ARM/AsmParser/*.h",
-        "include/llvm/Target/ARM/AsmParser/*.def",
-        "include/llvm/Target/ARM/AsmParser/*.inc",
-        "lib/Target/ARM/AsmParser/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/ARM"],
-    deps = [
-        ":ARMDesc",
-        ":ARMInfo",
-        ":ARMUtils",
-        ":MC",
-        ":MCParser",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "ARMCodeGen",
-    srcs = glob([
-        "lib/Target/ARM/*.c",
-        "lib/Target/ARM/*.cpp",
-        "lib/Target/ARM/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/ARM/*.h",
-        "include/llvm/Target/ARM/*.def",
-        "include/llvm/Target/ARM/*.inc",
-        "lib/Target/ARM/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/ARM"],
-    deps = [
-        ":ARMDesc",
-        ":ARMInfo",
-        ":ARMUtils",
-        ":Analysis",
-        ":AsmPrinter",
-        ":CFGuard",
-        ":CodeGen",
-        ":Core",
-        ":GlobalISel",
-        ":MC",
-        ":Scalar",
-        ":SelectionDAG",
-        ":Support",
-        ":Target",
-        ":TransformUtils",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "ARMDesc",
-    srcs = glob([
-        "lib/Target/ARM/MCTargetDesc/*.c",
-        "lib/Target/ARM/MCTargetDesc/*.cpp",
-        "lib/Target/ARM/MCTargetDesc/*.inc",
-        "lib/Target/ARM/*.h",
-        "include/llvm/CodeGen/GlobalISel/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/ARM/MCTargetDesc/*.h",
-        "include/llvm/Target/ARM/MCTargetDesc/*.def",
-        "include/llvm/Target/ARM/MCTargetDesc/*.inc",
-        "lib/Target/ARM/MCTargetDesc/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/ARM"],
-    deps = [
-        ":ARMCommonTableGen",
-        ":ARMInfo",
-        ":ARMUtils",
-        ":BinaryFormat",
-        ":MC",
-        ":MCDisassembler",
-        ":Support",
-        ":attributes_gen",
-        ":config",
-        ":intrinsic_enums_gen",
-        ":intrinsics_impl_gen",
-    ],
-)
-
-cc_library(
-    name = "ARMDisassembler",
-    srcs = glob([
-        "lib/Target/ARM/Disassembler/*.c",
-        "lib/Target/ARM/Disassembler/*.cpp",
-        "lib/Target/ARM/Disassembler/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/ARM/Disassembler/*.h",
-        "include/llvm/Target/ARM/Disassembler/*.def",
-        "include/llvm/Target/ARM/Disassembler/*.inc",
-        "lib/Target/ARM/Disassembler/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/ARM"],
-    deps = [
-        ":ARMDesc",
-        ":ARMInfo",
-        ":ARMUtils",
-        ":MCDisassembler",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "ARMInfo",
-    srcs = glob([
-        "lib/Target/ARM/TargetInfo/*.c",
-        "lib/Target/ARM/TargetInfo/*.cpp",
-        "lib/Target/ARM/TargetInfo/*.inc",
-        "lib/Target/ARM/MCTargetDesc/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/ARM/TargetInfo/*.h",
-        "include/llvm/Target/ARM/TargetInfo/*.def",
-        "include/llvm/Target/ARM/TargetInfo/*.inc",
-        "lib/Target/ARM/TargetInfo/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/ARM"],
-    deps = [
-        ":ARMCommonTableGen",
-        ":Support",
-        ":Target",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "ARMUtils",
-    srcs = glob([
-        "lib/Target/ARM/Utils/*.c",
-        "lib/Target/ARM/Utils/*.cpp",
-        "lib/Target/ARM/Utils/*.inc",
-        "lib/Target/ARM/MCTargetDesc/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/ARM/Utils/*.h",
-        "include/llvm/Target/ARM/Utils/*.def",
-        "include/llvm/Target/ARM/Utils/*.inc",
-        "lib/Target/ARM/Utils/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/ARM"],
-    deps = [
-        ":ARMCommonTableGen",
-        ":MC",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "AVRAsmParser",
-    srcs = glob([
-        "lib/Target/AVR/AsmParser/*.c",
-        "lib/Target/AVR/AsmParser/*.cpp",
-        "lib/Target/AVR/AsmParser/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/AVR/AsmParser/*.h",
-        "include/llvm/Target/AVR/AsmParser/*.def",
-        "include/llvm/Target/AVR/AsmParser/*.inc",
-        "lib/Target/AVR/AsmParser/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/AVR"],
-    deps = [
-        ":AVRDesc",
-        ":AVRInfo",
-        ":MC",
-        ":MCParser",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "AVRCodeGen",
-    srcs = glob([
-        "lib/Target/AVR/*.c",
-        "lib/Target/AVR/*.cpp",
-        "lib/Target/AVR/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/AVR/*.h",
-        "include/llvm/Target/AVR/*.def",
-        "include/llvm/Target/AVR/*.inc",
-        "lib/Target/AVR/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/AVR"],
-    deps = [
-        ":AVRDesc",
-        ":AVRInfo",
-        ":AsmPrinter",
-        ":CodeGen",
-        ":Core",
-        ":MC",
-        ":SelectionDAG",
-        ":Support",
-        ":Target",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "AVRDesc",
-    srcs = glob([
-        "lib/Target/AVR/MCTargetDesc/*.c",
-        "lib/Target/AVR/MCTargetDesc/*.cpp",
-        "lib/Target/AVR/MCTargetDesc/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/AVR/MCTargetDesc/*.h",
-        "include/llvm/Target/AVR/MCTargetDesc/*.def",
-        "include/llvm/Target/AVR/MCTargetDesc/*.inc",
-        "lib/Target/AVR/MCTargetDesc/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/AVR"],
-    deps = [
-        ":AVRInfo",
-        ":MC",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "AVRDisassembler",
-    srcs = glob([
-        "lib/Target/AVR/Disassembler/*.c",
-        "lib/Target/AVR/Disassembler/*.cpp",
-        "lib/Target/AVR/Disassembler/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/AVR/Disassembler/*.h",
-        "include/llvm/Target/AVR/Disassembler/*.def",
-        "include/llvm/Target/AVR/Disassembler/*.inc",
-        "lib/Target/AVR/Disassembler/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/AVR"],
-    deps = [
-        ":AVRInfo",
-        ":MCDisassembler",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "AVRInfo",
-    srcs = glob([
-        "lib/Target/AVR/TargetInfo/*.c",
-        "lib/Target/AVR/TargetInfo/*.cpp",
-        "lib/Target/AVR/TargetInfo/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/AVR/TargetInfo/*.h",
-        "include/llvm/Target/AVR/TargetInfo/*.def",
-        "include/llvm/Target/AVR/TargetInfo/*.inc",
-        "lib/Target/AVR/TargetInfo/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/AVR"],
-    deps = [
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "AggressiveInstCombine",
-    srcs = glob([
-        "lib/Transforms/AggressiveInstCombine/*.c",
-        "lib/Transforms/AggressiveInstCombine/*.cpp",
-        "lib/Transforms/AggressiveInstCombine/*.inc",
-        "lib/Transforms/AggressiveInstCombine/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/Transforms/AggressiveInstCombine/*.h",
-        "include/llvm/Transforms/AggressiveInstCombine/*.def",
-        "include/llvm/Transforms/AggressiveInstCombine/*.inc",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":Analysis",
-        ":Core",
-        ":Support",
-        ":TransformUtils",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "AsmParser",
-    srcs = glob([
-        "lib/AsmParser/*.c",
-        "lib/AsmParser/*.cpp",
-        "lib/AsmParser/*.inc",
-        "lib/AsmParser/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/AsmParser/*.h",
-        "include/llvm/AsmParser/*.def",
-        "include/llvm/AsmParser/*.inc",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":BinaryFormat",
-        ":Core",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "AsmPrinter",
-    srcs = glob([
-        "lib/CodeGen/AsmPrinter/*.c",
-        "lib/CodeGen/AsmPrinter/*.cpp",
-        "lib/CodeGen/AsmPrinter/*.inc",
-        "lib/CodeGen/AsmPrinter/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/CodeGen/AsmPrinter/*.h",
-        "include/llvm/CodeGen/AsmPrinter/*.def",
-        "include/llvm/CodeGen/AsmPrinter/*.inc",
-        "lib/CodeGen/AsmPrinter/*.def",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":Analysis",
-        ":BinaryFormat",
-        ":CodeGen",
-        ":Core",
-        ":DebugInfoCodeView",
-        ":DebugInfoDWARF",
-        ":DebugInfoMSF",
-        ":MC",
-        ":MCParser",
-        ":Remarks",
-        ":Support",
-        ":Target",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "BPFAsmParser",
-    srcs = glob([
-        "lib/Target/BPF/AsmParser/*.c",
-        "lib/Target/BPF/AsmParser/*.cpp",
-        "lib/Target/BPF/AsmParser/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/BPF/AsmParser/*.h",
-        "include/llvm/Target/BPF/AsmParser/*.def",
-        "include/llvm/Target/BPF/AsmParser/*.inc",
-        "lib/Target/BPF/AsmParser/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/BPF"],
-    deps = [
-        ":BPFDesc",
-        ":BPFInfo",
-        ":MC",
-        ":MCParser",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "BPFCodeGen",
-    srcs = glob([
-        "lib/Target/BPF/*.c",
-        "lib/Target/BPF/*.cpp",
-        "lib/Target/BPF/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/BPF/*.h",
-        "include/llvm/Target/BPF/*.def",
-        "include/llvm/Target/BPF/*.inc",
-        "lib/Target/BPF/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/BPF"],
-    deps = [
-        ":AsmPrinter",
-        ":BPFDesc",
-        ":BPFInfo",
-        ":CodeGen",
-        ":Core",
-        ":IPO",
-        ":MC",
-        ":Scalar",
-        ":SelectionDAG",
-        ":Support",
-        ":Target",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "BPFDesc",
-    srcs = glob([
-        "lib/Target/BPF/MCTargetDesc/*.c",
-        "lib/Target/BPF/MCTargetDesc/*.cpp",
-        "lib/Target/BPF/MCTargetDesc/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/BPF/MCTargetDesc/*.h",
-        "include/llvm/Target/BPF/MCTargetDesc/*.def",
-        "include/llvm/Target/BPF/MCTargetDesc/*.inc",
-        "lib/Target/BPF/MCTargetDesc/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/BPF"],
-    deps = [
-        ":BPFInfo",
-        ":MC",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "BPFDisassembler",
-    srcs = glob([
-        "lib/Target/BPF/Disassembler/*.c",
-        "lib/Target/BPF/Disassembler/*.cpp",
-        "lib/Target/BPF/Disassembler/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/BPF/Disassembler/*.h",
-        "include/llvm/Target/BPF/Disassembler/*.def",
-        "include/llvm/Target/BPF/Disassembler/*.inc",
-        "lib/Target/BPF/Disassembler/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/BPF"],
-    deps = [
-        ":BPFInfo",
-        ":MCDisassembler",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "BPFInfo",
-    srcs = glob([
-        "lib/Target/BPF/TargetInfo/*.c",
-        "lib/Target/BPF/TargetInfo/*.cpp",
-        "lib/Target/BPF/TargetInfo/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/BPF/TargetInfo/*.h",
-        "include/llvm/Target/BPF/TargetInfo/*.def",
-        "include/llvm/Target/BPF/TargetInfo/*.inc",
-        "lib/Target/BPF/TargetInfo/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/BPF"],
-    deps = [
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "BinaryFormat",
-    srcs = glob([
-        "lib/BinaryFormat/*.c",
-        "lib/BinaryFormat/*.cpp",
-        "lib/BinaryFormat/*.inc",
-        "lib/BinaryFormat/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/BinaryFormat/*.h",
-        "include/llvm/BinaryFormat/*.def",
-        "include/llvm/BinaryFormat/*.inc",
-        "include/llvm/BinaryFormat/ELFRelocs/*.def",
-        "include/llvm/BinaryFormat/WasmRelocs/*.def",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "BitReader",
-    srcs = glob([
-        "lib/Bitcode/Reader/*.c",
-        "lib/Bitcode/Reader/*.cpp",
-        "lib/Bitcode/Reader/*.inc",
-        "lib/Bitcode/Reader/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/Bitcode/Reader/*.h",
-        "include/llvm/Bitcode/Reader/*.def",
-        "include/llvm/Bitcode/Reader/*.inc",
-        "include/llvm/Bitcode/BitstreamReader.h",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":BitstreamReader",
-        ":Core",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "BitWriter",
-    srcs = glob([
-        "lib/Bitcode/Writer/*.c",
-        "lib/Bitcode/Writer/*.cpp",
-        "lib/Bitcode/Writer/*.inc",
-        "lib/Bitcode/Writer/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/Bitcode/Writer/*.h",
-        "include/llvm/Bitcode/Writer/*.def",
-        "include/llvm/Bitcode/Writer/*.inc",
-        "include/llvm/Bitcode/BitcodeWriter.h",
-        "include/llvm/Bitcode/BitcodeWriterPass.h",
-        "include/llvm/Bitcode/BitstreamWriter.h",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":Analysis",
-        ":Core",
-        ":MC",
-        ":Object",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "BitstreamReader",
-    srcs = glob([
-        "lib/Bitstream/Reader/*.c",
-        "lib/Bitstream/Reader/*.cpp",
-        "lib/Bitstream/Reader/*.inc",
-        "lib/Bitstream/Reader/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/Bitstream/Reader/*.h",
-        "include/llvm/Bitstream/Reader/*.def",
-        "include/llvm/Bitstream/Reader/*.inc",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "CFGuard",
-    srcs = glob([
-        "lib/Transforms/CFGuard/*.c",
-        "lib/Transforms/CFGuard/*.cpp",
-        "lib/Transforms/CFGuard/*.inc",
-        "lib/Transforms/CFGuard/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/Transforms/CFGuard/*.h",
-        "include/llvm/Transforms/CFGuard/*.def",
-        "include/llvm/Transforms/CFGuard/*.inc",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":Core",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "CodeGen",
-    srcs = glob([
-        "lib/CodeGen/*.c",
-        "lib/CodeGen/*.cpp",
-        "lib/CodeGen/*.inc",
-        "lib/CodeGen/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/CodeGen/*.h",
-        "include/llvm/CodeGen/*.def",
-        "include/llvm/CodeGen/*.inc",
-        "include/llvm/CodeGen/**/*.h",
-    ]),
     copts = llvm_copts,
     deps = [
         ":Analysis",
         ":BitReader",
         ":BitWriter",
+        ":CodeGen",
         ":Core",
-        ":Instrumentation",
+        ":IRReader",
+        ":Linker",
         ":MC",
-        ":ProfileData",
-        ":Scalar",
+        ":MCParser",
+        ":Object",
+        ":Passes",
         ":Support",
         ":Target",
         ":TransformUtils",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "Core",
-    srcs = glob([
-        "lib/IR/*.c",
-        "lib/IR/*.cpp",
-        "lib/IR/*.inc",
-        "include/llvm/Analysis/*.h",
-        "include/llvm/Bitcode/BitcodeReader.h",
-        "include/llvm/Bitcode/BitCodes.h",
-        "include/llvm/Bitcode/LLVMBitCodes.h",
-        "include/llvm/CodeGen/MachineValueType.h",
-        "include/llvm/CodeGen/ValueTypes.h",
-        "lib/IR/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/IR/*.h",
-        "include/llvm/IR/*.def",
-        "include/llvm/IR/*.inc",
-        "include/llvm/*.h",
-        "include/llvm/Analysis/*.def",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":BinaryFormat",
-        ":Remarks",
-        ":Support",
-        ":aarch64_enums_gen",
-        ":amdgcn_enums_gen",
-        ":arm_enums_gen",
-        ":attributes_gen",
-        ":bpf_enums_gen",
-        ":config",
-        ":hexagon_enums_gen",
-        ":intrinsic_enums_gen",
-        ":intrinsics_impl_gen",
-        ":mips_enums_gen",
-        ":nvvm_enums_gen",
-        ":ppc_enums_gen",
-        ":r600_enums_gen",
-        ":riscv_enums_gen",
-        ":s390_enums_gen",
-        ":wasm_enums_gen",
-        ":x86_enums_gen",
-        ":xcore_enums_gen",
-    ],
-)
-
-cc_library(
-    name = "Coroutines",
-    srcs = glob([
-        "lib/Transforms/Coroutines/*.c",
-        "lib/Transforms/Coroutines/*.cpp",
-        "lib/Transforms/Coroutines/*.inc",
-        "lib/Transforms/Coroutines/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/Transforms/Coroutines/*.h",
-        "include/llvm/Transforms/Coroutines/*.def",
-        "include/llvm/Transforms/Coroutines/*.inc",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":Analysis",
-        ":Core",
-        ":IPO",
-        ":Scalar",
-        ":Support",
-        ":TransformUtils",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "Coverage",
-    srcs = glob([
-        "lib/ProfileData/Coverage/*.c",
-        "lib/ProfileData/Coverage/*.cpp",
-        "lib/ProfileData/Coverage/*.inc",
-        "lib/ProfileData/Coverage/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/ProfileData/Coverage/*.h",
-        "include/llvm/ProfileData/Coverage/*.def",
-        "include/llvm/ProfileData/Coverage/*.inc",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":Core",
-        ":Object",
-        ":ProfileData",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "DWARFLinker",
-    srcs = glob([
-        "lib/DWARFLinker/*.c",
-        "lib/DWARFLinker/*.cpp",
-        "lib/DWARFLinker/*.inc",
-        "lib/DWARFLinker/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/DWARFLinker/*.h",
-        "include/llvm/DWARFLinker/*.def",
-        "include/llvm/DWARFLinker/*.inc",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":AsmPrinter",
-        ":CodeGen",
-        ":DebugInfoDWARF",
-        ":MC",
-        ":Object",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "DebugInfoCodeView",
-    srcs = glob([
-        "lib/DebugInfo/CodeView/*.c",
-        "lib/DebugInfo/CodeView/*.cpp",
-        "lib/DebugInfo/CodeView/*.inc",
-        "lib/DebugInfo/CodeView/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/DebugInfo/CodeView/*.h",
-        "include/llvm/DebugInfo/CodeView/*.def",
-        "include/llvm/DebugInfo/CodeView/*.inc",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":BinaryFormat",
-        ":DebugInfoMSF",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "DebugInfoDWARF",
-    srcs = glob([
-        "lib/DebugInfo/DWARF/*.c",
-        "lib/DebugInfo/DWARF/*.cpp",
-        "lib/DebugInfo/DWARF/*.inc",
-        "lib/DebugInfo/DWARF/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/DebugInfo/DWARF/*.h",
-        "include/llvm/DebugInfo/DWARF/*.def",
-        "include/llvm/DebugInfo/DWARF/*.inc",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":BinaryFormat",
-        ":MC",
-        ":Object",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "DebugInfoGSYM",
-    srcs = glob([
-        "lib/DebugInfo/GSYM/*.c",
-        "lib/DebugInfo/GSYM/*.cpp",
-        "lib/DebugInfo/GSYM/*.inc",
-        "lib/DebugInfo/GSYM/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/DebugInfo/GSYM/*.h",
-        "include/llvm/DebugInfo/GSYM/*.def",
-        "include/llvm/DebugInfo/GSYM/*.inc",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":DebugInfoDWARF",
-        ":MC",
-        ":Object",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "DebugInfoMSF",
-    srcs = glob([
-        "lib/DebugInfo/MSF/*.c",
-        "lib/DebugInfo/MSF/*.cpp",
-        "lib/DebugInfo/MSF/*.inc",
-        "lib/DebugInfo/MSF/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/DebugInfo/MSF/*.h",
-        "include/llvm/DebugInfo/MSF/*.def",
-        "include/llvm/DebugInfo/MSF/*.inc",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "DebugInfoPDB",
-    srcs = glob([
-        "lib/DebugInfo/PDB/*.c",
-        "lib/DebugInfo/PDB/*.cpp",
-        "lib/DebugInfo/PDB/*.inc",
-        "lib/DebugInfo/PDB/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/DebugInfo/PDB/*.h",
-        "include/llvm/DebugInfo/PDB/*.def",
-        "include/llvm/DebugInfo/PDB/*.inc",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":BinaryFormat",
-        ":DebugInfoCodeView",
-        ":DebugInfoMSF",
-        ":Object",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "Demangle",
-    srcs = glob([
-        "lib/Demangle/*.c",
-        "lib/Demangle/*.cpp",
-        "lib/Demangle/*.inc",
-        "lib/Demangle/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/Demangle/*.h",
-        "include/llvm/Demangle/*.def",
-        "include/llvm/Demangle/*.inc",
-    ]),
-    copts = llvm_copts,
-    deps = [":config"],
-)
-
-cc_library(
-    name = "DlltoolDriver",
-    srcs = glob([
-        "lib/ToolDrivers/llvm-dlltool/*.c",
-        "lib/ToolDrivers/llvm-dlltool/*.cpp",
-        "lib/ToolDrivers/llvm-dlltool/*.inc",
-        "lib/ToolDrivers/llvm-dlltool/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/ToolDrivers/llvm-dlltool/*.h",
-        "include/llvm/ToolDrivers/llvm-dlltool/*.def",
-        "include/llvm/ToolDrivers/llvm-dlltool/*.inc",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":Object",
-        ":Option",
-        ":Support",
+        ":common_transforms",
         ":config",
     ],
 )
@@ -2071,376 +2280,36 @@ cc_library(
 cc_library(
     name = "ExecutionEngine",
     srcs = glob([
-        "lib/ExecutionEngine/*.c",
         "lib/ExecutionEngine/*.cpp",
-        "lib/ExecutionEngine/*.inc",
         "lib/ExecutionEngine/*.h",
+        "lib/ExecutionEngine/RuntimeDyld/*.cpp",
+        "lib/ExecutionEngine/RuntimeDyld/*.h",
+        "lib/ExecutionEngine/RuntimeDyld/Targets/*.cpp",
+        "lib/ExecutionEngine/RuntimeDyld/Targets/*.h",
     ]),
-    hdrs = glob([
-        "include/llvm/ExecutionEngine/*.h",
-        "include/llvm/ExecutionEngine/*.def",
-        "include/llvm/ExecutionEngine/*.inc",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":Core",
-        ":MC",
-        ":Object",
-        ":RuntimeDyld",
-        ":Support",
-        ":Target",
-        ":config",
+    hdrs = glob(
+        [
+            "include/llvm/ExecutionEngine/*.h",
+        ],
+        exclude = [
+            "include/llvm/ExecutionEngine/MCJIT*.h",
+            "include/llvm/ExecutionEngine/OProfileWrapper.h",
+        ],
+    ) + [
+        "include/llvm-c/ExecutionEngine.h",
     ],
-)
-
-cc_library(
-    name = "Extensions",
-    srcs = glob([
-        "lib/Extensions/*.c",
-        "lib/Extensions/*.cpp",
-        "lib/Extensions/*.inc",
-        "lib/Extensions/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/Extensions/*.h",
-        "include/llvm/Extensions/*.def",
-        "include/llvm/Extensions/*.inc",
-    ]),
-    copts = llvm_copts,
-    deps = [":config"],
-)
-
-cc_library(
-    name = "FrontendOpenMP",
-    srcs = glob([
-        "lib/Frontend/OpenMP/*.c",
-        "lib/Frontend/OpenMP/*.cpp",
-        "lib/Frontend/OpenMP/*.inc",
-        "lib/Frontend/OpenMP/*.h",
-    ]) + ["include/llvm/Frontend/OpenMP/OMP.cpp"],
-    hdrs = glob([
-        "include/llvm/Frontend/OpenMP/*.h",
-        "include/llvm/Frontend/OpenMP/*.def",
-        "include/llvm/Frontend/OpenMP/*.inc",
-    ]),
     copts = llvm_copts,
     deps = [
-        ":Core",
-        ":Support",
-        ":TransformUtils",
-        ":config",
-        ":omp_gen",
-        ":omp_gen_impl",
-    ],
-)
-
-cc_library(
-    name = "FuzzMutate",
-    srcs = glob([
-        "lib/FuzzMutate/*.c",
-        "lib/FuzzMutate/*.cpp",
-        "lib/FuzzMutate/*.inc",
-        "lib/FuzzMutate/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/FuzzMutate/*.h",
-        "include/llvm/FuzzMutate/*.def",
-        "include/llvm/FuzzMutate/*.inc",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":Analysis",
-        ":BitReader",
-        ":BitWriter",
-        ":Core",
-        ":Scalar",
-        ":Support",
-        ":Target",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "GlobalISel",
-    srcs = glob([
-        "lib/CodeGen/GlobalISel/*.c",
-        "lib/CodeGen/GlobalISel/*.cpp",
-        "lib/CodeGen/GlobalISel/*.inc",
-        "lib/CodeGen/GlobalISel/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/CodeGen/GlobalISel/*.h",
-        "include/llvm/CodeGen/GlobalISel/*.def",
-        "include/llvm/CodeGen/GlobalISel/*.inc",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":Analysis",
+        ":BinaryFormat",
         ":CodeGen",
         ":Core",
-        ":MC",
-        ":SelectionDAG",
-        ":Support",
-        ":Target",
-        ":TransformUtils",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "HexagonAsmParser",
-    srcs = glob([
-        "lib/Target/Hexagon/AsmParser/*.c",
-        "lib/Target/Hexagon/AsmParser/*.cpp",
-        "lib/Target/Hexagon/AsmParser/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/Hexagon/AsmParser/*.h",
-        "include/llvm/Target/Hexagon/AsmParser/*.def",
-        "include/llvm/Target/Hexagon/AsmParser/*.inc",
-        "lib/Target/Hexagon/AsmParser/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/Hexagon"],
-    deps = [
-        ":HexagonDesc",
-        ":HexagonInfo",
-        ":MC",
-        ":MCParser",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "HexagonCodeGen",
-    srcs = glob([
-        "lib/Target/Hexagon/*.c",
-        "lib/Target/Hexagon/*.cpp",
-        "lib/Target/Hexagon/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/Hexagon/*.h",
-        "include/llvm/Target/Hexagon/*.def",
-        "include/llvm/Target/Hexagon/*.inc",
-        "lib/Target/Hexagon/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/Hexagon"],
-    deps = [
-        ":Analysis",
-        ":AsmPrinter",
-        ":CodeGen",
-        ":Core",
-        ":HexagonAsmParser",
-        ":HexagonDesc",
-        ":HexagonInfo",
-        ":IPO",
-        ":MC",
-        ":Scalar",
-        ":SelectionDAG",
-        ":Support",
-        ":Target",
-        ":TransformUtils",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "HexagonDesc",
-    srcs = glob([
-        "lib/Target/Hexagon/MCTargetDesc/*.c",
-        "lib/Target/Hexagon/MCTargetDesc/*.cpp",
-        "lib/Target/Hexagon/MCTargetDesc/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/Hexagon/MCTargetDesc/*.h",
-        "include/llvm/Target/Hexagon/MCTargetDesc/*.def",
-        "include/llvm/Target/Hexagon/MCTargetDesc/*.inc",
-        "lib/Target/Hexagon/MCTargetDesc/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/Hexagon"],
-    deps = [
-        ":HexagonInfo",
-        ":MC",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "HexagonDisassembler",
-    srcs = glob([
-        "lib/Target/Hexagon/Disassembler/*.c",
-        "lib/Target/Hexagon/Disassembler/*.cpp",
-        "lib/Target/Hexagon/Disassembler/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/Hexagon/Disassembler/*.h",
-        "include/llvm/Target/Hexagon/Disassembler/*.def",
-        "include/llvm/Target/Hexagon/Disassembler/*.inc",
-        "lib/Target/Hexagon/Disassembler/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/Hexagon"],
-    deps = [
-        ":HexagonDesc",
-        ":HexagonInfo",
+        ":DebugInfo",
         ":MC",
         ":MCDisassembler",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "HexagonInfo",
-    srcs = glob([
-        "lib/Target/Hexagon/TargetInfo/*.c",
-        "lib/Target/Hexagon/TargetInfo/*.cpp",
-        "lib/Target/Hexagon/TargetInfo/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/Hexagon/TargetInfo/*.h",
-        "include/llvm/Target/Hexagon/TargetInfo/*.def",
-        "include/llvm/Target/Hexagon/TargetInfo/*.inc",
-        "lib/Target/Hexagon/TargetInfo/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/Hexagon"],
-    deps = [
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "IPO",
-    srcs = glob([
-        "lib/Transforms/IPO/*.c",
-        "lib/Transforms/IPO/*.cpp",
-        "lib/Transforms/IPO/*.inc",
-        "include/llvm/Transforms/SampleProfile.h",
-        "include/llvm-c/Transforms/IPO.h",
-        "include/llvm-c/Transforms/PassManagerBuilder.h",
-        "lib/Transforms/IPO/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/Transforms/IPO/*.h",
-        "include/llvm/Transforms/IPO/*.def",
-        "include/llvm/Transforms/IPO/*.inc",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":AggressiveInstCombine",
-        ":Analysis",
-        ":BitReader",
-        ":BitWriter",
-        ":Core",
-        ":FrontendOpenMP",
-        ":IRReader",
-        ":InstCombine",
-        ":Instrumentation",
-        ":Linker",
         ":Object",
-        ":ProfileData",
-        ":Scalar",
+        ":Passes",
         ":Support",
-        ":TransformUtils",
-        ":Vectorize",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "IRReader",
-    srcs = glob([
-        "lib/IRReader/*.c",
-        "lib/IRReader/*.cpp",
-        "lib/IRReader/*.inc",
-        "lib/IRReader/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/IRReader/*.h",
-        "include/llvm/IRReader/*.def",
-        "include/llvm/IRReader/*.inc",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":AsmParser",
-        ":BitReader",
-        ":Core",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "InstCombine",
-    srcs = glob([
-        "lib/Transforms/InstCombine/*.c",
-        "lib/Transforms/InstCombine/*.cpp",
-        "lib/Transforms/InstCombine/*.inc",
-        "lib/Transforms/InstCombine/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/Transforms/InstCombine/*.h",
-        "include/llvm/Transforms/InstCombine/*.def",
-        "include/llvm/Transforms/InstCombine/*.inc",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":Analysis",
-        ":Core",
-        ":InstCombineTableGen",
-        ":Support",
-        ":TransformUtils",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "Instrumentation",
-    srcs = glob([
-        "lib/Transforms/Instrumentation/*.c",
-        "lib/Transforms/Instrumentation/*.cpp",
-        "lib/Transforms/Instrumentation/*.inc",
-        "lib/Transforms/Instrumentation/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/Transforms/Instrumentation/*.h",
-        "include/llvm/Transforms/Instrumentation/*.def",
-        "include/llvm/Transforms/Instrumentation/*.inc",
-        "include/llvm/Transforms/GCOVProfiler.h",
-        "include/llvm/Transforms/Instrumentation.h",
-        "include/llvm/Transforms/InstrProfiling.h",
-        "include/llvm/Transforms/PGOInstrumentation.h",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":Analysis",
-        ":Core",
-        ":MC",
-        ":ProfileData",
-        ":Support",
-        ":TransformUtils",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "InterfaceStub",
-    srcs = glob([
-        "lib/InterfaceStub/*.c",
-        "lib/InterfaceStub/*.cpp",
-        "lib/InterfaceStub/*.inc",
-        "lib/InterfaceStub/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/InterfaceStub/*.h",
-        "include/llvm/InterfaceStub/*.def",
-        "include/llvm/InterfaceStub/*.inc",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":Object",
-        ":Support",
+        ":Target",
         ":config",
     ],
 )
@@ -2448,22 +2317,17 @@ cc_library(
 cc_library(
     name = "Interpreter",
     srcs = glob([
-        "lib/ExecutionEngine/Interpreter/*.c",
         "lib/ExecutionEngine/Interpreter/*.cpp",
-        "lib/ExecutionEngine/Interpreter/*.inc",
         "lib/ExecutionEngine/Interpreter/*.h",
     ]),
-    hdrs = glob([
-        "include/llvm/ExecutionEngine/Interpreter/*.h",
-        "include/llvm/ExecutionEngine/Interpreter/*.def",
-        "include/llvm/ExecutionEngine/Interpreter/*.inc",
-    ]),
+    hdrs = ["include/llvm/ExecutionEngine/Interpreter.h"],
     copts = llvm_copts,
     deps = [
         ":CodeGen",
         ":Core",
         ":ExecutionEngine",
         ":Support",
+        ":Target",
         ":config",
     ],
 )
@@ -2471,311 +2335,16 @@ cc_library(
 cc_library(
     name = "JITLink",
     srcs = glob([
-        "lib/ExecutionEngine/JITLink/*.c",
         "lib/ExecutionEngine/JITLink/*.cpp",
-        "lib/ExecutionEngine/JITLink/*.inc",
         "lib/ExecutionEngine/JITLink/*.h",
     ]),
     hdrs = glob([
         "include/llvm/ExecutionEngine/JITLink/*.h",
-        "include/llvm/ExecutionEngine/JITLink/*.def",
-        "include/llvm/ExecutionEngine/JITLink/*.inc",
     ]),
     copts = llvm_copts,
     deps = [
-        ":BinaryFormat",
+        ":ExecutionEngine",
         ":Object",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "LTO",
-    srcs = glob([
-        "lib/LTO/*.c",
-        "lib/LTO/*.cpp",
-        "lib/LTO/*.inc",
-        "lib/LTO/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/LTO/*.h",
-        "include/llvm/LTO/*.def",
-        "include/llvm/LTO/*.inc",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":AggressiveInstCombine",
-        ":Analysis",
-        ":BinaryFormat",
-        ":BitReader",
-        ":BitWriter",
-        ":CodeGen",
-        ":Core",
-        ":Extensions",
-        ":IPO",
-        ":InstCombine",
-        ":Linker",
-        ":MC",
-        ":ObjCARC",
-        ":Object",
-        ":Passes",
-        ":Remarks",
-        ":Scalar",
-        ":Support",
-        ":Target",
-        ":TransformUtils",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "LanaiAsmParser",
-    srcs = glob([
-        "lib/Target/Lanai/AsmParser/*.c",
-        "lib/Target/Lanai/AsmParser/*.cpp",
-        "lib/Target/Lanai/AsmParser/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/Lanai/AsmParser/*.h",
-        "include/llvm/Target/Lanai/AsmParser/*.def",
-        "include/llvm/Target/Lanai/AsmParser/*.inc",
-        "lib/Target/Lanai/AsmParser/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/Lanai"],
-    deps = [
-        ":LanaiDesc",
-        ":LanaiInfo",
-        ":MC",
-        ":MCParser",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "LanaiCodeGen",
-    srcs = glob([
-        "lib/Target/Lanai/*.c",
-        "lib/Target/Lanai/*.cpp",
-        "lib/Target/Lanai/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/Lanai/*.h",
-        "include/llvm/Target/Lanai/*.def",
-        "include/llvm/Target/Lanai/*.inc",
-        "lib/Target/Lanai/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/Lanai"],
-    deps = [
-        ":Analysis",
-        ":AsmPrinter",
-        ":CodeGen",
-        ":Core",
-        ":LanaiAsmParser",
-        ":LanaiDesc",
-        ":LanaiInfo",
-        ":MC",
-        ":SelectionDAG",
-        ":Support",
-        ":Target",
-        ":TransformUtils",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "LanaiDesc",
-    srcs = glob([
-        "lib/Target/Lanai/MCTargetDesc/*.c",
-        "lib/Target/Lanai/MCTargetDesc/*.cpp",
-        "lib/Target/Lanai/MCTargetDesc/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/Lanai/MCTargetDesc/*.h",
-        "include/llvm/Target/Lanai/MCTargetDesc/*.def",
-        "include/llvm/Target/Lanai/MCTargetDesc/*.inc",
-        "lib/Target/Lanai/MCTargetDesc/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/Lanai"],
-    deps = [
-        ":LanaiInfo",
-        ":MC",
-        ":MCDisassembler",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "LanaiDisassembler",
-    srcs = glob([
-        "lib/Target/Lanai/Disassembler/*.c",
-        "lib/Target/Lanai/Disassembler/*.cpp",
-        "lib/Target/Lanai/Disassembler/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/Lanai/Disassembler/*.h",
-        "include/llvm/Target/Lanai/Disassembler/*.def",
-        "include/llvm/Target/Lanai/Disassembler/*.inc",
-        "lib/Target/Lanai/Disassembler/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/Lanai"],
-    deps = [
-        ":LanaiDesc",
-        ":LanaiInfo",
-        ":MC",
-        ":MCDisassembler",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "LanaiInfo",
-    srcs = glob([
-        "lib/Target/Lanai/TargetInfo/*.c",
-        "lib/Target/Lanai/TargetInfo/*.cpp",
-        "lib/Target/Lanai/TargetInfo/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/Lanai/TargetInfo/*.h",
-        "include/llvm/Target/Lanai/TargetInfo/*.def",
-        "include/llvm/Target/Lanai/TargetInfo/*.inc",
-        "lib/Target/Lanai/TargetInfo/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/Lanai"],
-    deps = [
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "LibDriver",
-    srcs = glob([
-        "lib/ToolDrivers/llvm-lib/*.c",
-        "lib/ToolDrivers/llvm-lib/*.cpp",
-        "lib/ToolDrivers/llvm-lib/*.inc",
-        "lib/ToolDrivers/llvm-lib/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/ToolDrivers/llvm-lib/*.h",
-        "include/llvm/ToolDrivers/llvm-lib/*.def",
-        "include/llvm/ToolDrivers/llvm-lib/*.inc",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":BinaryFormat",
-        ":BitReader",
-        ":Object",
-        ":Option",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "LineEditor",
-    srcs = glob([
-        "lib/LineEditor/*.c",
-        "lib/LineEditor/*.cpp",
-        "lib/LineEditor/*.inc",
-        "lib/LineEditor/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/LineEditor/*.h",
-        "include/llvm/LineEditor/*.def",
-        "include/llvm/LineEditor/*.inc",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "Linker",
-    srcs = glob([
-        "lib/Linker/*.c",
-        "lib/Linker/*.cpp",
-        "lib/Linker/*.inc",
-        "lib/Linker/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/Linker/*.h",
-        "include/llvm/Linker/*.def",
-        "include/llvm/Linker/*.inc",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":Core",
-        ":Support",
-        ":TransformUtils",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "MC",
-    srcs = glob([
-        "lib/MC/*.c",
-        "lib/MC/*.cpp",
-        "lib/MC/*.inc",
-        "lib/MC/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/MC/*.h",
-        "include/llvm/MC/*.def",
-        "include/llvm/MC/*.inc",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":BinaryFormat",
-        ":DebugInfoCodeView",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "MCA",
-    srcs = glob([
-        "lib/MCA/*.c",
-        "lib/MCA/*.cpp",
-        "lib/MCA/*.inc",
-        "lib/MCA/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/MCA/*.h",
-        "include/llvm/MCA/*.def",
-        "include/llvm/MCA/*.inc",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":MC",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "MCDisassembler",
-    srcs = glob([
-        "lib/MC/MCDisassembler/*.c",
-        "lib/MC/MCDisassembler/*.cpp",
-        "lib/MC/MCDisassembler/*.inc",
-        "lib/MC/MCDisassembler/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/MC/MCDisassembler/*.h",
-        "include/llvm/MC/MCDisassembler/*.def",
-        "include/llvm/MC/MCDisassembler/*.inc",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":MC",
         ":Support",
         ":config",
     ],
@@ -2784,501 +2353,19 @@ cc_library(
 cc_library(
     name = "MCJIT",
     srcs = glob([
-        "lib/ExecutionEngine/MCJIT/*.c",
         "lib/ExecutionEngine/MCJIT/*.cpp",
-        "lib/ExecutionEngine/MCJIT/*.inc",
         "lib/ExecutionEngine/MCJIT/*.h",
     ]),
-    hdrs = glob([
-        "include/llvm/ExecutionEngine/MCJIT/*.h",
-        "include/llvm/ExecutionEngine/MCJIT/*.def",
-        "include/llvm/ExecutionEngine/MCJIT/*.inc",
-    ]),
+    hdrs = glob(["include/llvm/ExecutionEngine/MCJIT*.h"]),
     copts = llvm_copts,
     deps = [
+        ":CodeGen",
         ":Core",
         ":ExecutionEngine",
-        ":Object",
-        ":RuntimeDyld",
-        ":Support",
-        ":Target",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "MCParser",
-    srcs = glob([
-        "lib/MC/MCParser/*.c",
-        "lib/MC/MCParser/*.cpp",
-        "lib/MC/MCParser/*.inc",
-        "lib/MC/MCParser/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/MC/MCParser/*.h",
-        "include/llvm/MC/MCParser/*.def",
-        "include/llvm/MC/MCParser/*.inc",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":MC",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "MIRParser",
-    srcs = glob([
-        "lib/CodeGen/MIRParser/*.c",
-        "lib/CodeGen/MIRParser/*.cpp",
-        "lib/CodeGen/MIRParser/*.inc",
-        "lib/CodeGen/MIRParser/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/CodeGen/MIRParser/*.h",
-        "include/llvm/CodeGen/MIRParser/*.def",
-        "include/llvm/CodeGen/MIRParser/*.inc",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":AsmParser",
-        ":BinaryFormat",
-        ":CodeGen",
-        ":Core",
-        ":MC",
-        ":Support",
-        ":Target",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "MSP430AsmParser",
-    srcs = glob([
-        "lib/Target/MSP430/AsmParser/*.c",
-        "lib/Target/MSP430/AsmParser/*.cpp",
-        "lib/Target/MSP430/AsmParser/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/MSP430/AsmParser/*.h",
-        "include/llvm/Target/MSP430/AsmParser/*.def",
-        "include/llvm/Target/MSP430/AsmParser/*.inc",
-        "lib/Target/MSP430/AsmParser/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/MSP430"],
-    deps = [
-        ":MC",
-        ":MCParser",
-        ":MSP430Desc",
-        ":MSP430Info",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "MSP430CodeGen",
-    srcs = glob([
-        "lib/Target/MSP430/*.c",
-        "lib/Target/MSP430/*.cpp",
-        "lib/Target/MSP430/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/MSP430/*.h",
-        "include/llvm/Target/MSP430/*.def",
-        "include/llvm/Target/MSP430/*.inc",
-        "lib/Target/MSP430/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/MSP430"],
-    deps = [
-        ":AsmPrinter",
-        ":CodeGen",
-        ":Core",
-        ":MC",
-        ":MSP430Desc",
-        ":MSP430Info",
-        ":SelectionDAG",
-        ":Support",
-        ":Target",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "MSP430Desc",
-    srcs = glob([
-        "lib/Target/MSP430/MCTargetDesc/*.c",
-        "lib/Target/MSP430/MCTargetDesc/*.cpp",
-        "lib/Target/MSP430/MCTargetDesc/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/MSP430/MCTargetDesc/*.h",
-        "include/llvm/Target/MSP430/MCTargetDesc/*.def",
-        "include/llvm/Target/MSP430/MCTargetDesc/*.inc",
-        "lib/Target/MSP430/MCTargetDesc/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/MSP430"],
-    deps = [
-        ":MC",
-        ":MSP430Info",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "MSP430Disassembler",
-    srcs = glob([
-        "lib/Target/MSP430/Disassembler/*.c",
-        "lib/Target/MSP430/Disassembler/*.cpp",
-        "lib/Target/MSP430/Disassembler/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/MSP430/Disassembler/*.h",
-        "include/llvm/Target/MSP430/Disassembler/*.def",
-        "include/llvm/Target/MSP430/Disassembler/*.inc",
-        "lib/Target/MSP430/Disassembler/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/MSP430"],
-    deps = [
-        ":MCDisassembler",
-        ":MSP430Info",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "MSP430Info",
-    srcs = glob([
-        "lib/Target/MSP430/TargetInfo/*.c",
-        "lib/Target/MSP430/TargetInfo/*.cpp",
-        "lib/Target/MSP430/TargetInfo/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/MSP430/TargetInfo/*.h",
-        "include/llvm/Target/MSP430/TargetInfo/*.def",
-        "include/llvm/Target/MSP430/TargetInfo/*.inc",
-        "lib/Target/MSP430/TargetInfo/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/MSP430"],
-    deps = [
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "MipsAsmParser",
-    srcs = glob([
-        "lib/Target/Mips/AsmParser/*.c",
-        "lib/Target/Mips/AsmParser/*.cpp",
-        "lib/Target/Mips/AsmParser/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/Mips/AsmParser/*.h",
-        "include/llvm/Target/Mips/AsmParser/*.def",
-        "include/llvm/Target/Mips/AsmParser/*.inc",
-        "lib/Target/Mips/AsmParser/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/Mips"],
-    deps = [
-        ":MC",
-        ":MCParser",
-        ":MipsDesc",
-        ":MipsInfo",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "MipsCodeGen",
-    srcs = glob([
-        "lib/Target/Mips/*.c",
-        "lib/Target/Mips/*.cpp",
-        "lib/Target/Mips/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/Mips/*.h",
-        "include/llvm/Target/Mips/*.def",
-        "include/llvm/Target/Mips/*.inc",
-        "lib/Target/Mips/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/Mips"],
-    deps = [
-        ":Analysis",
-        ":AsmPrinter",
-        ":CodeGen",
-        ":Core",
-        ":GlobalISel",
-        ":MC",
-        ":MipsDesc",
-        ":MipsInfo",
-        ":SelectionDAG",
-        ":Support",
-        ":Target",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "MipsDesc",
-    srcs = glob([
-        "lib/Target/Mips/MCTargetDesc/*.c",
-        "lib/Target/Mips/MCTargetDesc/*.cpp",
-        "lib/Target/Mips/MCTargetDesc/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/Mips/MCTargetDesc/*.h",
-        "include/llvm/Target/Mips/MCTargetDesc/*.def",
-        "include/llvm/Target/Mips/MCTargetDesc/*.inc",
-        "lib/Target/Mips/MCTargetDesc/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/Mips"],
-    deps = [
-        ":MC",
-        ":MipsInfo",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "MipsDisassembler",
-    srcs = glob([
-        "lib/Target/Mips/Disassembler/*.c",
-        "lib/Target/Mips/Disassembler/*.cpp",
-        "lib/Target/Mips/Disassembler/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/Mips/Disassembler/*.h",
-        "include/llvm/Target/Mips/Disassembler/*.def",
-        "include/llvm/Target/Mips/Disassembler/*.inc",
-        "lib/Target/Mips/Disassembler/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/Mips"],
-    deps = [
-        ":MCDisassembler",
-        ":MipsInfo",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "MipsInfo",
-    srcs = glob([
-        "lib/Target/Mips/TargetInfo/*.c",
-        "lib/Target/Mips/TargetInfo/*.cpp",
-        "lib/Target/Mips/TargetInfo/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/Mips/TargetInfo/*.h",
-        "include/llvm/Target/Mips/TargetInfo/*.def",
-        "include/llvm/Target/Mips/TargetInfo/*.inc",
-        "lib/Target/Mips/TargetInfo/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/Mips"],
-    deps = [
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "NVPTXCodeGen",
-    srcs = glob([
-        "lib/Target/NVPTX/*.c",
-        "lib/Target/NVPTX/*.cpp",
-        "lib/Target/NVPTX/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/NVPTX/*.h",
-        "include/llvm/Target/NVPTX/*.def",
-        "include/llvm/Target/NVPTX/*.inc",
-        "lib/Target/NVPTX/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/NVPTX"],
-    deps = [
-        ":Analysis",
-        ":AsmPrinter",
-        ":CodeGen",
-        ":Core",
-        ":IPO",
-        ":MC",
-        ":NVPTXDesc",
-        ":NVPTXInfo",
-        ":Scalar",
-        ":SelectionDAG",
-        ":Support",
-        ":Target",
-        ":TransformUtils",
-        ":Vectorize",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "NVPTXDesc",
-    srcs = glob([
-        "lib/Target/NVPTX/MCTargetDesc/*.c",
-        "lib/Target/NVPTX/MCTargetDesc/*.cpp",
-        "lib/Target/NVPTX/MCTargetDesc/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/NVPTX/MCTargetDesc/*.h",
-        "include/llvm/Target/NVPTX/MCTargetDesc/*.def",
-        "include/llvm/Target/NVPTX/MCTargetDesc/*.inc",
-        "lib/Target/NVPTX/MCTargetDesc/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/NVPTX"],
-    deps = [
-        ":MC",
-        ":NVPTXCommonTableGen",
-        ":NVPTXInfo",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "NVPTXInfo",
-    srcs = glob([
-        "lib/Target/NVPTX/TargetInfo/*.c",
-        "lib/Target/NVPTX/TargetInfo/*.cpp",
-        "lib/Target/NVPTX/TargetInfo/*.inc",
-        "lib/Target/NVPTX/MCTargetDesc/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/NVPTX/TargetInfo/*.h",
-        "include/llvm/Target/NVPTX/TargetInfo/*.def",
-        "include/llvm/Target/NVPTX/TargetInfo/*.inc",
-        "lib/Target/NVPTX/NVPTX.h",
-        "lib/Target/NVPTX/TargetInfo/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/NVPTX"],
-    deps = [
-        ":Core",
-        ":NVPTXCommonTableGen",
-        ":Support",
-        ":Target",
-        ":attributes_gen",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "ObjCARC",
-    srcs = glob([
-        "lib/Transforms/ObjCARC/*.c",
-        "lib/Transforms/ObjCARC/*.cpp",
-        "lib/Transforms/ObjCARC/*.inc",
-        "include/llvm/Transforms/ObjCARC.h",
-        "lib/Transforms/ObjCARC/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/Transforms/ObjCARC/*.h",
-        "include/llvm/Transforms/ObjCARC/*.def",
-        "include/llvm/Transforms/ObjCARC/*.inc",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":Analysis",
-        ":Core",
-        ":Support",
-        ":TransformUtils",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "Object",
-    srcs = glob([
-        "lib/Object/*.c",
-        "lib/Object/*.cpp",
-        "lib/Object/*.inc",
-        "lib/Object/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/Object/*.h",
-        "include/llvm/Object/*.def",
-        "include/llvm/Object/*.inc",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":BinaryFormat",
-        ":BitReader",
-        ":Core",
-        ":MC",
-        ":MCParser",
-        ":Support",
-        ":TextAPI",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "ObjectYAML",
-    srcs = glob([
-        "lib/ObjectYAML/*.c",
-        "lib/ObjectYAML/*.cpp",
-        "lib/ObjectYAML/*.inc",
-        "lib/ObjectYAML/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/ObjectYAML/*.h",
-        "include/llvm/ObjectYAML/*.def",
-        "include/llvm/ObjectYAML/*.inc",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":BinaryFormat",
-        ":DebugInfoCodeView",
         ":MC",
         ":Object",
         ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "Option",
-    srcs = glob([
-        "lib/Option/*.c",
-        "lib/Option/*.cpp",
-        "lib/Option/*.inc",
-        "lib/Option/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/Option/*.h",
-        "include/llvm/Option/*.def",
-        "include/llvm/Option/*.inc",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "OrcError",
-    srcs = glob([
-        "lib/ExecutionEngine/OrcError/*.c",
-        "lib/ExecutionEngine/OrcError/*.cpp",
-        "lib/ExecutionEngine/OrcError/*.inc",
-        "lib/ExecutionEngine/OrcError/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/ExecutionEngine/OrcError/*.h",
-        "include/llvm/ExecutionEngine/OrcError/*.def",
-        "include/llvm/ExecutionEngine/OrcError/*.inc",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":Support",
+        ":Target",
         ":config",
     ],
 )
@@ -3286,26 +2373,27 @@ cc_library(
 cc_library(
     name = "OrcJIT",
     srcs = glob([
-        "lib/ExecutionEngine/Orc/*.c",
         "lib/ExecutionEngine/Orc/*.cpp",
-        "lib/ExecutionEngine/Orc/*.inc",
         "lib/ExecutionEngine/Orc/*.h",
+        "lib/ExecutionEngine/Orc/RPC/*.cpp",
+        "lib/ExecutionEngine/OrcError/*.cpp",
     ]),
     hdrs = glob([
         "include/llvm/ExecutionEngine/Orc/*.h",
-        "include/llvm/ExecutionEngine/Orc/*.def",
-        "include/llvm/ExecutionEngine/Orc/*.inc",
-    ]),
+        "include/llvm/ExecutionEngine/Orc/RPC/*.h",
+    ]) + [
+        "include/llvm-c/Orc.h",
+        "include/llvm-c/OrcBindings.h",
+    ],
     copts = llvm_copts,
     deps = [
+        ":BitReader",
+        ":BitWriter",
         ":Core",
         ":ExecutionEngine",
         ":JITLink",
         ":MC",
         ":Object",
-        ":OrcError",
-        ":Passes",
-        ":RuntimeDyld",
         ":Support",
         ":Target",
         ":TransformUtils",
@@ -3314,1120 +2402,81 @@ cc_library(
 )
 
 cc_library(
-    name = "Passes",
+    name = "DWARFLinker",
     srcs = glob([
-        "lib/Passes/*.c",
-        "lib/Passes/*.cpp",
-        "lib/Passes/*.inc",
-        "lib/Passes/*.h",
+        "lib/DWARFLinker/*.cpp",
+        "lib/DWARFLinker/*.h",
     ]),
-    hdrs = glob([
-        "include/llvm/Passes/*.h",
-        "include/llvm/Passes/*.def",
-        "include/llvm/Passes/*.inc",
-    ]),
+    hdrs = glob(["include/llvm/DWARFLinker/*.h"]),
     copts = llvm_copts,
     deps = [
-        ":AggressiveInstCombine",
-        ":Analysis",
         ":CodeGen",
-        ":Core",
-        ":Coroutines",
-        ":IPO",
-        ":InstCombine",
-        ":Instrumentation",
-        ":Scalar",
-        ":Support",
-        ":Target",
-        ":TransformUtils",
-        ":Vectorize",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "PowerPCAsmParser",
-    srcs = glob([
-        "lib/Target/PowerPC/AsmParser/*.c",
-        "lib/Target/PowerPC/AsmParser/*.cpp",
-        "lib/Target/PowerPC/AsmParser/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/PowerPC/AsmParser/*.h",
-        "include/llvm/Target/PowerPC/AsmParser/*.def",
-        "include/llvm/Target/PowerPC/AsmParser/*.inc",
-        "lib/Target/PowerPC/AsmParser/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/PowerPC"],
-    deps = [
-        ":MC",
-        ":MCParser",
-        ":PowerPCDesc",
-        ":PowerPCInfo",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "PowerPCCodeGen",
-    srcs = glob([
-        "lib/Target/PowerPC/*.c",
-        "lib/Target/PowerPC/*.cpp",
-        "lib/Target/PowerPC/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/PowerPC/*.h",
-        "include/llvm/Target/PowerPC/*.def",
-        "include/llvm/Target/PowerPC/*.inc",
-        "lib/Target/PowerPC/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/PowerPC"],
-    deps = [
-        ":Analysis",
-        ":AsmPrinter",
-        ":CodeGen",
-        ":Core",
-        ":MC",
-        ":PowerPCDesc",
-        ":PowerPCInfo",
-        ":Scalar",
-        ":SelectionDAG",
-        ":Support",
-        ":Target",
-        ":TransformUtils",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "PowerPCDesc",
-    srcs = glob([
-        "lib/Target/PowerPC/MCTargetDesc/*.c",
-        "lib/Target/PowerPC/MCTargetDesc/*.cpp",
-        "lib/Target/PowerPC/MCTargetDesc/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/PowerPC/MCTargetDesc/*.h",
-        "include/llvm/Target/PowerPC/MCTargetDesc/*.def",
-        "include/llvm/Target/PowerPC/MCTargetDesc/*.inc",
-        "lib/Target/PowerPC/MCTargetDesc/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/PowerPC"],
-    deps = [
-        ":BinaryFormat",
-        ":MC",
-        ":PowerPCCommonTableGen",
-        ":PowerPCInfo",
-        ":Support",
-        ":attributes_gen",
-        ":config",
-        ":intrinsic_enums_gen",
-        ":intrinsics_impl_gen",
-    ],
-)
-
-cc_library(
-    name = "PowerPCDisassembler",
-    srcs = glob([
-        "lib/Target/PowerPC/Disassembler/*.c",
-        "lib/Target/PowerPC/Disassembler/*.cpp",
-        "lib/Target/PowerPC/Disassembler/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/PowerPC/Disassembler/*.h",
-        "include/llvm/Target/PowerPC/Disassembler/*.def",
-        "include/llvm/Target/PowerPC/Disassembler/*.inc",
-        "lib/Target/PowerPC/Disassembler/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/PowerPC"],
-    deps = [
-        ":MCDisassembler",
-        ":PowerPCInfo",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "PowerPCInfo",
-    srcs = glob([
-        "lib/Target/PowerPC/TargetInfo/*.c",
-        "lib/Target/PowerPC/TargetInfo/*.cpp",
-        "lib/Target/PowerPC/TargetInfo/*.inc",
-        "lib/Target/PowerPC/MCTargetDesc/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/PowerPC/TargetInfo/*.h",
-        "include/llvm/Target/PowerPC/TargetInfo/*.def",
-        "include/llvm/Target/PowerPC/TargetInfo/*.inc",
-        "lib/Target/PowerPC/PPC*.h",
-        "lib/Target/PowerPC/TargetInfo/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/PowerPC"],
-    deps = [
-        ":Core",
-        ":PowerPCCommonTableGen",
-        ":Support",
-        ":Target",
-        ":attributes_gen",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "ProfileData",
-    srcs = glob([
-        "lib/ProfileData/*.c",
-        "lib/ProfileData/*.cpp",
-        "lib/ProfileData/*.inc",
-        "lib/ProfileData/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/ProfileData/*.h",
-        "include/llvm/ProfileData/*.def",
-        "include/llvm/ProfileData/*.inc",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":Core",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "RISCVAsmParser",
-    srcs = glob([
-        "lib/Target/RISCV/AsmParser/*.c",
-        "lib/Target/RISCV/AsmParser/*.cpp",
-        "lib/Target/RISCV/AsmParser/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/RISCV/AsmParser/*.h",
-        "include/llvm/Target/RISCV/AsmParser/*.def",
-        "include/llvm/Target/RISCV/AsmParser/*.inc",
-        "lib/Target/RISCV/AsmParser/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/RISCV"],
-    deps = [
-        ":MC",
-        ":MCParser",
-        ":RISCVDesc",
-        ":RISCVInfo",
-        ":RISCVUtils",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "RISCVCodeGen",
-    srcs = glob([
-        "lib/Target/RISCV/*.c",
-        "lib/Target/RISCV/*.cpp",
-        "lib/Target/RISCV/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/RISCV/*.h",
-        "include/llvm/Target/RISCV/*.def",
-        "include/llvm/Target/RISCV/*.inc",
-        "lib/Target/RISCV/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/RISCV"],
-    deps = [
-        ":Analysis",
-        ":AsmPrinter",
-        ":CodeGen",
-        ":Core",
-        ":GlobalISel",
-        ":MC",
-        ":RISCVDesc",
-        ":RISCVInfo",
-        ":RISCVUtils",
-        ":SelectionDAG",
-        ":Support",
-        ":Target",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "RISCVDesc",
-    srcs = glob([
-        "lib/Target/RISCV/MCTargetDesc/*.c",
-        "lib/Target/RISCV/MCTargetDesc/*.cpp",
-        "lib/Target/RISCV/MCTargetDesc/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/RISCV/MCTargetDesc/*.h",
-        "include/llvm/Target/RISCV/MCTargetDesc/*.def",
-        "include/llvm/Target/RISCV/MCTargetDesc/*.inc",
-        "lib/Target/RISCV/MCTargetDesc/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/RISCV"],
-    deps = [
-        ":MC",
-        ":RISCVInfo",
-        ":RISCVUtils",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "RISCVDisassembler",
-    srcs = glob([
-        "lib/Target/RISCV/Disassembler/*.c",
-        "lib/Target/RISCV/Disassembler/*.cpp",
-        "lib/Target/RISCV/Disassembler/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/RISCV/Disassembler/*.h",
-        "include/llvm/Target/RISCV/Disassembler/*.def",
-        "include/llvm/Target/RISCV/Disassembler/*.inc",
-        "lib/Target/RISCV/Disassembler/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/RISCV"],
-    deps = [
-        ":MCDisassembler",
-        ":RISCVInfo",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "RISCVInfo",
-    srcs = glob([
-        "lib/Target/RISCV/TargetInfo/*.c",
-        "lib/Target/RISCV/TargetInfo/*.cpp",
-        "lib/Target/RISCV/TargetInfo/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/RISCV/TargetInfo/*.h",
-        "include/llvm/Target/RISCV/TargetInfo/*.def",
-        "include/llvm/Target/RISCV/TargetInfo/*.inc",
-        "lib/Target/RISCV/TargetInfo/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/RISCV"],
-    deps = [
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "RISCVUtils",
-    srcs = glob([
-        "lib/Target/RISCV/Utils/*.c",
-        "lib/Target/RISCV/Utils/*.cpp",
-        "lib/Target/RISCV/Utils/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/RISCV/Utils/*.h",
-        "include/llvm/Target/RISCV/Utils/*.def",
-        "include/llvm/Target/RISCV/Utils/*.inc",
-        "lib/Target/RISCV/Utils/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/RISCV"],
-    deps = [
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "Remarks",
-    srcs = glob([
-        "lib/Remarks/*.c",
-        "lib/Remarks/*.cpp",
-        "lib/Remarks/*.inc",
-        "lib/Remarks/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/Remarks/*.h",
-        "include/llvm/Remarks/*.def",
-        "include/llvm/Remarks/*.inc",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":BitstreamReader",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "RuntimeDyld",
-    srcs = glob([
-        "lib/ExecutionEngine/RuntimeDyld/*.c",
-        "lib/ExecutionEngine/RuntimeDyld/*.cpp",
-        "lib/ExecutionEngine/RuntimeDyld/*.inc",
-        "include/llvm/ExecutionEngine/JITSymbol.h",
-        "include/llvm/ExecutionEngine/RTDyldMemoryManager.h",
-        "lib/ExecutionEngine/RuntimeDyld/*.h",
-        "lib/ExecutionEngine/RuntimeDyld/Targets/*.h",
-        "lib/ExecutionEngine/RuntimeDyld/Targets/*.cpp",
-        "lib/ExecutionEngine/RuntimeDyld/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/ExecutionEngine/RuntimeDyld/*.h",
-        "include/llvm/ExecutionEngine/RuntimeDyld/*.def",
-        "include/llvm/ExecutionEngine/RuntimeDyld/*.inc",
-        "include/llvm/DebugInfo/DIContext.h",
-        "include/llvm/ExecutionEngine/RTDyldMemoryManager.h",
-        "include/llvm/ExecutionEngine/RuntimeDyld*.h",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":Core",
-        ":MC",
-        ":MCDisassembler",
-        ":Object",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "Scalar",
-    srcs = glob([
-        "lib/Transforms/Scalar/*.c",
-        "lib/Transforms/Scalar/*.cpp",
-        "lib/Transforms/Scalar/*.inc",
-        "include/llvm-c/Transforms/Scalar.h",
-        "include/llvm/Transforms/Scalar.h",
-        "include/llvm/Target/TargetMachine.h",
-        "lib/Transforms/Scalar/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/Transforms/Scalar/*.h",
-        "include/llvm/Transforms/Scalar/*.def",
-        "include/llvm/Transforms/Scalar/*.inc",
-        "include/llvm/Transforms/IPO.h",
-        "include/llvm/Transforms/IPO/SCCP.h",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":AggressiveInstCombine",
-        ":Analysis",
-        ":Core",
-        ":InstCombine",
-        ":Support",
-        ":Target",
-        ":TransformUtils",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "SelectionDAG",
-    srcs = glob([
-        "lib/CodeGen/SelectionDAG/*.c",
-        "lib/CodeGen/SelectionDAG/*.cpp",
-        "lib/CodeGen/SelectionDAG/*.inc",
-        "lib/CodeGen/SelectionDAG/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/CodeGen/SelectionDAG/*.h",
-        "include/llvm/CodeGen/SelectionDAG/*.def",
-        "include/llvm/CodeGen/SelectionDAG/*.inc",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":Analysis",
-        ":CodeGen",
-        ":Core",
-        ":MC",
-        ":Support",
-        ":Target",
-        ":TransformUtils",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "SparcAsmParser",
-    srcs = glob([
-        "lib/Target/Sparc/AsmParser/*.c",
-        "lib/Target/Sparc/AsmParser/*.cpp",
-        "lib/Target/Sparc/AsmParser/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/Sparc/AsmParser/*.h",
-        "include/llvm/Target/Sparc/AsmParser/*.def",
-        "include/llvm/Target/Sparc/AsmParser/*.inc",
-        "lib/Target/Sparc/AsmParser/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/Sparc"],
-    deps = [
-        ":MC",
-        ":MCParser",
-        ":SparcDesc",
-        ":SparcInfo",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "SparcCodeGen",
-    srcs = glob([
-        "lib/Target/Sparc/*.c",
-        "lib/Target/Sparc/*.cpp",
-        "lib/Target/Sparc/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/Sparc/*.h",
-        "include/llvm/Target/Sparc/*.def",
-        "include/llvm/Target/Sparc/*.inc",
-        "lib/Target/Sparc/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/Sparc"],
-    deps = [
-        ":AsmPrinter",
-        ":CodeGen",
-        ":Core",
-        ":MC",
-        ":SelectionDAG",
-        ":SparcDesc",
-        ":SparcInfo",
-        ":Support",
-        ":Target",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "SparcDesc",
-    srcs = glob([
-        "lib/Target/Sparc/MCTargetDesc/*.c",
-        "lib/Target/Sparc/MCTargetDesc/*.cpp",
-        "lib/Target/Sparc/MCTargetDesc/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/Sparc/MCTargetDesc/*.h",
-        "include/llvm/Target/Sparc/MCTargetDesc/*.def",
-        "include/llvm/Target/Sparc/MCTargetDesc/*.inc",
-        "lib/Target/Sparc/MCTargetDesc/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/Sparc"],
-    deps = [
-        ":MC",
-        ":SparcInfo",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "SparcDisassembler",
-    srcs = glob([
-        "lib/Target/Sparc/Disassembler/*.c",
-        "lib/Target/Sparc/Disassembler/*.cpp",
-        "lib/Target/Sparc/Disassembler/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/Sparc/Disassembler/*.h",
-        "include/llvm/Target/Sparc/Disassembler/*.def",
-        "include/llvm/Target/Sparc/Disassembler/*.inc",
-        "lib/Target/Sparc/Disassembler/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/Sparc"],
-    deps = [
-        ":MCDisassembler",
-        ":SparcInfo",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "SparcInfo",
-    srcs = glob([
-        "lib/Target/Sparc/TargetInfo/*.c",
-        "lib/Target/Sparc/TargetInfo/*.cpp",
-        "lib/Target/Sparc/TargetInfo/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/Sparc/TargetInfo/*.h",
-        "include/llvm/Target/Sparc/TargetInfo/*.def",
-        "include/llvm/Target/Sparc/TargetInfo/*.inc",
-        "lib/Target/Sparc/TargetInfo/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/Sparc"],
-    deps = [
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "Support",
-    srcs = glob([
-        "lib/Support/*.c",
-        "lib/Support/*.cpp",
-        "lib/Support/*.inc",
-        "include/llvm-c/*.h",
-        "include/llvm/CodeGen/MachineValueType.h",
-        "include/llvm/BinaryFormat/COFF.h",
-        "include/llvm/BinaryFormat/MachO.h",
-        "lib/Support/*.h",
-    ]) + llvm_support_platform_specific_srcs_glob(),
-    hdrs = glob([
-        "include/llvm/Support/*.h",
-        "include/llvm/Support/*.def",
-        "include/llvm/Support/*.inc",
-        "include/llvm/ADT/*.h",
-        "include/llvm/Support/ELFRelocs/*.def",
-        "include/llvm/Support/WasmRelocs/*.def",
-    ]) + [
-        "include/llvm/BinaryFormat/MachO.def",
-        "include/llvm/Support/VCSRevision.h",
-    ],
-    copts = llvm_copts,
-    deps = [
-        ":Demangle",
-        ":config",
-        "@zlib",
-    ],
-)
-
-cc_library(
-    name = "Symbolize",
-    srcs = glob([
-        "lib/DebugInfo/Symbolize/*.c",
-        "lib/DebugInfo/Symbolize/*.cpp",
-        "lib/DebugInfo/Symbolize/*.inc",
-        "lib/DebugInfo/Symbolize/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/DebugInfo/Symbolize/*.h",
-        "include/llvm/DebugInfo/Symbolize/*.def",
-        "include/llvm/DebugInfo/Symbolize/*.inc",
-    ]),
-    copts = llvm_copts,
-    deps = [
         ":DebugInfoDWARF",
-        ":DebugInfoPDB",
-        ":Demangle",
+        ":Support",
+    ],
+)
+
+gentbl(
+    name = "DllOptionsTableGen",
+    tbl_outs = [(
+        "-gen-opt-parser-defs",
+        "lib/ToolDrivers/llvm-dlltool/Options.inc",
+    )],
+    tblgen = ":llvm-tblgen",
+    td_file = "lib/ToolDrivers/llvm-dlltool/Options.td",
+    td_srcs = ["include/llvm/Option/OptParser.td"],
+)
+
+cc_library(
+    name = "DlltoolDriver",
+    srcs = glob(["lib/ToolDrivers/llvm-dlltool/*.cpp"]),
+    hdrs = glob(["include/llvm/ToolDrivers/llvm-dlltool/*.h"]),
+    copts = llvm_copts,
+    deps = [
+        ":DllOptionsTableGen",
         ":Object",
+        ":Option",
         ":Support",
-        ":config",
     ],
 )
 
-cc_library(
-    name = "SystemZAsmParser",
-    srcs = glob([
-        "lib/Target/SystemZ/AsmParser/*.c",
-        "lib/Target/SystemZ/AsmParser/*.cpp",
-        "lib/Target/SystemZ/AsmParser/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/SystemZ/AsmParser/*.h",
-        "include/llvm/Target/SystemZ/AsmParser/*.def",
-        "include/llvm/Target/SystemZ/AsmParser/*.inc",
-        "lib/Target/SystemZ/AsmParser/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/SystemZ"],
-    deps = [
-        ":MC",
-        ":MCParser",
-        ":Support",
-        ":SystemZDesc",
-        ":SystemZInfo",
-        ":config",
-    ],
+gentbl(
+    name = "LibOptionsTableGen",
+    tbl_outs = [(
+        "-gen-opt-parser-defs",
+        "lib/ToolDrivers/llvm-lib/Options.inc",
+    )],
+    tblgen = ":llvm-tblgen",
+    td_file = "lib/ToolDrivers/llvm-lib/Options.td",
+    td_srcs = ["include/llvm/Option/OptParser.td"],
 )
 
 cc_library(
-    name = "SystemZCodeGen",
-    srcs = glob([
-        "lib/Target/SystemZ/*.c",
-        "lib/Target/SystemZ/*.cpp",
-        "lib/Target/SystemZ/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/SystemZ/*.h",
-        "include/llvm/Target/SystemZ/*.def",
-        "include/llvm/Target/SystemZ/*.inc",
-        "lib/Target/SystemZ/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/SystemZ"],
-    deps = [
-        ":Analysis",
-        ":AsmPrinter",
-        ":CodeGen",
-        ":Core",
-        ":MC",
-        ":Scalar",
-        ":SelectionDAG",
-        ":Support",
-        ":SystemZDesc",
-        ":SystemZInfo",
-        ":Target",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "SystemZDesc",
-    srcs = glob([
-        "lib/Target/SystemZ/MCTargetDesc/*.c",
-        "lib/Target/SystemZ/MCTargetDesc/*.cpp",
-        "lib/Target/SystemZ/MCTargetDesc/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/SystemZ/MCTargetDesc/*.h",
-        "include/llvm/Target/SystemZ/MCTargetDesc/*.def",
-        "include/llvm/Target/SystemZ/MCTargetDesc/*.inc",
-        "lib/Target/SystemZ/MCTargetDesc/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/SystemZ"],
-    deps = [
-        ":MC",
-        ":Support",
-        ":SystemZCommonTableGen",
-        ":SystemZInfo",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "SystemZDisassembler",
-    srcs = glob([
-        "lib/Target/SystemZ/Disassembler/*.c",
-        "lib/Target/SystemZ/Disassembler/*.cpp",
-        "lib/Target/SystemZ/Disassembler/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/SystemZ/Disassembler/*.h",
-        "include/llvm/Target/SystemZ/Disassembler/*.def",
-        "include/llvm/Target/SystemZ/Disassembler/*.inc",
-        "lib/Target/SystemZ/Disassembler/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/SystemZ"],
-    deps = [
-        ":MC",
-        ":MCDisassembler",
-        ":Support",
-        ":SystemZDesc",
-        ":SystemZInfo",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "SystemZInfo",
-    srcs = glob([
-        "lib/Target/SystemZ/TargetInfo/*.c",
-        "lib/Target/SystemZ/TargetInfo/*.cpp",
-        "lib/Target/SystemZ/TargetInfo/*.inc",
-        "lib/Target/SystemZ/MCTargetDesc/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/SystemZ/TargetInfo/*.h",
-        "include/llvm/Target/SystemZ/TargetInfo/*.def",
-        "include/llvm/Target/SystemZ/TargetInfo/*.inc",
-        "lib/Target/SystemZ/TargetInfo/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/SystemZ"],
-    deps = [
-        ":Support",
-        ":SystemZCommonTableGen",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "TableGen",
-    srcs = glob([
-        "lib/TableGen/*.c",
-        "lib/TableGen/*.cpp",
-        "lib/TableGen/*.inc",
-        "include/llvm/CodeGen/*.h",
-        "lib/TableGen/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/TableGen/*.h",
-        "include/llvm/TableGen/*.def",
-        "include/llvm/TableGen/*.inc",
-        "include/llvm/Target/*.def",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":MC",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "Target",
-    srcs = glob([
-        "lib/Target/*.c",
-        "lib/Target/*.cpp",
-        "lib/Target/*.inc",
-        "include/llvm/CodeGen/*.h",
-        "include/llvm-c/Initialization.h",
-        "include/llvm-c/Target.h",
-        "lib/Target/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/*.h",
-        "include/llvm/Target/*.def",
-        "include/llvm/Target/*.inc",
-        "include/llvm/CodeGen/*.def",
-        "include/llvm/CodeGen/*.inc",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":Analysis",
-        ":Core",
-        ":MC",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "TestingSupport",
-    srcs = glob([
-        "lib/Testing/Support/*.c",
-        "lib/Testing/Support/*.cpp",
-        "lib/Testing/Support/*.inc",
-        "lib/Testing/Support/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/Testing/Support/*.h",
-        "include/llvm/Testing/Support/*.def",
-        "include/llvm/Testing/Support/*.inc",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "TextAPI",
-    srcs = glob([
-        "lib/TextAPI/*.c",
-        "lib/TextAPI/*.cpp",
-        "lib/TextAPI/*.inc",
-        "lib/TextAPI/ELF/*.cpp",
-        "lib/TextAPI/MachO/*.cpp",
-        "lib/TextAPI/MachO/*.h",
-        "lib/TextAPI/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/TextAPI/*.h",
-        "include/llvm/TextAPI/*.def",
-        "include/llvm/TextAPI/*.inc",
-    ]) + [
-        "include/llvm/TextAPI/MachO/Architecture.def",
-        "include/llvm/TextAPI/MachO/PackedVersion.h",
-        "include/llvm/TextAPI/MachO/InterfaceFile.h",
-        "include/llvm/TextAPI/MachO/Symbol.h",
-        "include/llvm/TextAPI/MachO/ArchitectureSet.h",
-        "include/llvm/TextAPI/MachO/TextAPIWriter.h",
-        "include/llvm/TextAPI/MachO/TextAPIReader.h",
-        "include/llvm/TextAPI/MachO/Architecture.h",
-    ],
+    name = "LibDriver",
+    srcs = glob(["lib/ToolDrivers/llvm-lib/*.cpp"]),
+    hdrs = glob(["include/llvm/ToolDrivers/llvm-lib/*.h"]),
     copts = llvm_copts,
     deps = [
         ":BinaryFormat",
+        ":LibOptionsTableGen",
+        ":Object",
+        ":Option",
         ":Support",
-        ":config",
     ],
 )
 
 cc_library(
-    name = "TransformUtils",
+    name = "InterfaceStub",
     srcs = glob([
-        "lib/Transforms/Utils/*.c",
-        "lib/Transforms/Utils/*.cpp",
-        "lib/Transforms/Utils/*.inc",
-        "include/llvm/Transforms/IPO.h",
-        "include/llvm/Transforms/Scalar.h",
-        "lib/Transforms/Utils/*.h",
+        "lib/InterfaceStub/*.cpp",
+        "lib/InterfaceStub/*.h",
     ]),
     hdrs = glob([
-        "include/llvm/Transforms/Utils/*.h",
-        "include/llvm/Transforms/Utils/*.def",
-        "include/llvm/Transforms/Utils/*.inc",
+        "include/llvm/InterfaceStub/*.h",
     ]),
     copts = llvm_copts,
     deps = [
-        ":Analysis",
-        ":Core",
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "VEAsmParser",
-    srcs = glob([
-        "lib/Target/VE/AsmParser/*.c",
-        "lib/Target/VE/AsmParser/*.cpp",
-        "lib/Target/VE/AsmParser/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/VE/AsmParser/*.h",
-        "include/llvm/Target/VE/AsmParser/*.def",
-        "include/llvm/Target/VE/AsmParser/*.inc",
-        "lib/Target/VE/AsmParser/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/VE"],
-    deps = [
-        ":MC",
-        ":MCParser",
-        ":Support",
-        ":VEDesc",
-        ":VEInfo",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "VECodeGen",
-    srcs = glob([
-        "lib/Target/VE/*.c",
-        "lib/Target/VE/*.cpp",
-        "lib/Target/VE/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/VE/*.h",
-        "include/llvm/Target/VE/*.def",
-        "include/llvm/Target/VE/*.inc",
-        "lib/Target/VE/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/VE"],
-    deps = [
-        ":Analysis",
-        ":AsmPrinter",
-        ":CodeGen",
-        ":Core",
-        ":MC",
-        ":SelectionDAG",
-        ":Support",
-        ":Target",
-        ":VEDesc",
-        ":VEInfo",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "VEDesc",
-    srcs = glob([
-        "lib/Target/VE/MCTargetDesc/*.c",
-        "lib/Target/VE/MCTargetDesc/*.cpp",
-        "lib/Target/VE/MCTargetDesc/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/VE/MCTargetDesc/*.h",
-        "include/llvm/Target/VE/MCTargetDesc/*.def",
-        "include/llvm/Target/VE/MCTargetDesc/*.inc",
-        "lib/Target/VE/MCTargetDesc/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/VE"],
-    deps = [
-        ":MC",
-        ":Support",
-        ":VEInfo",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "VEDisassembler",
-    srcs = glob([
-        "lib/Target/VE/Disassembler/*.c",
-        "lib/Target/VE/Disassembler/*.cpp",
-        "lib/Target/VE/Disassembler/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/VE/Disassembler/*.h",
-        "include/llvm/Target/VE/Disassembler/*.def",
-        "include/llvm/Target/VE/Disassembler/*.inc",
-        "lib/Target/VE/Disassembler/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/VE"],
-    deps = [
-        ":MCDisassembler",
-        ":Support",
-        ":VEInfo",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "VEInfo",
-    srcs = glob([
-        "lib/Target/VE/TargetInfo/*.c",
-        "lib/Target/VE/TargetInfo/*.cpp",
-        "lib/Target/VE/TargetInfo/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/VE/TargetInfo/*.h",
-        "include/llvm/Target/VE/TargetInfo/*.def",
-        "include/llvm/Target/VE/TargetInfo/*.inc",
-        "lib/Target/VE/TargetInfo/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/VE"],
-    deps = [
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "Vectorize",
-    srcs = glob([
-        "lib/Transforms/Vectorize/*.c",
-        "lib/Transforms/Vectorize/*.cpp",
-        "lib/Transforms/Vectorize/*.inc",
-        "include/llvm-c/Transforms/Vectorize.h",
-        "lib/Transforms/Vectorize/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/Transforms/Vectorize/*.h",
-        "include/llvm/Transforms/Vectorize/*.def",
-        "include/llvm/Transforms/Vectorize/*.inc",
-        "include/llvm/Transforms/Vectorize.h",
-    ]),
-    copts = llvm_copts,
-    deps = [
-        ":Analysis",
-        ":Core",
-        ":Scalar",
-        ":Support",
-        ":TransformUtils",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "WebAssemblyAsmParser",
-    srcs = glob([
-        "lib/Target/WebAssembly/AsmParser/*.c",
-        "lib/Target/WebAssembly/AsmParser/*.cpp",
-        "lib/Target/WebAssembly/AsmParser/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/WebAssembly/AsmParser/*.h",
-        "include/llvm/Target/WebAssembly/AsmParser/*.def",
-        "include/llvm/Target/WebAssembly/AsmParser/*.inc",
-        "lib/Target/WebAssembly/AsmParser/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/WebAssembly"],
-    deps = [
-        ":MC",
-        ":MCParser",
-        ":Support",
-        ":WebAssemblyInfo",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "WebAssemblyCodeGen",
-    srcs = glob([
-        "lib/Target/WebAssembly/*.c",
-        "lib/Target/WebAssembly/*.cpp",
-        "lib/Target/WebAssembly/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/WebAssembly/*.h",
-        "include/llvm/Target/WebAssembly/*.def",
-        "include/llvm/Target/WebAssembly/*.inc",
-        "lib/Target/WebAssembly/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/WebAssembly"],
-    deps = [
-        ":Analysis",
-        ":AsmPrinter",
-        ":BinaryFormat",
-        ":CodeGen",
-        ":Core",
-        ":MC",
-        ":Scalar",
-        ":SelectionDAG",
-        ":Support",
-        ":Target",
-        ":TransformUtils",
-        ":WebAssemblyDesc",
-        ":WebAssemblyInfo",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "WebAssemblyDesc",
-    srcs = glob([
-        "lib/Target/WebAssembly/MCTargetDesc/*.c",
-        "lib/Target/WebAssembly/MCTargetDesc/*.cpp",
-        "lib/Target/WebAssembly/MCTargetDesc/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/WebAssembly/MCTargetDesc/*.h",
-        "include/llvm/Target/WebAssembly/MCTargetDesc/*.def",
-        "include/llvm/Target/WebAssembly/MCTargetDesc/*.inc",
-        "lib/Target/WebAssembly/MCTargetDesc/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/WebAssembly"],
-    deps = [
-        ":MC",
-        ":Support",
-        ":WebAssemblyInfo",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "WebAssemblyDisassembler",
-    srcs = glob([
-        "lib/Target/WebAssembly/Disassembler/*.c",
-        "lib/Target/WebAssembly/Disassembler/*.cpp",
-        "lib/Target/WebAssembly/Disassembler/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/WebAssembly/Disassembler/*.h",
-        "include/llvm/Target/WebAssembly/Disassembler/*.def",
-        "include/llvm/Target/WebAssembly/Disassembler/*.inc",
-        "lib/Target/WebAssembly/Disassembler/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/WebAssembly"],
-    deps = [
-        ":MC",
-        ":MCDisassembler",
-        ":Support",
-        ":WebAssemblyDesc",
-        ":WebAssemblyInfo",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "WebAssemblyInfo",
-    srcs = glob([
-        "lib/Target/WebAssembly/TargetInfo/*.c",
-        "lib/Target/WebAssembly/TargetInfo/*.cpp",
-        "lib/Target/WebAssembly/TargetInfo/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/WebAssembly/TargetInfo/*.h",
-        "include/llvm/Target/WebAssembly/TargetInfo/*.def",
-        "include/llvm/Target/WebAssembly/TargetInfo/*.inc",
-        "lib/Target/WebAssembly/TargetInfo/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/WebAssembly"],
-    deps = [
+        ":Object",
         ":Support",
         ":config",
     ],
@@ -4436,300 +2485,1582 @@ cc_library(
 cc_library(
     name = "WindowsManifest",
     srcs = glob([
-        "lib/WindowsManifest/*.c",
         "lib/WindowsManifest/*.cpp",
-        "lib/WindowsManifest/*.inc",
-        "lib/WindowsManifest/*.h",
     ]),
     hdrs = glob([
         "include/llvm/WindowsManifest/*.h",
-        "include/llvm/WindowsManifest/*.def",
-        "include/llvm/WindowsManifest/*.inc",
+    ]),
+    copts = llvm_copts,
+    linkopts = [
+        # Libxml2 is required to process Windows manifests. Without this,
+        # lld uses Microsoft mt.exe instead, which is not cross-platform.
+        "-lxml2",
+    ],
+    deps = [
+        ":Support",
+        ":config",
+    ],
+)
+
+cc_library(
+    name = "MCA",
+    srcs = glob([
+        "lib/MCA/**/*.cpp",
+        "lib/MCA/**/*.h",
+    ]),
+    hdrs = glob([
+        "include/llvm/MCA/**/*.h",
     ]),
     copts = llvm_copts,
     deps = [
-        ":Support",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "X86AsmParser",
-    srcs = glob([
-        "lib/Target/X86/AsmParser/*.c",
-        "lib/Target/X86/AsmParser/*.cpp",
-        "lib/Target/X86/AsmParser/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/X86/AsmParser/*.h",
-        "include/llvm/Target/X86/AsmParser/*.def",
-        "include/llvm/Target/X86/AsmParser/*.inc",
-        "lib/Target/X86/AsmParser/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/X86"],
-    deps = [
-        ":MC",
-        ":MCParser",
-        ":Support",
-        ":X86Desc",
-        ":X86Info",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "X86CodeGen",
-    srcs = glob([
-        "lib/Target/X86/*.c",
-        "lib/Target/X86/*.cpp",
-        "lib/Target/X86/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/X86/*.h",
-        "include/llvm/Target/X86/*.def",
-        "include/llvm/Target/X86/*.inc",
-        "lib/Target/X86/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/X86"],
-    deps = [
-        ":Analysis",
-        ":AsmPrinter",
-        ":CFGuard",
-        ":CodeGen",
-        ":Core",
-        ":GlobalISel",
-        ":MC",
-        ":ProfileData",
-        ":SelectionDAG",
-        ":Support",
-        ":Target",
-        ":X86Desc",
-        ":X86Info",
-        ":config",
-        ":x86_defs",
-    ],
-)
-
-cc_library(
-    name = "X86Desc",
-    srcs = glob([
-        "lib/Target/X86/MCTargetDesc/*.c",
-        "lib/Target/X86/MCTargetDesc/*.cpp",
-        "lib/Target/X86/MCTargetDesc/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/X86/MCTargetDesc/*.h",
-        "include/llvm/Target/X86/MCTargetDesc/*.def",
-        "include/llvm/Target/X86/MCTargetDesc/*.inc",
-        "lib/Target/X86/MCTargetDesc/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/X86"],
-    deps = [
-        ":BinaryFormat",
         ":MC",
         ":MCDisassembler",
+        ":Object",
         ":Support",
-        ":X86Info",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "X86Disassembler",
-    srcs = glob([
-        "lib/Target/X86/Disassembler/*.c",
-        "lib/Target/X86/Disassembler/*.cpp",
-        "lib/Target/X86/Disassembler/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/X86/Disassembler/*.h",
-        "include/llvm/Target/X86/Disassembler/*.def",
-        "include/llvm/Target/X86/Disassembler/*.inc",
-        "lib/Target/X86/Disassembler/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/X86"],
-    deps = [
-        ":MCDisassembler",
-        ":Support",
-        ":X86Info",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "X86Info",
-    srcs = glob([
-        "lib/Target/X86/TargetInfo/*.c",
-        "lib/Target/X86/TargetInfo/*.cpp",
-        "lib/Target/X86/TargetInfo/*.inc",
-        "lib/Target/X86/MCTargetDesc/*.h",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/X86/TargetInfo/*.h",
-        "include/llvm/Target/X86/TargetInfo/*.def",
-        "include/llvm/Target/X86/TargetInfo/*.inc",
-        "lib/Target/X86/TargetInfo/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/X86"],
-    deps = [
-        ":MC",
-        ":Support",
-        ":X86CommonTableGen",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "XCoreCodeGen",
-    srcs = glob([
-        "lib/Target/XCore/*.c",
-        "lib/Target/XCore/*.cpp",
-        "lib/Target/XCore/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/XCore/*.h",
-        "include/llvm/Target/XCore/*.def",
-        "include/llvm/Target/XCore/*.inc",
-        "lib/Target/XCore/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/XCore"],
-    deps = [
-        ":Analysis",
-        ":AsmPrinter",
-        ":CodeGen",
-        ":Core",
-        ":MC",
-        ":SelectionDAG",
-        ":Support",
-        ":Target",
-        ":TransformUtils",
-        ":XCoreDesc",
-        ":XCoreInfo",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "XCoreDesc",
-    srcs = glob([
-        "lib/Target/XCore/MCTargetDesc/*.c",
-        "lib/Target/XCore/MCTargetDesc/*.cpp",
-        "lib/Target/XCore/MCTargetDesc/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/XCore/MCTargetDesc/*.h",
-        "include/llvm/Target/XCore/MCTargetDesc/*.def",
-        "include/llvm/Target/XCore/MCTargetDesc/*.inc",
-        "lib/Target/XCore/MCTargetDesc/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/XCore"],
-    deps = [
-        ":MC",
-        ":Support",
-        ":XCoreInfo",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "XCoreDisassembler",
-    srcs = glob([
-        "lib/Target/XCore/Disassembler/*.c",
-        "lib/Target/XCore/Disassembler/*.cpp",
-        "lib/Target/XCore/Disassembler/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/XCore/Disassembler/*.h",
-        "include/llvm/Target/XCore/Disassembler/*.def",
-        "include/llvm/Target/XCore/Disassembler/*.inc",
-        "lib/Target/XCore/Disassembler/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/XCore"],
-    deps = [
-        ":MCDisassembler",
-        ":Support",
-        ":XCoreInfo",
-        ":config",
-    ],
-)
-
-cc_library(
-    name = "XCoreInfo",
-    srcs = glob([
-        "lib/Target/XCore/TargetInfo/*.c",
-        "lib/Target/XCore/TargetInfo/*.cpp",
-        "lib/Target/XCore/TargetInfo/*.inc",
-    ]),
-    hdrs = glob([
-        "include/llvm/Target/XCore/TargetInfo/*.h",
-        "include/llvm/Target/XCore/TargetInfo/*.def",
-        "include/llvm/Target/XCore/TargetInfo/*.inc",
-        "lib/Target/XCore/TargetInfo/*.h",
-    ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/lib/Target/XCore"],
-    deps = [
-        ":Support",
-        ":config",
     ],
 )
 
 cc_library(
     name = "XRay",
     srcs = glob([
-        "lib/XRay/*.c",
         "lib/XRay/*.cpp",
-        "lib/XRay/*.inc",
         "lib/XRay/*.h",
     ]),
-    hdrs = glob([
-        "include/llvm/XRay/*.h",
-        "include/llvm/XRay/*.def",
-        "include/llvm/XRay/*.inc",
-    ]),
+    hdrs = glob(["include/llvm/XRay/*.h"]),
     copts = llvm_copts,
     deps = [
         ":Object",
         ":Support",
+    ],
+)
+
+# FIXME: Add support for fetching and building libpfm4 and uncomment this.
+#cc_library(
+#    name = "llvm-exegesis-lib",
+#    srcs = glob([
+#        "tools/llvm-exegesis/lib/*.cpp",
+#        "tools/llvm-exegesis/lib/X86/*.cpp",
+#        "tools/llvm-exegesis/lib/X86/*.h",
+#    ]),
+#    hdrs = glob(["tools/llvm-exegesis/lib/*.h"]),
+#    copts = llvm_copts + ["-DHAVE_LIBPFM=1"],
+#    defines = ["LLVM_EXEGESIS_INITIALIZE_NATIVE_TARGET=InitializeX86ExegesisTarget"],
+#    deps = [
+#        ":AllTargetsAsmParsers",
+#        ":AllTargetsCodeGens",
+#        ":CodeGen",
+#        ":Core",
+#        ":ExecutionEngine",
+#        ":MC",
+#        ":MCDisassembler",
+#        ":MCJIT",
+#        ":Object",
+#        ":ObjectYAML",
+#        ":Support",
+#        ":Target",
+#        ":config",
+#    ],
+#)
+
+################################################################################
+# LLVM toolchain and development binaries
+
+gentbl(
+    name = "DsymutilTableGen",
+    tbl_outs = [(
+        "-gen-opt-parser-defs",
+        "tools/dsymutil/Options.inc",
+    )],
+    tblgen = ":llvm-tblgen",
+    td_file = "tools/dsymutil/Options.td",
+    td_srcs = ["include/llvm/Option/OptParser.td"],
+)
+
+cc_binary(
+    name = "dsymutil",
+    srcs = glob([
+        "tools/dsymutil/*.cpp",
+        "tools/dsymutil/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":AllTargetsCodeGens",
+        ":BinaryFormat",
+        ":CodeGen",
+        ":DWARFLinker",
+        ":DebugInfo",
+        ":DebugInfoDWARF",
+        ":DsymutilTableGen",
+        ":MC",
+        ":Object",
+        ":Option",
+        ":Support",
+        ":Target",
         ":config",
+        ":remark_linker",
+    ],
+)
+
+cc_binary(
+    name = "llc",
+    srcs = glob([
+        "tools/llc/*.cpp",
+        "tools/llc/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":AllTargetsAsmParsers",
+        ":AllTargetsCodeGens",
+        ":Analysis",
+        ":AsmParser",
+        ":BitReader",
+        ":CodeGen",
+        ":Core",
+        ":IRReader",
+        ":MC",
+        ":Support",
+        ":Target",
+        ":TransformUtils",
+    ],
+)
+
+cc_binary(
+    name = "lli",
+    srcs = glob([
+        "tools/lli/*.cpp",
+        "tools/lli/*.h",
+    ]),
+    copts = llvm_copts,
+    # ll scripts rely on symbols from dependent
+    # libraries being resolvable.
+    linkopts = [
+        "-Wl,--undefined=_ZTIi",
+        "-Wl,--export-dynamic-symbol=_ZTIi",
+        "-Wl,--export-dynamic-symbol=__cxa_begin_catch",
+        "-Wl,--export-dynamic-symbol=__cxa_end_catch",
+        "-Wl,--export-dynamic-symbol=__gxx_personality_v0",
+        "-Wl,--export-dynamic-symbol=__cxa_allocate_exception",
+        "-Wl,--export-dynamic-symbol=__cxa_throw",
+    ],
+    stamp = 0,
+    deps = [
+        ":AllTargetsAsmParsers",
+        ":AllTargetsCodeGens",
+        ":AsmParser",
+        ":BitReader",
+        ":CodeGen",
+        ":Core",
+        ":ExecutionEngine",
+        ":IRReader",
+        ":Instrumentation",
+        ":Interpreter",
+        ":MCJIT",
+        ":Object",
+        ":OrcJIT",
+        ":Support",
+        ":config",
+    ],
+)
+
+cc_binary(
+    name = "llvm-ar",
+    srcs = glob([
+        "tools/llvm-ar/*.cpp",
+        "tools/llvm-ar/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":AllTargetsAsmParsers",
+        ":AllTargetsCodeGens",
+        ":Core",
+        ":DlltoolDriver",
+        ":LibDriver",
+        ":Object",
+        ":Support",
+    ],
+)
+
+# We need to run llvm-ar with different basenames to make it run with
+# different behavior.
+sh_binary(
+    name = "llvm-dlltool",
+    srcs = [":llvm-ar"],
+)
+
+sh_binary(
+    name = "llvm-lib",
+    srcs = [":llvm-ar"],
+)
+
+sh_binary(
+    name = "llvm-ranlib",
+    srcs = [":llvm-ar"],
+)
+
+cc_binary(
+    name = "llvm-as",
+    srcs = glob([
+        "tools/llvm-as/*.cpp",
+        "tools/llvm-as/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":Analysis",
+        ":AsmParser",
+        ":BitWriter",
+        ":Core",
+        ":Support",
+    ],
+)
+
+cc_binary(
+    name = "llvm-bcanalyzer",
+    srcs = glob([
+        "tools/llvm-bcanalyzer/*.cpp",
+        "tools/llvm-bcanalyzer/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":BitReader",
+        ":Support",
+    ],
+)
+
+cc_binary(
+    name = "llvm-cat",
+    srcs = glob([
+        "tools/llvm-cat/*.cpp",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":BitReader",
+        ":BitWriter",
+        ":Core",
+        ":IRReader",
+        ":Support",
+    ],
+)
+
+cc_binary(
+    name = "llvm-cfi-verify",
+    srcs = glob([
+        "tools/llvm-cfi-verify/*.cpp",
+        "tools/llvm-cfi-verify/lib/*.cpp",
+        "tools/llvm-cfi-verify/lib/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":AllTargetsAsmParsers",
+        ":AllTargetsCodeGens",
+        ":AllTargetsDisassemblers",
+        ":BinaryFormat",
+        ":DebugInfoDWARF",
+        ":MC",
+        ":MCDisassembler",
+        ":MCParser",
+        ":Object",
+        ":Support",
+        ":Symbolize",
+    ],
+)
+
+cc_binary(
+    name = "llvm-cov",
+    srcs = glob([
+        "tools/llvm-cov/*.cpp",
+        "tools/llvm-cov/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":Coverage",
+        ":Instrumentation",
+        ":Object",
+        ":ProfileData",
+        ":Support",
+    ],
+)
+
+gentbl(
+    name = "CvtResTableGen",
+    tbl_outs = [(
+        "-gen-opt-parser-defs",
+        "tools/llvm-cvtres/Opts.inc",
+    )],
+    tblgen = ":llvm-tblgen",
+    td_file = "tools/llvm-cvtres/Opts.td",
+    td_srcs = ["include/llvm/Option/OptParser.td"],
+)
+
+cc_binary(
+    name = "llvm-cvtres",
+    srcs = glob([
+        "tools/llvm-cvtres/*.cpp",
+        "tools/llvm-cvtres/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":CvtResTableGen",
+        ":Object",
+        ":Option",
+        ":Support",
+    ],
+)
+
+cc_binary(
+    name = "llvm-cxxdump",
+    srcs = glob([
+        "tools/llvm-cxxdump/*.cpp",
+        "tools/llvm-cxxdump/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":AllTargetsCodeGens",
+        ":BitReader",
+        ":Object",
+        ":Support",
+    ],
+)
+
+cc_binary(
+    name = "llvm-cxxmap",
+    srcs = glob([
+        "tools/llvm-cxxmap/*.cpp",
+        "tools/llvm-cxxmap/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":Support",
+    ],
+)
+
+cc_binary(
+    name = "llvm-cxxfilt",
+    srcs = glob([
+        "tools/llvm-cxxfilt/*.cpp",
+        "tools/llvm-cxxfilt/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":Demangle",
+        ":Support",
+    ],
+)
+
+cc_binary(
+    name = "llvm-dis",
+    srcs = glob([
+        "tools/llvm-dis/*.cpp",
+        "tools/llvm-dis/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":Analysis",
+        ":BitReader",
+        ":Core",
+        ":Support",
+    ],
+)
+
+cc_binary(
+    name = "llvm-dwarfdump",
+    srcs = glob([
+        "tools/llvm-dwarfdump/*.cpp",
+        "tools/llvm-dwarfdump/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":AllTargetsCodeGens",
+        ":BinaryFormat",
+        ":DebugInfo",
+        ":DebugInfoDWARF",
+        ":MC",
+        ":Object",
+        ":Support",
+    ],
+)
+
+cc_binary(
+    name = "llvm-dwp",
+    srcs = glob([
+        "tools/llvm-dwp/*.cpp",
+        "tools/llvm-dwp/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":AllTargetsCodeGens",
+        ":DebugInfoDWARF",
+        ":MC",
+        ":Object",
+        ":Support",
+        ":Target",
+    ],
+)
+
+cc_binary(
+    name = "llvm-elfabi",
+    srcs = glob([
+        "tools/llvm-elfabi/*.cpp",
+        "tools/llvm-elfabi/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":InterfaceStub",
+        ":Object",
+        ":Support",
+        ":TextAPI",
+    ],
+)
+
+# FIXME: Uncomment when the library builds.
+#cc_binary(
+#    name = "llvm-exegesis",
+#    srcs = [
+#        "tools/llvm-exegesis/llvm-exegesis.cpp",
+#    ],
+#    copts = llvm_copts + ["-DHAVE_LIBPFM=0"],
+#    stamp = 0,
+#    deps = [
+#        ":AllTargetsAsmParsers",
+#        ":AllTargetsCodeGens",
+#        ":AllTargetsDisassemblers",
+#        ":MC",
+#        ":MCParser",
+#        ":Object",
+#        ":Support",
+#        ":config",
+#        ":llvm-exegesis-lib",
+#    ],
+#)
+
+cc_binary(
+    name = "llvm-extract",
+    srcs = glob([
+        "tools/llvm-extract/*.cpp",
+        "tools/llvm-extract/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":AsmParser",
+        ":BitReader",
+        ":BitWriter",
+        ":Core",
+        ":IPO",
+        ":IRReader",
+        ":Support",
+    ],
+)
+
+cc_binary(
+    name = "llvm-ifs",
+    srcs = glob([
+        "tools/llvm-ifs/*.cpp",
+        "tools/llvm-ifs/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":ObjectYAML",
+        ":Support",
+        ":TextAPI",
+    ],
+)
+
+cc_binary(
+    name = "llvm-jitlink",
+    srcs = glob([
+        "tools/llvm-jitlink/*.cpp",
+        "tools/llvm-jitlink/*.h",
+    ]),
+    copts = llvm_copts,
+    # Make symbols from the standard library dynamically resolvable.
+    linkopts = [
+        "-Wl,--undefined=_ZTIi",
+        "-Wl,--export-dynamic-symbol=_ZTIi",
+        "-Wl,--export-dynamic-symbol=__cxa_begin_catch",
+        "-Wl,--export-dynamic-symbol=__cxa_end_catch",
+        "-Wl,--export-dynamic-symbol=__gxx_personality_v0",
+        "-Wl,--export-dynamic-symbol=__cxa_allocate_exception",
+        "-Wl,--export-dynamic-symbol=__cxa_throw",
+    ],
+    stamp = 0,
+    deps = [
+        ":AllTargetsAsmParsers",
+        ":AllTargetsCodeGens",
+        ":AllTargetsDisassemblers",
+        ":AsmParser",
+        ":BitReader",
+        ":CodeGen",
+        ":ExecutionEngine",
+        ":MCJIT",
+        ":Object",
+        ":OrcJIT",
+        ":Support",
+        ":config",
+    ],
+)
+
+cc_binary(
+    name = "llvm-libtool-darwin",
+    srcs = glob([
+        "tools/llvm-libtool-darwin/*.cpp",
+        "tools/llvm-libtool-darwin/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":BinaryFormat",
+        ":Object",
+        ":Support",
+    ],
+)
+
+cc_binary(
+    name = "llvm-link",
+    srcs = glob([
+        "tools/llvm-link/*.cpp",
+        "tools/llvm-link/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":AsmParser",
+        ":BitReader",
+        ":BitWriter",
+        ":Core",
+        ":IPO",
+        ":IRReader",
+        ":Linker",
+        ":Object",
+        ":Support",
+        ":TransformUtils",
+    ],
+)
+
+gentbl(
+    name = "LipoOptsTableGen",
+    tbl_outs = [(
+        "-gen-opt-parser-defs",
+        "tools/llvm-lipo/LipoOpts.inc",
+    )],
+    tblgen = ":llvm-tblgen",
+    td_file = "tools/llvm-lipo/LipoOpts.td",
+    td_srcs = ["include/llvm/Option/OptParser.td"],
+)
+
+cc_binary(
+    name = "llvm-lipo",
+    srcs = [
+        "tools/llvm-lipo/llvm-lipo.cpp",
+    ],
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":LipoOptsTableGen",
+        ":Object",
+        ":Option",
+        ":Support",
+    ],
+)
+
+cc_binary(
+    name = "llvm-lto",
+    srcs = glob([
+        "tools/llvm-lto/*.cpp",
+        "tools/llvm-lto/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":AllTargetsAsmParsers",
+        ":AllTargetsCodeGens",
+        ":BitReader",
+        ":BitWriter",
+        ":CodeGen",
+        ":Core",
+        ":IRReader",
+        ":LTO",
+        ":Support",
+        ":Target",
+    ],
+)
+
+cc_binary(
+    name = "llvm-lto2",
+    srcs = glob([
+        "tools/llvm-lto2/*.cpp",
+        "tools/llvm-lto2/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":AllTargetsAsmParsers",
+        ":AllTargetsCodeGens",
+        ":BitReader",
+        ":CodeGen",
+        ":Core",
+        ":LTO",
+        ":Support",
+    ],
+)
+
+cc_binary(
+    name = "llvm-mc",
+    srcs = glob([
+        "tools/llvm-mc/*.cpp",
+        "tools/llvm-mc/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":AllTargetsAsmParsers",
+        ":AllTargetsCodeGens",
+        ":AllTargetsDisassemblers",
+        ":MC",
+        ":MCDisassembler",
+        ":MCParser",
+        ":Object",
+        ":Support",
+    ],
+)
+
+cc_binary(
+    name = "llvm-mca",
+    srcs = glob([
+        "tools/llvm-mca/*.cpp",
+        "tools/llvm-mca/*.h",
+        "tools/llvm-mca/Views/*.cpp",
+        "tools/llvm-mca/Views/*.h",
+    ]),
+    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/tools/llvm-mca"],
+    stamp = 0,
+    deps = [
+        ":AllTargetsAsmParsers",
+        ":AllTargetsCodeGens",
+        ":AllTargetsDisassemblers",
+        ":MC",
+        ":MCA",
+        ":MCParser",
+        ":Support",
+    ],
+)
+
+cc_binary(
+    name = "llvm-ml",
+    srcs = glob([
+        "tools/llvm-ml/*.cpp",
+        "tools/llvm-ml/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":AllTargetsAsmParsers",
+        ":AllTargetsCodeGens",
+        ":AllTargetsDisassemblers",
+        ":MC",
+        ":MCParser",
+        ":Support",
+    ],
+)
+
+cc_binary(
+    name = "llvm-modextract",
+    srcs = glob([
+        "tools/llvm-modextract/*.cpp",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":BitReader",
+        ":BitWriter",
+        ":IRReader",
+        ":Support",
+    ],
+)
+
+gentbl(
+    name = "MtTableGen",
+    tbl_outs = [(
+        "-gen-opt-parser-defs",
+        "tools/llvm-mt/Opts.inc",
+    )],
+    tblgen = ":llvm-tblgen",
+    td_file = "tools/llvm-mt/Opts.td",
+    td_srcs = ["include/llvm/Option/OptParser.td"],
+)
+
+cc_binary(
+    name = "llvm-mt",
+    srcs = glob([
+        "tools/llvm-mt/*.cpp",
+        "tools/llvm-mt/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":MtTableGen",
+        ":Option",
+        ":Support",
+        ":WindowsManifest",
+    ],
+)
+
+cc_binary(
+    name = "llvm-nm",
+    srcs = glob([
+        "tools/llvm-nm/*.cpp",
+        "tools/llvm-nm/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":AllTargetsAsmParsers",
+        ":AllTargetsCodeGens",
+        ":BinaryFormat",
+        ":BitReader",
+        ":Core",
+        ":Demangle",
+        ":Object",
+        ":Support",
+    ],
+)
+
+gentbl(
+    name = "llvm-objcopy-opts",
+    tbl_outs = [(
+        "-gen-opt-parser-defs",
+        "tools/llvm-objcopy/ObjcopyOpts.inc",
+    )],
+    tblgen = ":llvm-tblgen",
+    td_file = "tools/llvm-objcopy/ObjcopyOpts.td",
+    td_srcs = [
+        "include/llvm/Option/OptParser.td",
+        "tools/llvm-objcopy/CommonOpts.td",
+    ],
+)
+
+gentbl(
+    name = "llvm-installnametool-opts",
+    tbl_outs = [(
+        "-gen-opt-parser-defs",
+        "tools/llvm-objcopy/InstallNameToolOpts.inc",
+    )],
+    tblgen = ":llvm-tblgen",
+    td_file = "tools/llvm-objcopy/InstallNameToolOpts.td",
+    td_srcs = [
+        "include/llvm/Option/OptParser.td",
+        "tools/llvm-objcopy/CommonOpts.td",
+    ],
+)
+
+gentbl(
+    name = "llvm-strip-opts",
+    tbl_outs = [(
+        "-gen-opt-parser-defs",
+        "tools/llvm-objcopy/StripOpts.inc",
+    )],
+    tblgen = ":llvm-tblgen",
+    td_file = "tools/llvm-objcopy/StripOpts.td",
+    td_srcs = [
+        "include/llvm/Option/OptParser.td",
+        "tools/llvm-objcopy/CommonOpts.td",
+    ],
+)
+
+cc_binary(
+    name = "llvm-objcopy",
+    srcs = glob([
+        "tools/llvm-objcopy/**/*.cpp",
+        "tools/llvm-objcopy/**/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":BinaryFormat",
+        ":MC",
+        ":Object",
+        ":ObjectYAML",
+        ":Option",
+        ":Support",
+        ":Target",
+        ":llvm-installnametool-opts",
+        ":llvm-objcopy-opts",
+        ":llvm-strip-opts",
+    ],
+)
+
+sh_binary(
+    name = "llvm-strip",
+    srcs = [":llvm-objcopy"],
+)
+
+sh_binary(
+    name = "llvm-install-name-tool",
+    srcs = [":llvm-objcopy"],
+)
+
+cc_binary(
+    name = "llvm-objdump",
+    srcs = glob([
+        "tools/llvm-objdump/*.cpp",
+        "tools/llvm-objdump/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":AllTargetsAsmParsers",
+        ":AllTargetsCodeGens",
+        ":AllTargetsDisassemblers",
+        ":BinaryFormat",
+        ":CodeGen",
+        ":DebugInfo",
+        ":DebugInfoDWARF",
+        ":Demangle",
+        ":MC",
+        ":MCDisassembler",
+        ":Object",
+        ":Support",
+        ":Symbolize",
+        ":config",
+    ],
+)
+
+cc_binary(
+    name = "llvm-opt-report",
+    srcs = glob([
+        "tools/llvm-opt-report/*.cpp",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":AllTargetsCodeGens",
+        ":Demangle",
+        ":Remarks",
+        ":Support",
+    ],
+)
+
+cc_binary(
+    name = "llvm-pdbutil",
+    srcs = glob([
+        "tools/llvm-pdbutil/*.cpp",
+        "tools/llvm-pdbutil/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":BinaryFormat",
+        ":DebugInfoCodeView",
+        ":DebugInfoMSF",
+        ":DebugInfoPDB",
+        ":Object",
+        ":ObjectYAML",
+        ":Support",
+        ":config",
+    ],
+)
+
+cc_binary(
+    name = "llvm-profdata",
+    srcs = glob([
+        "tools/llvm-profdata/*.cpp",
+        "tools/llvm-profdata/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":Core",
+        ":ProfileData",
+        ":Support",
+    ],
+)
+
+gentbl(
+    name = "RcTableGen",
+    tbl_outs = [(
+        "-gen-opt-parser-defs",
+        "tools/llvm-rc/Opts.inc",
+    )],
+    tblgen = ":llvm-tblgen",
+    td_file = "tools/llvm-rc/Opts.td",
+    td_srcs = ["include/llvm/Option/OptParser.td"],
+)
+
+# Workaround inability to put `.def` files into `srcs` with a library.
+cc_library(
+    name = "llvm-rc-defs-lib",
+    textual_hdrs = glob([
+        "tools/llvm-rc/*.def",
+    ]),
+)
+
+cc_binary(
+    name = "llvm-rc",
+    srcs = glob([
+        "tools/llvm-rc/*.cpp",
+        "tools/llvm-rc/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":Object",
+        ":Option",
+        ":RcTableGen",
+        ":Support",
+        ":llvm-rc-defs-lib",
+    ],
+)
+
+cc_binary(
+    name = "llvm-readobj",
+    srcs = glob([
+        "tools/llvm-readobj/*.cpp",
+        "tools/llvm-readobj/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":AllTargetsCodeGens",
+        ":BinaryFormat",
+        ":BitReader",
+        ":DebugInfoCodeView",
+        ":DebugInfoDWARF",
+        ":Demangle",
+        ":Object",
+        ":Support",
+    ],
+)
+
+# Create an 'llvm-readelf' named binary from the 'llvm-readobj' tool.
+sh_binary(
+    name = "llvm-readelf",
+    srcs = [":llvm-readobj"],
+)
+
+cc_binary(
+    name = "llvm-reduce",
+    srcs = glob([
+        "tools/llvm-reduce/**/*.cpp",
+        "tools/llvm-reduce/**/*.h",
+    ]),
+    copts = llvm_copts,
+    includes = ["tools/llvm-reduce"],
+    stamp = 0,
+    deps = [
+        ":AllTargetsCodeGens",
+        ":BitReader",
+        ":Core",
+    ],
+)
+
+cc_binary(
+    name = "llvm-rtdyld",
+    srcs = glob([
+        "tools/llvm-rtdyld/*.cpp",
+        "tools/llvm-rtdyld/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":AllTargetsCodeGens",
+        ":AllTargetsDisassemblers",
+        ":DebugInfo",
+        ":DebugInfoDWARF",
+        ":ExecutionEngine",
+        ":MC",
+        ":MCDisassembler",
+        ":Object",
+        ":Support",
+    ],
+)
+
+cc_binary(
+    name = "llvm-size",
+    srcs = glob([
+        "tools/llvm-size/*.cpp",
+        "tools/llvm-size/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":Object",
+        ":Support",
+    ],
+)
+
+cc_binary(
+    name = "llvm-split",
+    srcs = glob([
+        "tools/llvm-split/*.cpp",
+        "tools/llvm-split/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":BitWriter",
+        ":Core",
+        ":IRReader",
+        ":Support",
+        ":TransformUtils",
+    ],
+)
+
+cc_binary(
+    name = "llvm-strings",
+    srcs = glob([
+        "tools/llvm-strings/*.cpp",
+        "tools/llvm-strings/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":Object",
+        ":Support",
+    ],
+)
+
+gentbl(
+    name = "SymbolizerOptsTableGen",
+    tbl_outs = [(
+        "-gen-opt-parser-defs",
+        "tools/llvm-symbolizer/Opts.inc",
+    )],
+    tblgen = ":llvm-tblgen",
+    td_file = "tools/llvm-symbolizer/Opts.td",
+    td_srcs = ["include/llvm/Option/OptParser.td"],
+)
+
+cc_binary(
+    name = "llvm-symbolizer",
+    srcs = glob([
+        "tools/llvm-symbolizer/*.cpp",
+        "tools/llvm-symbolizer/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":DebugInfoDWARF",
+        ":DebugInfoPDB",
+        ":Object",
+        ":Option",
+        ":Support",
+        ":Symbolize",
+        ":SymbolizerOptsTableGen",
+    ],
+)
+
+sh_binary(
+    name = "llvm-addr2line",
+    srcs = [":llvm-symbolizer"],
+)
+
+cc_binary(
+    name = "llvm-undname",
+    srcs = glob([
+        "tools/llvm-undname/*.cpp",
+        "tools/llvm-undname/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":Demangle",
+        ":Support",
+    ],
+)
+
+cc_binary(
+    name = "llvm-xray",
+    srcs = glob([
+        "tools/llvm-xray/*.cpp",
+        "tools/llvm-xray/*.cc",
+        "tools/llvm-xray/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":DebugInfoDWARF",
+        ":Object",
+        ":Support",
+        ":Symbolize",
+        ":XRay",
+    ],
+)
+
+cc_binary(
+    name = "opt",
+    srcs = glob([
+        "tools/opt/*.cpp",
+        "tools/opt/*.h",
+    ]),
+    copts = llvm_copts,
+    linkopts = ["-Wl,--export-dynamic"],
+    stamp = 0,
+    deps = [
+        ":AllTargetsAsmParsers",
+        ":AllTargetsCodeGens",
+        ":Analysis",
+        ":AsmParser",
+        ":BitReader",
+        ":BitWriter",
+        ":CodeGen",
+        ":Core",
+        ":IRReader",
+        ":MC",
+        ":Passes",
+        ":Support",
+        ":Target",
+        ":TransformUtils",
+        ":common_transforms",
+        ":config",
+    ],
+)
+
+cc_binary(
+    name = "sancov",
+    srcs = glob([
+        "tools/sancov/*.cpp",
+        "tools/sancov/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":AllTargetsCodeGens",
+        ":AllTargetsDisassemblers",
+        ":DebugInfoDWARF",
+        ":DebugInfoPDB",
+        ":MC",
+        ":MCDisassembler",
+        ":Object",
+        ":Support",
+        ":Symbolize",
+    ],
+)
+
+cc_binary(
+    name = "sanstats",
+    srcs = glob([
+        "tools/sanstats/*.cpp",
+        "tools/sanstats/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":Support",
+        ":Symbolize",
+        ":TransformUtils",
+    ],
+)
+
+cc_binary(
+    name = "split-file",
+    srcs = glob([
+        "tools/split-file/*.cpp",
+        "tools/split-file/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":Support",
+    ],
+)
+
+################################################################################
+# Begin testonly libraries
+
+cc_library(
+    name = "FuzzMutate",
+    testonly = 1,
+    srcs = glob(["lib/FuzzMutate/*.cpp"]),
+    hdrs = glob(["include/llvm/FuzzMutate/*.h"]),
+    copts = llvm_copts,
+    includes = ["include"],
+    deps = [
+        ":Analysis",
+        ":BitReader",
+        ":BitWriter",
+        ":Core",
+        ":Scalar",
+        ":Support",
     ],
 )
 
 cc_library(
     name = "gtest",
+    testonly = 1,
+    srcs = glob(
+        [
+            "utils/unittest/googletest/include/**/*.h",
+            "utils/unittest/googletest/src/*.cc",
+        ],
+        exclude = [
+            "utils/unittest/googletest/src/gtest-all.cc",
+            "utils/unittest/googletest/include/gtest/gtest_pred_impl.h",
+        ],
+    ) + [
+    ],
+    hdrs = ["utils/unittest/googletest/include/gtest/gtest.h"],
+    # TODO: the hard-coding of `external/llvm-project` path components here is
+    # really unfortunate. It is essentially baking in an implementation detail
+    # of how Bazel runs the compiler when compiling LLVM in the exact
+    # configuration we use.
+    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/utils/unittest/googletest"],
+    defines = [
+        "GTEST_HAS_RTTI=0",
+        "GTEST_USE_OWN_TR1_TUPLE",
+        "__STDC_LIMIT_MACROS",
+        "__STDC_CONSTANT_MACROS",
+    ],
+    includes = [
+        "include",
+        "utils/unittest/googletest/include",
+    ],
+    textual_hdrs = [
+        "utils/unittest/googletest/include/gtest/gtest_pred_impl.h",
+        "utils/unittest/googletest/src/gtest-internal-inl.h",
+    ],
+    deps = [":Support"],
+)
+
+cc_library(
+    name = "gtest_main",
+    testonly = 1,
+    srcs = ["utils/unittest/UnitTestMain/TestMain.cpp"],
+    copts = llvm_copts,
+    deps = [
+        ":Support",
+        ":gmock",
+        ":gtest",
+    ],
+)
+
+cc_library(
+    name = "gmock",
+    testonly = 1,
+    srcs = glob(
+        [
+            "utils/unittest/googlemock/include/**/*.h",
+            "utils/unittest/googlemock/src/*.cc",
+        ],
+        exclude = ["utils/unittest/googlemock/src/gmock-all.cc"],
+    ),
+    hdrs = ["utils/unittest/googlemock/include/gmock/gmock.h"],
+    # TODO: the hard-coding of `external/llvm-project` path components here is
+    # really unfortunate. It is essentially baking in an implementation detail
+    # of how Bazel runs the compiler when compiling LLVM in the exact
+    # configuration we use.
+    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/utils/unittest/googlemock"],
+    includes = [
+        "include",
+        "utils/unittest/googlemock/include",
+    ],
+    deps = [":gtest"],
+)
+
+cc_library(
+    name = "TestingSupport",
+    testonly = 1,
     srcs = glob([
-        "utils/unittest/*.c",
-        "utils/unittest/*.cpp",
-        "utils/unittest/*.inc",
-        "utils/unittest/*.h",
+        "lib/Testing/Support/*.cpp",
+        "lib/Testing/Support/*.h",
     ]),
     hdrs = glob([
-        "utils/unittest/*.h",
-        "utils/unittest/*.def",
-        "utils/unittest/*.inc",
+        "include/llvm/Testing/Support/*.h",
     ]),
     copts = llvm_copts,
     deps = [
         ":Support",
         ":config",
+        ":gmock",
+        ":gtest",
     ],
 )
 
-cc_library(
-    name = "gtest_main",
+################################################################################
+# Begin testonly binary utilities
+
+cc_binary(
+    name = "FileCheck",
+    testonly = 1,
     srcs = glob([
-        "utils/unittest/*.c",
-        "utils/unittest/*.cpp",
-        "utils/unittest/*.inc",
-        "utils/unittest/*.h",
-    ]),
-    hdrs = glob([
-        "utils/unittest/*.h",
-        "utils/unittest/*.def",
-        "utils/unittest/*.inc",
+        "utils/FileCheck/*.cpp",
+        "utils/FileCheck/*.h",
     ]),
     copts = llvm_copts,
+    stamp = 0,
+    deps = [":FileCheckLib"],
+)
+
+cc_binary(
+    name = "bugpoint",
+    srcs = glob([
+        "tools/bugpoint/*.cpp",
+        "tools/bugpoint/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
     deps = [
+        ":AllTargetsAsmParsers",
+        ":AllTargetsCodeGens",
+        ":Analysis",
+        ":AsmParser",
+        ":BitReader",
+        ":BitWriter",
+        ":CodeGen",
+        ":Core",
+        ":IRReader",
+        ":Linker",
+        ":Passes",
+        ":Support",
+        ":TransformUtils",
+        ":common_transforms",
         ":config",
-        ":gtest",
+    ],
+)
+
+cc_binary(
+    name = "count",
+    testonly = 1,
+    srcs = glob([
+        "utils/count/*.c",
+        "utils/count/*.h",
+    ]),
+    stamp = 0,
+)
+
+cc_binary(
+    name = "lli-child-target",
+    testonly = 1,
+    srcs = glob([
+        "tools/lli/ChildTarget/*.cpp",
+        "tools/lli/ChildTarget/*.h",
+    ]) + [
+        "tools/lli/RemoteJITUtils.h",
+    ],
+    copts = llvm_copts,
+    # The tests load code into this binary that expect to see symbols
+    # from libstdc++ such as __cxa_begin_catch and _ZTIi. The latter
+    # isn't even used in the main binary, so we also need to force it
+    # to be included.
+    linkopts = [
+        "-rdynamic",
+        "-u_ZTIi",
+    ],
+    stamp = 0,
+    deps = [
+        ":OrcJIT",
+        ":Support",
+        ":attributes_gen",
+        ":config",
+        ":intrinsic_enums_gen",
+    ],
+)
+
+cc_binary(
+    name = "llvm-c-test",
+    testonly = 1,
+    srcs = glob([
+        "tools/llvm-c-test/*.c",
+        "tools/llvm-c-test/*.cpp",
+        "tools/llvm-c-test/*.h",
+    ]),
+    # Note that we cannot use the general LLVM options here as we mix C and C++
+    # code. However, we generally don't need to disable warnings here as
+    # headers included here shouldn't trigger warnings.
+    copts = [],
+    stamp = 0,
+    deps = [
+        ":AllTargetsAsmParsers",
+        ":AllTargetsCodeGens",
+        ":AllTargetsDisassemblers",
+        ":Analysis",
+        ":BitReader",
+        ":BitWriter",
+        ":Core",
+        ":ExecutionEngine",
+        ":IPO",
+        ":LTO",
+        ":Linker",
+        ":MCDisassembler",
+        ":Object",
+        ":OrcJIT",
+        ":Scalar",
+        ":Support",
+        ":Target",
+        ":Vectorize",
+    ],
+)
+
+cc_binary(
+    name = "llvm-diff",
+    testonly = 1,
+    srcs = glob([
+        "tools/llvm-diff/*.cpp",
+        "tools/llvm-diff/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":AsmParser",
+        ":BitReader",
+        ":Core",
+        ":IRReader",
+        ":Support",
+    ],
+)
+
+cc_binary(
+    name = "llvm-isel-fuzzer",
+    testonly = 1,
+    srcs = glob([
+        "tools/llvm-isel-fuzzer/*.cpp",
+        "tools/llvm-isel-fuzzer/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":AllTargetsAsmParsers",
+        ":AllTargetsCodeGens",
+        ":Analysis",
+        ":BitReader",
+        ":BitWriter",
+        ":CodeGen",
+        ":Core",
+        ":FuzzMutate",
+        ":IRReader",
+        ":Support",
+        ":Target",
+    ],
+)
+
+# This is really a Python script, but call it sh_binary to ignore the hyphen in
+# the path, which py_binary does not allow.
+# Also, note: llvm-locstats expects llvm-dwarfdump to be in the same directory
+# when executed.
+sh_binary(
+    name = "llvm-locstats",
+    testonly = 1,
+    srcs = glob([
+        "utils/llvm-locstats/*.py",
+    ]),
+    # llvm-locstats is a thin wrapper around llvm-dwarfdump.
+    data = [":llvm-dwarfdump"],
+)
+
+cc_binary(
+    name = "not",
+    testonly = 1,
+    srcs = glob([
+        "utils/not/*.cpp",
+        "utils/not/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [":Support"],
+)
+
+cc_binary(
+    name = "llvm-opt-fuzzer",
+    testonly = 1,
+    srcs = glob([
+        "tools/llvm-opt-fuzzer/*.cpp",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":AllTargetsCodeGens",
+        ":Analysis",
+        ":BitReader",
+        ":BitWriter",
+        ":CodeGen",
+        ":Core",
+        ":Coroutines",
+        ":FuzzMutate",
+        ":Passes",
+        ":Support",
+    ],
+)
+
+cc_binary(
+    name = "obj2yaml",
+    testonly = 1,
+    srcs = glob([
+        "tools/obj2yaml/*.cpp",
+        "tools/obj2yaml/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":BinaryFormat",
+        ":DebugInfoCodeView",
+        ":DebugInfoDWARF",
+        ":Object",
+        ":ObjectYAML",
+        ":Support",
+    ],
+)
+
+cc_binary(
+    name = "verify-uselistorder",
+    srcs = glob([
+        "tools/verify-uselistorder/*.cpp",
+        "tools/verify-uselistorder/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":AsmParser",
+        ":BitReader",
+        ":BitWriter",
+        ":Core",
+        ":IRReader",
+        ":Support",
+    ],
+)
+
+cc_binary(
+    name = "yaml2obj",
+    testonly = 1,
+    srcs = glob([
+        "tools/yaml2obj/*.cpp",
+        "tools/yaml2obj/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":BinaryFormat",
+        ":DebugInfoCodeView",
+        ":MC",
+        ":Object",
+        ":ObjectYAML",
+        ":Support",
+    ],
+)
+
+cc_binary(
+    name = "yaml-bench",
+    testonly = 1,
+    srcs = glob([
+        "utils/yaml-bench/*.cpp",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":Support",
     ],
 )
