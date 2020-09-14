@@ -15,15 +15,20 @@ suitable for more general usage.
 
 # Status
 
-MLIR builds with Cuda and Vulkan support disabled.
-
-Building LLVM core has many issues with finding `.inc` files.
+MLIR has Cuda and Vulkan support disabled. LLVM does not yet have configuration
+detection and hardcodes values in the config.
 
 # Usage
 
 These build files are flexible in how they can be used. The
 [llvm-bazel subdirectory](./llvm-bazel) has the simplest build configuration
-with a submodule for the llvm-project.
+with a submodule for the llvm-project. The WORKSPACE is in that directory, so
+you can build the project like:
+
+```shell
+cd llvm-bazel/
+bazel --config=generic_clang build @llvm-project//...
+```
 
 Users are more likely going to want to fetch build files from this repository
 and use them with their own copy of the llvm-project.
@@ -38,10 +43,11 @@ The
 shows usage of these build files with both them and llvm-project coming from
 submodules.
 
-You can build either of these demos with a command like
+You can build either of these demos after changing into the respective directory
+with a command like
 
 ```shell
-bazel --config=generic_clang @llvm-project//mlir/...
+bazel --config=generic_clang build @llvm-project//...
 ```
 
 # License
