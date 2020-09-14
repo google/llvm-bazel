@@ -20,7 +20,6 @@ jobs:
           submodules: true
       - name: Tagging head commit
         run: ./scripts/tag_rev.sh
-      - name: Fetching integration branch
       - name: Pushing changes
         uses: ad-m/github-push-action@v0.6.0
         with:
