@@ -1,13 +1,8 @@
-# This file is licensed under the Apache License v2.0 with LLVM Exceptions.
-# See https://llvm.org/LICENSE.txt for license information.
-# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-
 load("//mlir:tblgen.bzl", "gentbl")
 
-package(
-    default_visibility = [":test_friends"],
-    licenses = ["notice"],
-)
+licenses(["notice"])
+
+package(default_visibility = [":test_friends"])
 
 # Please only depend on this from MLIR tests.
 package_group(
