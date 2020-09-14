@@ -16,6 +16,6 @@ if [[ -n "$(git status --porcelain)" ]]; then
     exit 1
 fi
 
-LLVM_COMMIT="$(.scripts/get_llvm_commit.sh)"
+LLVM_COMMIT="$(./scripts/get_llvm_commit.sh)"
 
 git tag -f "llvm-project-${LLVM_COMMIT?}"
