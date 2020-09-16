@@ -24,7 +24,6 @@ llvm_copts = [
     "$(STACK_FRAME_UNLIMITED)",
     "-Wno-unused-parameter",
     "-Wno-comment",
-    "-Wno-class-memaccess",
     "-Wno-maybe-uninitialized",
     "-Wno-misleading-indentation",
     "-Wno-unknown-warning-option",
