@@ -3110,7 +3110,7 @@ cc_binary(
     srcs = ["tools/mlir-cuda-runner/cuda-runtime-wrappers.cpp"],
     linkshared = True,
     tags = [
-        "manual",  # TODO(gcmn) enable this target
+        "manual",  # TODO(gcmn): Add support for this target
     ],
     deps = [
         ":mlir_c_runner_utils",
@@ -3129,13 +3129,6 @@ cc_library(
     hdrs = [
         "tools/mlir-vulkan-runner/VulkanRuntime.h",
     ],
-    data = [
-        "//third_party/swiftshader/src:libvk_swiftshader.so",
-        "//third_party/swiftshader/src:vulkan_icd_manifest_files",
-    ],
-    tags = [
-        "manual",  # TODO(gcmn) enable this target
-    ],
     deps = [
         ":IR",
         ":Pass",
@@ -3145,7 +3138,7 @@ cc_library(
         ":Support",
         "//llvm:Support",
         "//third_party/vulkan_headers",
-        "//third_party/vulkan_loader",
+        "@vulkan_sdk//:sdk",
     ],
 )
 
@@ -3153,9 +3146,6 @@ cc_binary(
     name = "tools/libvulkan-runtime-wrappers.so",
     srcs = ["tools/mlir-vulkan-runner/vulkan-runtime-wrappers.cpp"],
     linkshared = True,
-    tags = [
-        "manual",  # TODO(gcmn) enable this target
-    ],
     deps = [
         ":VulkanRuntime",
         "//llvm:Support",
@@ -3167,7 +3157,7 @@ cc_binary(
     srcs = ["tools/mlir-cuda-runner/mlir-cuda-runner.cpp"],
     data = [":tools/libcuda-runtime-wrappers.so"],
     tags = [
-        "manual",  # TODO(gcmn) enable this target
+        "manual",  # TODO(gcmn): Add support for this target
     ],
     deps = [
         ":AllPassesAndDialectsNoRegistration",
@@ -3201,7 +3191,7 @@ cc_binary(
         "//mlir/test/mlir-cpu-runner:libmlir_runner_utils.so",
     ],
     tags = [
-        "manual",  # TODO(gcmn) enable this target
+        "manual",  # TODO(gcmn): Add support for this target
     ],
     deps = [
         ":AllPassesAndDialectsNoRegistration",
