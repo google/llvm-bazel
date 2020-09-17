@@ -3129,13 +3129,6 @@ cc_library(
     hdrs = [
         "tools/mlir-vulkan-runner/VulkanRuntime.h",
     ],
-    data = [
-        "//third_party/swiftshader/src:libvk_swiftshader.so",
-        "//third_party/swiftshader/src:vulkan_icd_manifest_files",
-    ],
-    tags = [
-        "manual",  # TODO(gcmn) enable this target
-    ],
     deps = [
         ":IR",
         ":Pass",
@@ -3144,8 +3137,8 @@ cc_library(
         ":StandardOps",
         ":Support",
         "//llvm:Support",
-        "//third_party/vulkan_headers",
-        "//third_party/vulkan_loader",
+        "@vulkan_headers",
+        "@vulkan_sdk//:sdk"
     ],
 )
 
@@ -3153,9 +3146,6 @@ cc_binary(
     name = "tools/libvulkan-runtime-wrappers.so",
     srcs = ["tools/mlir-vulkan-runner/vulkan-runtime-wrappers.cpp"],
     linkshared = True,
-    tags = [
-        "manual",  # TODO(gcmn) enable this target
-    ],
     deps = [
         ":VulkanRuntime",
         "//llvm:Support",
