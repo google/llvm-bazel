@@ -14,20 +14,13 @@ exports_files(["LICENSE.TXT"])
 
 llvm_host_triple = "x86_64-unknown-linux_gnu"
 
-# FIXME: Would be nice to have a select here on the compiler so that we can use
-# a more minimal list for Clang than we need for GCC. Currently this merges the
-# two lists. However, that results in warning flags that aren't understood by
-# the compiler. For GCC, this will only result in extra warning output when
-# a warning or error occurs for some other reason. For Clang, we disable
-# warning on unknown warning options.
+# It may be tempting to add compiler flags here, but that should be avoided.
+# The necessary warnings and other compile flags should be provided by the
+# toolchain or the `.bazelrc` file. This is just a workaround until we have a
+# widely available feature to enable unlimited stack frame instead of using
+# this `Make` variable.
 llvm_copts = [
     "$(STACK_FRAME_UNLIMITED)",
-    "-Wno-unused-parameter",
-    "-Wno-comment",
-    "-Wno-class-memaccess",
-    "-Wno-maybe-uninitialized",
-    "-Wno-misleading-indentation",
-    "-Wno-unknown-warning-option",
 ]
 
 llvm_targets = [
