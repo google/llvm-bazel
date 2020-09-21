@@ -3129,6 +3129,9 @@ cc_library(
     hdrs = [
         "tools/mlir-vulkan-runner/VulkanRuntime.h",
     ],
+    tags = [
+        "manual",  # Requires an external dependency.
+    ],
     deps = [
         ":IR",
         ":Pass",
@@ -3138,7 +3141,7 @@ cc_library(
         ":Support",
         "//llvm:Support",
         "@vulkan_headers",
-        "@vulkan_sdk//:sdk"
+        "@vulkan_sdk//:sdk",
     ],
 )
 
@@ -3146,6 +3149,9 @@ cc_binary(
     name = "tools/libvulkan-runtime-wrappers.so",
     srcs = ["tools/mlir-vulkan-runner/vulkan-runtime-wrappers.cpp"],
     linkshared = True,
+    tags = [
+        "manual",  # Requires an external dependency (via VulkanRuntime)
+    ],
     deps = [
         ":VulkanRuntime",
         "//llvm:Support",
