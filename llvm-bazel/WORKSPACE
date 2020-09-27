@@ -14,6 +14,26 @@ llvm_configure(
 
 maybe(
     http_archive,
+    name = "zlib",
+    build_file = "//third_party_build:zlib.BUILD",
+    sha256 = "c3e5e9fdd5004dcb542feda5ee4f0ff0744628baf8ed2dd5d66f8ca1197cb1a1",
+    strip_prefix = "zlib-1.2.11",
+    urls = [
+        "https://storage.googleapis.com/mirror.tensorflow.org/zlib.net/zlib-1.2.11.tar.gz",
+        "https://zlib.net/zlib-1.2.11.tar.gz",
+    ],
+)
+
+load(":zlib.bzl", "llvm_zlib_from_env")
+
+maybe(
+    llvm_zlib_from_env,
+    name = "llvm_zlib",
+    external_zlib = "@zlib",
+)
+
+maybe(
+    http_archive,
     name = "vulkan_headers",
     strip_prefix = "Vulkan-Headers-9bd3f561bcee3f01d22912de10bb07ce4e23d378",
     sha256 = "19f491784ef0bc73caff877d11c96a48b946b5a1c805079d9006e3fbaa5c1895",

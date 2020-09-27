@@ -649,6 +649,10 @@ cc_library(
     deps = [
         ":Demangle",
         ":config",
+        # We unconditionally depend on the custom LLVM zlib wrapper. This will
+        # be an empty library unless zlib is enabled, in which case it will
+        # both provide the necessary dependencies and configuration defines.
+        "@llvm_zlib//:zlib",
     ],
 )
 
