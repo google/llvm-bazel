@@ -2,7 +2,10 @@
 # See https://llvm.org/LICENSE.txt for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-package(default_visibility = ["//visibility:public"])
+package(
+    default_visibility = ["//visibility:public"],
+    licenses = ["notice"],
+)
 
 # Exports all headers but defining VK_NO_PROTOTYPES to disable the
 # inclusion of C function prototypes. Useful if dynamically loading
