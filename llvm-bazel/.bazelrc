@@ -10,12 +10,15 @@
 build --experimental_guard_against_concurrent_changes
 
 ###############################################################################
-# Options to select different strategies for linking zlib. The default leaves
-# it disabled.
+# Options to select different strategies for linking potential dependent
+# libraries. The default leaves it disabled.
 ###############################################################################
 
 build:zlib_external --repo_env=BAZEL_LLVM_ZLIB_STRATEGY=external
 build:zlib_system --repo_env=BAZEL_LLVM_ZLIB_STRATEGY=system
+
+build:terminfo_external --repo_env=BAZEL_LLVM_TERMINFO_STRATEGY=external
+build:terminfo_system --repo_env=BAZEL_LLVM_TERMINFO_STRATEGY=system
 
 ###############################################################################
 # Options for "generic_clang" builds: these options should generally apply to
