@@ -128,22 +128,43 @@ cc_library(
         "lib/CAPI/IR/IR.cpp",
         "lib/CAPI/IR/StandardAttributes.cpp",
         "lib/CAPI/IR/StandardTypes.cpp",
+        "lib/CAPI/IR/Support.cpp",
+        "lib/CAPI/Standard/StandardDialect.cpp",
     ],
     hdrs = [
         "include/mlir-c/AffineMap.h",
         "include/mlir-c/IR.h",
         "include/mlir-c/StandardAttributes.h",
+        "include/mlir-c/StandardDialect.h",
         "include/mlir-c/StandardTypes.h",
+        "include/mlir-c/Support.h",
         "include/mlir/CAPI/AffineMap.h",
         "include/mlir/CAPI/IR.h",
+        "include/mlir/CAPI/Support.h",
+        "include/mlir/CAPI/Utils.h",
         "include/mlir/CAPI/Wrap.h",
     ],
     includes = ["include"],
     deps = [
         ":IR",
         ":Parser",
+        ":StandardOps",
         ":Support",
         "//llvm:Support",
+    ],
+)
+
+cc_library(
+    name = "MLIRBindingsPythonExtension",
+    hdrs = [
+        "include/mlir-c/Bindings/Python/Interop.h",
+    ],
+    tags = [
+        "manual",  # TODO(gcmn): Add support for this target
+    ],
+    deps = [
+        ":CAPIIR",
+        "//third_party/python_runtime:headers",
     ],
 )
 
@@ -236,6 +257,44 @@ gentbl(
     td_file = "include/mlir/Dialect/Affine/IR/AffineMemoryOpInterfaces.td",
     td_srcs = [
         ":AffineOpsTdFiles",
+    ],
+)
+
+##---------------------------------------------------------------------------##
+# Async dialect.
+##---------------------------------------------------------------------------##
+
+filegroup(
+    name = "AsyncOpsTdFiles",
+    srcs = [
+        "include/mlir/Dialect/Async/IR/AsyncBase.td",
+        "include/mlir/Dialect/Async/IR/AsyncOps.td",
+        "include/mlir/Interfaces/SideEffectInterfaces.td",
+        ":OpBaseTdFiles",
+    ],
+)
+
+gentbl(
+    name = "AsyncOpsIncGen",
+    strip_include_prefix = "include",
+    tbl_outs = [
+        (
+            "-gen-op-decls",
+            "include/mlir/Dialect/Async/IR/AsyncOps.h.inc",
+        ),
+        (
+            "-gen-op-defs",
+            "include/mlir/Dialect/Async/IR/AsyncOps.cpp.inc",
+        ),
+        (
+            "-gen-dialect-decls",
+            "include/mlir/Dialect/Async/IR/AsyncOpsDialect.h.inc",
+        ),
+    ],
+    tblgen = ":mlir-tblgen",
+    td_file = "include/mlir/Dialect/Async/IR/AsyncOps.td",
+    td_srcs = [
+        ":AsyncOpsTdFiles",
     ],
 )
 
@@ -501,6 +560,26 @@ cc_library(
         ":EDSC",
         ":IR",
         ":LoopLikeInterface",
+        ":SideEffectInterfaces",
+        ":StandardOps",
+        ":Support",
+        "//llvm:Support",
+    ],
+)
+
+cc_library(
+    name = "Async",
+    srcs = glob([
+        "lib/Dialect/Async/IR/*.cpp",
+    ]),
+    hdrs = glob([
+        "include/mlir/Dialect/Async/IR/*.h",
+    ]),
+    includes = ["include"],
+    deps = [
+        ":AsyncOpsIncGen",
+        ":Dialect",
+        ":IR",
         ":SideEffectInterfaces",
         ":StandardOps",
         ":Support",
@@ -2953,6 +3032,7 @@ cc_library(
         ":AffinePassIncGen",
         ":AffineToStandard",
         ":AffineTransforms",
+        ":Async",
         ":ConversionPasses",
         ":GPUDialect",
         ":GPUPassIncGen",
@@ -3105,12 +3185,11 @@ cc_binary(
     ],
 )
 
-cc_binary(
-    name = "tools/libcuda-runtime-wrappers.so",
+cc_library(
+    name = "tools/libcuda-runtime-wrappers",
     srcs = ["tools/mlir-cuda-runner/cuda-runtime-wrappers.cpp"],
-    linkshared = True,
     tags = [
-        "manual",  # TODO(gcmn) enable this target
+        "manual",  # TODO(gcmn): Add support for this target
     ],
     deps = [
         ":mlir_c_runner_utils",
@@ -3119,6 +3198,15 @@ cc_binary(
         "//third_party/gpus/cuda:cuda_runtime",
         "//third_party/gpus/cuda:libcuda",
     ],
+)
+
+cc_binary(
+    name = "tools/libcuda-runtime-wrappers.so",
+    linkshared = True,
+    tags = [
+        "manual",  # TODO(gcmn): Add support for this target
+    ],
+    deps = [":tools/libcuda-runtime-wrappers"],
 )
 
 cc_library(
@@ -3163,7 +3251,7 @@ cc_binary(
     srcs = ["tools/mlir-cuda-runner/mlir-cuda-runner.cpp"],
     data = [":tools/libcuda-runtime-wrappers.so"],
     tags = [
-        "manual",  # TODO(gcmn) enable this target
+        "manual",  # TODO(gcmn): Add support for this target
     ],
     deps = [
         ":AllPassesAndDialectsNoRegistration",
@@ -3197,7 +3285,7 @@ cc_binary(
         "//mlir/test/mlir-cpu-runner:libmlir_runner_utils.so",
     ],
     tags = [
-        "manual",  # TODO(gcmn) enable this target
+        "manual",  # TODO(gcmn): Add support for this target
     ],
     deps = [
         ":AllPassesAndDialectsNoRegistration",
