@@ -14,20 +14,13 @@ exports_files(["LICENSE.TXT"])
 
 llvm_host_triple = "x86_64-unknown-linux_gnu"
 
-# FIXME: Would be nice to have a select here on the compiler so that we can use
-# a more minimal list for Clang than we need for GCC. Currently this merges the
-# two lists. However, that results in warning flags that aren't understood by
-# the compiler. For GCC, this will only result in extra warning output when
-# a warning or error occurs for some other reason. For Clang, we disable
-# warning on unknown warning options.
+# It may be tempting to add compiler flags here, but that should be avoided.
+# The necessary warnings and other compile flags should be provided by the
+# toolchain or the `.bazelrc` file. This is just a workaround until we have a
+# widely available feature to enable unlimited stack frame instead of using
+# this `Make` variable.
 llvm_copts = [
     "$(STACK_FRAME_UNLIMITED)",
-    "-Wno-unused-parameter",
-    "-Wno-comment",
-    "-Wno-class-memaccess",
-    "-Wno-maybe-uninitialized",
-    "-Wno-misleading-indentation",
-    "-Wno-unknown-warning-option",
 ]
 
 llvm_targets = [
@@ -656,6 +649,15 @@ cc_library(
     deps = [
         ":Demangle",
         ":config",
+        # We unconditionally depend on the custom LLVM terminfo wrapper. This
+        # will be an empty library unless terminfo is enabled, in which case it
+        # will both provide the necessary dependencies and configuration
+        # defines.
+        "@llvm_terminfo//:terminfo",
+        # We unconditionally depend on the custom LLVM zlib wrapper. This will
+        # be an empty library unless zlib is enabled, in which case it will
+        # both provide the necessary dependencies and configuration defines.
+        "@llvm_zlib//:zlib",
     ],
 )
 
@@ -1685,6 +1687,21 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "HelloNew",
+    srcs = glob([
+        "lib/Transforms/HelloNew/*.cpp",
+        "lib/Transforms/HelloNew/*.h",
+    ]),
+    hdrs = ["include/llvm/Transforms/HelloNew/HelloWorld.h"],
+    copts = llvm_copts,
+    includes = ["include"],
+    deps = [
+        ":Core",
+        ":Support",
+    ],
+)
+
 # Meta-target for clients which depend on all of the transforms libraries.
 cc_library(
     name = "common_transforms",
@@ -2233,6 +2250,7 @@ cc_library(
         ":CodeGen",
         ":Core",
         ":Coroutines",
+        ":HelloNew",
         ":MLPolicies",
         ":Support",
         ":Target",
@@ -3242,6 +3260,20 @@ cc_binary(
 )
 
 gentbl(
+    name = "llvm-bitcode-strip-opts",
+    tbl_outs = [(
+        "-gen-opt-parser-defs",
+        "tools/llvm-objcopy/BitcodeStripOpts.inc",
+    )],
+    tblgen = ":llvm-tblgen",
+    td_file = "tools/llvm-objcopy/BitcodeStripOpts.td",
+    td_srcs = [
+        "include/llvm/Option/OptParser.td",
+        "tools/llvm-objcopy/CommonOpts.td",
+    ],
+)
+
+gentbl(
     name = "llvm-objcopy-opts",
     tbl_outs = [(
         "-gen-opt-parser-defs",
@@ -3299,6 +3331,7 @@ cc_binary(
         ":Option",
         ":Support",
         ":Target",
+        ":llvm-bitcode-strip-opts",
         ":llvm-installnametool-opts",
         ":llvm-objcopy-opts",
         ":llvm-strip-opts",
@@ -3307,6 +3340,11 @@ cc_binary(
 
 sh_binary(
     name = "llvm-strip",
+    srcs = [":llvm-objcopy"],
+)
+
+sh_binary(
+    name = "llvm-bitcode-strip",
     srcs = [":llvm-objcopy"],
 )
 

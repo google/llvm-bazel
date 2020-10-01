@@ -8,21 +8,59 @@
 ###############################################################################
 # Prevent invalid caching if input files are modified during a build.
 build --experimental_guard_against_concurrent_changes
-# Default to optimized builds
-# Override via: "-c dbg" or --compilation_mode=dbg
-build --compilation_mode=opt
+
+###############################################################################
+# Options to select different strategies for linking potential dependent
+# libraries. The default leaves it disabled.
+###############################################################################
+
+build:zlib_external --repo_env=BAZEL_LLVM_ZLIB_STRATEGY=external
+build:zlib_system --repo_env=BAZEL_LLVM_ZLIB_STRATEGY=system
+
+build:terminfo_external --repo_env=BAZEL_LLVM_TERMINFO_STRATEGY=external
+build:terminfo_system --repo_env=BAZEL_LLVM_TERMINFO_STRATEGY=system
 
 ###############################################################################
 # Options for "generic_clang" builds: these options should generally apply to
-# either clang or gcc and are curated based on need.
+# builds using a Clang-based compiler, and default to the `clang` executable on
+# the `PATH`. While these are provided for convenience and may serve as a
+# reference, it would be preferable for users to configure an explicit C++
+# toolchain instead of relying on `.bazelrc` files.
 ###############################################################################
+
+# Set the default compiler to the `clang` binary on the `PATH`.
+build:generic_clang --repo_env=CC=clang
 
 # C++14 standard version is required.
 build:generic_clang --cxxopt=-std=c++14 --host_cxxopt=-std=c++14
 
-# Default to adding back asserts in optimized builds.
-# This is a good compromise between runtime and debugability.
-build:generic_clang --copt=-UNDEBUG
+# Use `-Wall` and `-Werror` for Clang.
+build:generic_clang --copt=-Wall --copt=-Werror --host_copt=-Wall --host_copt=-Werror
+
+###############################################################################
+# Options for "generic_gcc" builds: these options should generally apply to
+# builds using a GCC-based compiler, and default to the `gcc` executable on
+# the `PATH`. While these are provided for convenience and may serve as a
+# reference, it would be preferable for users to configure an explicit C++
+# toolchain instead of relying on `.bazelrc` files.
+###############################################################################
+
+# Set the default compiler to the `gcc` binary on the `PATH`.
+build:generic_gcc --repo_env=CC=gcc
+
+# C++14 standard version is required.
+build:generic_gcc --cxxopt=-std=c++14 --host_cxxopt=-std=c++14
+
+# Disable GCC warnings that are noisy and/or false positives on LLVM code.
+# These need to be global as some code triggering these is in header files.
+build:generic_gcc --copt=-Wno-unused-parameter --host_copt=-Wno-unused-parameter
+build:generic_gcc --copt=-Wno-comment --host_copt=-Wno-comment
+build:generic_gcc --cxxopt=-Wno-class-memaccess --host_cxxopt=-Wno-class-memaccess
+build:generic_gcc --copt=-Wno-maybe-uninitialized --host_copt=-Wno-maybe-uninitialized
+build:generic_gcc --copt=-Wno-misleading-indentation --host_copt=-Wno-misleading-indentation
+
+# Use `-Werror` for GCC to make sure warnings don't slip past.
+build:generic_gcc --copt=-Werror --host_copt=-Werror
 
 # The user.bazelrc file is not checked in but available for local mods.
 # Always keep this at the end of the file so that user flags override.
