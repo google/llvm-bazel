@@ -2141,6 +2141,7 @@ gentbl(
             ":Core",
             ":IPO",
             ":MC",
+            ":Passes",
             ":ProfileData",
             ":Scalar",
             ":Support",
