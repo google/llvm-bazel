@@ -3260,6 +3260,20 @@ cc_binary(
 )
 
 gentbl(
+    name = "llvm-bitcode-strip-opts",
+    tbl_outs = [(
+        "-gen-opt-parser-defs",
+        "tools/llvm-objcopy/BitcodeStripOpts.inc",
+    )],
+    tblgen = ":llvm-tblgen",
+    td_file = "tools/llvm-objcopy/BitcodeStripOpts.td",
+    td_srcs = [
+        "include/llvm/Option/OptParser.td",
+        "tools/llvm-objcopy/CommonOpts.td",
+    ],
+)
+
+gentbl(
     name = "llvm-objcopy-opts",
     tbl_outs = [(
         "-gen-opt-parser-defs",
@@ -3317,6 +3331,7 @@ cc_binary(
         ":Option",
         ":Support",
         ":Target",
+        ":llvm-bitcode-strip-opts",
         ":llvm-installnametool-opts",
         ":llvm-objcopy-opts",
         ":llvm-strip-opts",
@@ -3325,6 +3340,11 @@ cc_binary(
 
 sh_binary(
     name = "llvm-strip",
+    srcs = [":llvm-objcopy"],
+)
+
+sh_binary(
+    name = "llvm-bitcode-strip",
     srcs = [":llvm-objcopy"],
 )
 
