@@ -578,10 +578,10 @@ cc_library(
     copts = llvm_copts,
     includes = ["include"],
     textual_hdrs = [
-        "include/llvm/Config/Targets.def",
-        "include/llvm/Config/AsmPrinters.def",
         "include/llvm/Config/AsmParsers.def",
+        "include/llvm/Config/AsmPrinters.def",
         "include/llvm/Config/Disassemblers.def",
+        "include/llvm/Config/Targets.def",
         # Needed for include scanner to find execinfo.h
         "include/llvm/Config/config.h",
     ],
@@ -647,8 +647,8 @@ cc_library(
         "include/llvm/Support/*.def",
     ]),
     deps = [
-        ":Demangle",
         ":config",
+        ":Demangle",
         # We unconditionally depend on the custom LLVM terminfo wrapper. This
         # will be an empty library unless terminfo is enabled, in which case it
         # will both provide the necessary dependencies and configuration
@@ -669,10 +669,7 @@ cc_library(
     ]),
     hdrs = glob(["include/llvm/FileCheck/*.h"]),
     copts = llvm_copts,
-    deps = [
-        ":Support",
-        ":config",
-    ],
+    deps = [":Support"],
 )
 
 cc_library(
@@ -1079,6 +1076,14 @@ cc_library(
     ],
 )
 
+filegroup(
+    name = "llvm_intrinsics_headers",
+    srcs = [
+        "include/llvm/IR/Intrinsics" + target["name"] + ".h"
+        for target in llvm_target_intrinsics_list
+    ],
+)
+
 cc_library(
     name = "Core",
     srcs = glob([
@@ -1096,7 +1101,7 @@ cc_library(
     ) + [
         "include/llvm-c/Comdat.h",
         "include/llvm-c/DebugInfo.h",
-    ] + ["include/llvm/IR/Intrinsics" + target["name"] + ".h" for target in llvm_target_intrinsics_list],
+    ] + [":llvm_intrinsics_headers"],
     copts = llvm_copts,
     textual_hdrs = glob(["include/llvm/IR/*.def"]),
     deps = [
@@ -1162,7 +1167,6 @@ cc_library(
     deps = [
         ":BinaryFormat",
         ":Support",
-        ":config",
     ],
 )
 
@@ -1250,6 +1254,7 @@ cc_library(
         exclude = [
             # TODO: Add these files to the build.
             "lib/Analysis/MLInlineAdvisor.cpp",
+            "lib/Analysis/DevelopmentModeInlineAdvisor.cpp",
             "lib/Analysis/ReleaseModeModelRunner.cpp",
             "lib/Analysis/TFUtils.cpp",
         ],
@@ -1506,7 +1511,9 @@ filegroup(
 gentbl(
     name = "omp_gen",
     library = False,
-    tbl_outs = [("--gen-directive-decl", "include/llvm/Frontend/OpenMP/OMP.h.inc")],
+    tbl_outs = [
+        ("--gen-directive-decl", "include/llvm/Frontend/OpenMP/OMP.h.inc"),
+    ],
     tblgen = ":llvm-tblgen",
     td_file = "include/llvm/Frontend/OpenMP/OMP.td",
     td_srcs = [":omp_td_files"],
@@ -1657,7 +1664,6 @@ cc_library(
     deps = [
         ":Core",
         ":Support",
-        ":config",
     ],
 )
 
@@ -1915,7 +1921,6 @@ llvm_target_list = [
         "name": "PowerPC",
         "short_name": "PPC",
         "tbl_outs": [
-            ("-gen-register-bank", "lib/Target/PowerPC/PPCGenRegisterBank.inc"),
             ("-gen-asm-writer", "lib/Target/PowerPC/PPCGenAsmWriter.inc"),
             ("-gen-asm-matcher", "lib/Target/PowerPC/PPCGenAsmMatcher.inc"),
             ("-gen-emitter", "lib/Target/PowerPC/PPCGenMCCodeEmitter.inc"),
@@ -1923,10 +1928,11 @@ llvm_target_list = [
             ("-gen-instr-info", "lib/Target/PowerPC/PPCGenInstrInfo.inc"),
             ("-gen-dag-isel", "lib/Target/PowerPC/PPCGenDAGISel.inc"),
             ("-gen-fast-isel", "lib/Target/PowerPC/PPCGenFastISel.inc"),
-            ("-gen-global-isel", "lib/Target/PowerPC/PPCGenGlobalISel.inc"),
             ("-gen-callingconv", "lib/Target/PowerPC/PPCGenCallingConv.inc"),
             ("-gen-subtarget", "lib/Target/PowerPC/PPCGenSubtargetInfo.inc"),
             ("-gen-disassembler", "lib/Target/PowerPC/PPCGenDisassemblerTables.inc"),
+            ("-gen-register-bank", "lib/Target/PowerPC/PPCGenRegisterBank.inc"),
+            ("-gen-global-isel", "lib/Target/PowerPC/PPCGenGlobalISel.inc"),
         ],
     },
     {
@@ -2081,7 +2087,7 @@ gentbl(
         ],
     )],
     # We cannot separate the `Utils` and `MCTargetDesc` sublibraries of
-    # a number of targets due to criss crossing inclusion of headers.
+    # a number of targets due to crisscrossing inclusion of headers.
     [cc_library(
         name = target["name"] + "UtilsAndDesc",
         srcs = glob([
@@ -2552,33 +2558,35 @@ cc_library(
     ],
 )
 
-# FIXME: Add support for fetching and building libpfm4 and uncomment this.
-#cc_library(
-#    name = "llvm-exegesis-lib",
-#    srcs = glob([
-#        "tools/llvm-exegesis/lib/*.cpp",
-#        "tools/llvm-exegesis/lib/X86/*.cpp",
-#        "tools/llvm-exegesis/lib/X86/*.h",
-#    ]),
-#    hdrs = glob(["tools/llvm-exegesis/lib/*.h"]),
-#    copts = llvm_copts + ["-DHAVE_LIBPFM=1"],
-#    defines = ["LLVM_EXEGESIS_INITIALIZE_NATIVE_TARGET=InitializeX86ExegesisTarget"],
-#    deps = [
-#        ":AllTargetsAsmParsers",
-#        ":AllTargetsCodeGens",
-#        ":CodeGen",
-#        ":Core",
-#        ":ExecutionEngine",
-#        ":MC",
-#        ":MCDisassembler",
-#        ":MCJIT",
-#        ":Object",
-#        ":ObjectYAML",
-#        ":Support",
-#        ":Target",
-#        ":config",
-#    ],
-#)
+cc_library(
+    name = "llvm-exegesis-lib",
+    srcs = glob([
+        "tools/llvm-exegesis/lib/*.cpp",
+        "tools/llvm-exegesis/lib/X86/*.cpp",
+        "tools/llvm-exegesis/lib/X86/*.h",
+    ]),
+    hdrs = glob(["tools/llvm-exegesis/lib/*.h"]),
+    copts = llvm_copts + ["-DHAVE_LIBPFM=1"],
+    defines = ["LLVM_EXEGESIS_INITIALIZE_NATIVE_TARGET=InitializeX86ExegesisTarget"],
+    tags = [
+        "manual",  # TODO(chandlerc): Add support for fetching and building libpfm4 and enable this.
+    ],
+    deps = [
+        ":AllTargetsAsmParsers",
+        ":AllTargetsCodeGens",
+        ":CodeGen",
+        ":Core",
+        ":ExecutionEngine",
+        ":MC",
+        ":MCDisassembler",
+        ":MCJIT",
+        ":Object",
+        ":ObjectYAML",
+        ":Support",
+        ":Target",
+        ":config",
+    ],
+)
 
 ################################################################################
 # LLVM toolchain and development binaries
@@ -2945,26 +2953,28 @@ cc_binary(
     ],
 )
 
-# FIXME: Uncomment when the library builds.
-#cc_binary(
-#    name = "llvm-exegesis",
-#    srcs = [
-#        "tools/llvm-exegesis/llvm-exegesis.cpp",
-#    ],
-#    copts = llvm_copts + ["-DHAVE_LIBPFM=0"],
-#    stamp = 0,
-#    deps = [
-#        ":AllTargetsAsmParsers",
-#        ":AllTargetsCodeGens",
-#        ":AllTargetsDisassemblers",
-#        ":MC",
-#        ":MCParser",
-#        ":Object",
-#        ":Support",
-#        ":config",
-#        ":llvm-exegesis-lib",
-#    ],
-#)
+cc_binary(
+    name = "llvm-exegesis",
+    srcs = [
+        "tools/llvm-exegesis/llvm-exegesis.cpp",
+    ],
+    copts = llvm_copts + ["-DHAVE_LIBPFM=0"],
+    stamp = 0,
+    tags = [
+        "manual",  # TODO(chandlerc): Remove when the library builds.
+    ],
+    deps = [
+        ":AllTargetsAsmParsers",
+        ":AllTargetsCodeGens",
+        ":AllTargetsDisassemblers",
+        ":MC",
+        ":MCParser",
+        ":Object",
+        ":Support",
+        ":config",
+        ":llvm-exegesis-lib",
+    ],
+)
 
 cc_binary(
     name = "llvm-extract",
@@ -3309,6 +3319,20 @@ gentbl(
     )],
     tblgen = ":llvm-tblgen",
     td_file = "tools/llvm-objcopy/StripOpts.td",
+    td_srcs = [
+        "include/llvm/Option/OptParser.td",
+        "tools/llvm-objcopy/CommonOpts.td",
+    ],
+)
+
+gentbl(
+    name = "llvm-bitcode-strip-opts",
+    tbl_outs = [(
+        "-gen-opt-parser-defs",
+        "tools/llvm-objcopy/BitcodeStripOpts.inc",
+    )],
+    tblgen = ":llvm-tblgen",
+    td_file = "tools/llvm-objcopy/BitcodeStripOpts.td",
     td_srcs = [
         "include/llvm/Option/OptParser.td",
         "tools/llvm-objcopy/CommonOpts.td",
@@ -3723,7 +3747,7 @@ cc_binary(
 
 cc_library(
     name = "FuzzMutate",
-    testonly = 1,
+    testonly = True,
     srcs = glob(["lib/FuzzMutate/*.cpp"]),
     hdrs = glob(["include/llvm/FuzzMutate/*.h"]),
     copts = llvm_copts,
@@ -3740,7 +3764,7 @@ cc_library(
 
 cc_library(
     name = "gtest",
-    testonly = 1,
+    testonly = True,
     srcs = glob(
         [
             "utils/unittest/googletest/include/**/*.h",
@@ -3777,7 +3801,7 @@ cc_library(
 
 cc_library(
     name = "gtest_main",
-    testonly = 1,
+    testonly = True,
     srcs = ["utils/unittest/UnitTestMain/TestMain.cpp"],
     copts = llvm_copts,
     deps = [
@@ -3789,7 +3813,7 @@ cc_library(
 
 cc_library(
     name = "gmock",
-    testonly = 1,
+    testonly = True,
     srcs = glob(
         [
             "utils/unittest/googlemock/include/**/*.h",
@@ -3812,7 +3836,7 @@ cc_library(
 
 cc_library(
     name = "TestingSupport",
-    testonly = 1,
+    testonly = True,
     srcs = glob([
         "lib/Testing/Support/*.cpp",
         "lib/Testing/Support/*.h",
@@ -3834,7 +3858,7 @@ cc_library(
 
 cc_binary(
     name = "FileCheck",
-    testonly = 1,
+    testonly = True,
     srcs = glob([
         "utils/FileCheck/*.cpp",
         "utils/FileCheck/*.h",
@@ -3873,7 +3897,7 @@ cc_binary(
 
 cc_binary(
     name = "count",
-    testonly = 1,
+    testonly = True,
     srcs = glob([
         "utils/count/*.c",
         "utils/count/*.h",
@@ -3883,7 +3907,7 @@ cc_binary(
 
 cc_binary(
     name = "lli-child-target",
-    testonly = 1,
+    testonly = True,
     srcs = glob([
         "tools/lli/ChildTarget/*.cpp",
         "tools/lli/ChildTarget/*.h",
@@ -3911,16 +3935,12 @@ cc_binary(
 
 cc_binary(
     name = "llvm-c-test",
-    testonly = 1,
+    testonly = True,
     srcs = glob([
         "tools/llvm-c-test/*.c",
         "tools/llvm-c-test/*.cpp",
         "tools/llvm-c-test/*.h",
     ]),
-    # Note that we cannot use the general LLVM options here as we mix C and C++
-    # code. However, we generally don't need to disable warnings here as
-    # headers included here shouldn't trigger warnings.
-    copts = [],
     stamp = 0,
     deps = [
         ":AllTargetsAsmParsers",
@@ -3946,7 +3966,7 @@ cc_binary(
 
 cc_binary(
     name = "llvm-diff",
-    testonly = 1,
+    testonly = True,
     srcs = glob([
         "tools/llvm-diff/*.cpp",
         "tools/llvm-diff/*.h",
@@ -3964,7 +3984,7 @@ cc_binary(
 
 cc_binary(
     name = "llvm-isel-fuzzer",
-    testonly = 1,
+    testonly = True,
     srcs = glob([
         "tools/llvm-isel-fuzzer/*.cpp",
         "tools/llvm-isel-fuzzer/*.h",
@@ -3992,7 +4012,7 @@ cc_binary(
 # when executed.
 sh_binary(
     name = "llvm-locstats",
-    testonly = 1,
+    testonly = True,
     srcs = glob([
         "utils/llvm-locstats/*.py",
     ]),
@@ -4002,7 +4022,7 @@ sh_binary(
 
 cc_binary(
     name = "not",
-    testonly = 1,
+    testonly = True,
     srcs = glob([
         "utils/not/*.cpp",
         "utils/not/*.h",
@@ -4014,7 +4034,7 @@ cc_binary(
 
 cc_binary(
     name = "llvm-opt-fuzzer",
-    testonly = 1,
+    testonly = True,
     srcs = glob([
         "tools/llvm-opt-fuzzer/*.cpp",
     ]),
@@ -4036,7 +4056,7 @@ cc_binary(
 
 cc_binary(
     name = "obj2yaml",
-    testonly = 1,
+    testonly = True,
     srcs = glob([
         "tools/obj2yaml/*.cpp",
         "tools/obj2yaml/*.h",
@@ -4073,7 +4093,7 @@ cc_binary(
 
 cc_binary(
     name = "yaml2obj",
-    testonly = 1,
+    testonly = True,
     srcs = glob([
         "tools/yaml2obj/*.cpp",
         "tools/yaml2obj/*.h",
@@ -4092,7 +4112,7 @@ cc_binary(
 
 cc_binary(
     name = "yaml-bench",
-    testonly = 1,
+    testonly = True,
     srcs = glob([
         "utils/yaml-bench/*.cpp",
     ]),
