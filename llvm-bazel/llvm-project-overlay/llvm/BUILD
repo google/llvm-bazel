@@ -3734,7 +3734,7 @@ cc_binary(
 
 cc_library(
     name = "FuzzMutate",
-    testonly = 1,
+    testonly = True,
     srcs = glob(["lib/FuzzMutate/*.cpp"]),
     hdrs = glob(["include/llvm/FuzzMutate/*.h"]),
     copts = llvm_copts,
@@ -3751,7 +3751,7 @@ cc_library(
 
 cc_library(
     name = "gtest",
-    testonly = 1,
+    testonly = True,
     srcs = glob(
         [
             "utils/unittest/googletest/include/**/*.h",
@@ -3788,7 +3788,7 @@ cc_library(
 
 cc_library(
     name = "gtest_main",
-    testonly = 1,
+    testonly = True,
     srcs = ["utils/unittest/UnitTestMain/TestMain.cpp"],
     copts = llvm_copts,
     deps = [
@@ -3800,7 +3800,7 @@ cc_library(
 
 cc_library(
     name = "gmock",
-    testonly = 1,
+    testonly = True,
     srcs = glob(
         [
             "utils/unittest/googlemock/include/**/*.h",
@@ -3823,7 +3823,7 @@ cc_library(
 
 cc_library(
     name = "TestingSupport",
-    testonly = 1,
+    testonly = True,
     srcs = glob([
         "lib/Testing/Support/*.cpp",
         "lib/Testing/Support/*.h",
@@ -3845,7 +3845,7 @@ cc_library(
 
 cc_binary(
     name = "FileCheck",
-    testonly = 1,
+    testonly = True,
     srcs = glob([
         "utils/FileCheck/*.cpp",
         "utils/FileCheck/*.h",
@@ -3884,7 +3884,7 @@ cc_binary(
 
 cc_binary(
     name = "count",
-    testonly = 1,
+    testonly = True,
     srcs = glob([
         "utils/count/*.c",
         "utils/count/*.h",
@@ -3894,7 +3894,7 @@ cc_binary(
 
 cc_binary(
     name = "lli-child-target",
-    testonly = 1,
+    testonly = True,
     srcs = glob([
         "tools/lli/ChildTarget/*.cpp",
         "tools/lli/ChildTarget/*.h",
@@ -3922,7 +3922,7 @@ cc_binary(
 
 cc_binary(
     name = "llvm-c-test",
-    testonly = 1,
+    testonly = True,
     srcs = glob([
         "tools/llvm-c-test/*.c",
         "tools/llvm-c-test/*.cpp",
@@ -3953,7 +3953,7 @@ cc_binary(
 
 cc_binary(
     name = "llvm-diff",
-    testonly = 1,
+    testonly = True,
     srcs = glob([
         "tools/llvm-diff/*.cpp",
         "tools/llvm-diff/*.h",
@@ -3971,7 +3971,7 @@ cc_binary(
 
 cc_binary(
     name = "llvm-isel-fuzzer",
-    testonly = 1,
+    testonly = True,
     srcs = glob([
         "tools/llvm-isel-fuzzer/*.cpp",
         "tools/llvm-isel-fuzzer/*.h",
@@ -3999,7 +3999,7 @@ cc_binary(
 # when executed.
 sh_binary(
     name = "llvm-locstats",
-    testonly = 1,
+    testonly = True,
     srcs = glob([
         "utils/llvm-locstats/*.py",
     ]),
@@ -4009,7 +4009,7 @@ sh_binary(
 
 cc_binary(
     name = "not",
-    testonly = 1,
+    testonly = True,
     srcs = glob([
         "utils/not/*.cpp",
         "utils/not/*.h",
@@ -4021,7 +4021,7 @@ cc_binary(
 
 cc_binary(
     name = "llvm-opt-fuzzer",
-    testonly = 1,
+    testonly = True,
     srcs = glob([
         "tools/llvm-opt-fuzzer/*.cpp",
     ]),
@@ -4043,7 +4043,7 @@ cc_binary(
 
 cc_binary(
     name = "obj2yaml",
-    testonly = 1,
+    testonly = True,
     srcs = glob([
         "tools/obj2yaml/*.cpp",
         "tools/obj2yaml/*.h",
@@ -4080,7 +4080,7 @@ cc_binary(
 
 cc_binary(
     name = "yaml2obj",
-    testonly = 1,
+    testonly = True,
     srcs = glob([
         "tools/yaml2obj/*.cpp",
         "tools/yaml2obj/*.h",
@@ -4099,7 +4099,7 @@ cc_binary(
 
 cc_binary(
     name = "yaml-bench",
-    testonly = 1,
+    testonly = True,
     srcs = glob([
         "utils/yaml-bench/*.cpp",
     ]),
