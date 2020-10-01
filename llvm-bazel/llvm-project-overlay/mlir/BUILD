@@ -3188,7 +3188,6 @@ cc_binary(
 cc_library(
     name = "tools/libcuda-runtime-wrappers",
     srcs = ["tools/mlir-cuda-runner/cuda-runtime-wrappers.cpp"],
-    compatible_with = ["//buildenv/target:prod"],
     tags = [
         "manual",  # TODO(gcmn): Add support for this target
     ],
