@@ -41,10 +41,5 @@ jobs:
       - name: Running auto integration
         run: ./scripts/auto_integrate.sh
       - name: Pushing changes
-        uses: ad-m/github-push-action@v0.6.0
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ env.INTEGRATION_BRANCH }}
-          tags: true
-          # Override existing tags
-          force: true
+        run: |
+          git push origin "${INTEGRATION_BRANCH?}" --force --tags
