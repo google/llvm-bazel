@@ -2558,7 +2558,6 @@ cc_library(
     ],
 )
 
-# FIXME: Add support for fetching and building libpfm4 and uncomment this.
 cc_library(
     name = "llvm-exegesis-lib",
     srcs = glob([
