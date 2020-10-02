@@ -33,7 +33,7 @@ jobs:
           git fetch --no-tags --prune origin "${INTEGRATION_BRANCH?}:${INTEGRATION_BRANCH?}"
       - name: Setting git config
         run: |
-          git config --local user.email "llvm-bazel-github-actions-bot@google.com"
+          git config --local user.email "llvm-bazel-github-bot@google.com"
           git config --local user.name "Auto Integrate Action"
       - name: Merging in changes
         run: |
