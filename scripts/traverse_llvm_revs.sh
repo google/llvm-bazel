@@ -11,12 +11,14 @@
 
 set -e
 set -o pipefail
+set -x
 
 BRANCH="${BRANCH:-master}"
 SUBMODULE_DIR="third_party/llvm-project"
 
 pushd "${SUBMODULE_DIR?}"
 START="$(git rev-parse HEAD)"
+git remote -v
 git checkout "${BRANCH?}"
 git pull --ff-only origin "${BRANCH?}"
 git checkout "${START?}"
