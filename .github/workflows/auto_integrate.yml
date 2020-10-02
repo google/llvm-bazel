@@ -12,9 +12,14 @@ name: Auto Integrate
 on:
   push:
     branches: [main]
+  schedule:
+    # Every 15 minutes
+    - cron: "*/15 * * * *"
 
 jobs:
   auto_integrate:
+    # Don't run on forks
+    if: github.repository == 'google/llvm-bazel'
     runs-on: ubuntu-18.04
     env:
       MERGING_BRANCH: "main"
