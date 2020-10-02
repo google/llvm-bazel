@@ -27,6 +27,7 @@ jobs:
           fetch-depth: 0
           submodules: true
           ref: ${{ env.MERGING_BRANCH }}
+          token: ${{ secrets.WRITE_ACCESS_TOKEN }}
       - name: Fetching integration branch
         run: |
           git fetch --no-tags --prune origin "${INTEGRATION_BRANCH?}:${INTEGRATION_BRANCH?}"
