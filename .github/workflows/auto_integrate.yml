@@ -42,6 +42,7 @@ jobs:
           else
             echo "${INTEGRATION_BRANCH?} already branches from ${MERGING_BRANCH?}"
           fi
+          git checkout "${INTEGRATION_BRANCH?}"
           git submodule update
       - name: Running auto integration
         run: ./scripts/auto_integrate.sh
