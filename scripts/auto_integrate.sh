@@ -6,4 +6,6 @@
 
 # Walks commits in the LLVM submodule creating new commits for each update.
 
+set -x
+
 ./scripts/traverse_llvm_revs.sh ./scripts/commit_and_tag.sh
