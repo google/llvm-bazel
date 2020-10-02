@@ -36,10 +36,15 @@ jobs:
           git config --local user.name "Auto Integrate Action"
       - name: Merging in changes
         run: |
-          ./scripts/clobber_merge.sh "${INTEGRATION_BRANCH?}" "${MERGING_BRANCH?}"
+          if ! git merge-base --is-ancestor "${MERGING_BRANCH?}" "${INTEGRATION_BRANCH?}"; then
+            ./scripts/clobber_merge.sh "${INTEGRATION_BRANCH?}" "${MERGING_BRANCH?}"
+          else
+            echo "${INTEGRATION_BRANCH?} already branches from ${MERGING_BRANCH?}"
+          fi
           git submodule update
       - name: Running auto integration
         run: ./scripts/auto_integrate.sh
       - name: Pushing changes
         run: |
-          git push origin "${INTEGRATION_BRANCH?}" --force --tags
+          git push origin "${INTEGRATION_BRANCH?}"
+          git push origin --force --tags
