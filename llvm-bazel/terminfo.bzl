@@ -45,7 +45,10 @@ def _find_c_compiler(repository_ctx):
     trying to use it for (detecting if a trivial source file can compile and
     link against a particular library) requires very little.
     """
-    cc = repository_ctx.which(repository_ctx.os.environ.get("CC"))
+    cc_env = repository_ctx.os.environ.get("CC")
+    cc = None
+    if cc_env:
+        cc = repository_ctx.which(cc_env)
     if not cc:
         # Look for Clang, GCC, and the POSIX / UNIX specified C compiler
         # binaries.

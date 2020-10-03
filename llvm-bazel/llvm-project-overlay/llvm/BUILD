@@ -2520,6 +2520,9 @@ cc_library(
         # lld uses Microsoft mt.exe instead, which is not cross-platform.
         "-lxml2",
     ],
+    tags = [
+        "manual",  # TODO(gcmn): Fix remote execution and re-enable
+    ],
     deps = [
         ":Support",
         ":config",
@@ -3241,6 +3244,9 @@ cc_binary(
     ]),
     copts = llvm_copts,
     stamp = 0,
+    tags = [
+        "manual" # TODO(gcmn): Fix remote execution and re-enable
+    ],
     deps = [
         ":MtTableGen",
         ":Option",
