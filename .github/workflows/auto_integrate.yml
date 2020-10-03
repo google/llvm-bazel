@@ -21,10 +21,22 @@ jobs:
     # Don't run on forks
     if: github.repository == 'google/llvm-bazel'
     runs-on: ubuntu-18.04
+    # Mostly so that busy-waiting through turnstyle is not indefinite.
+    timeout-minutes: 15
     env:
       MERGING_BRANCH: "main"
       INTEGRATION_BRANCH: "auto-integrate"
     steps:
+      # Busy-wait for previous workflow invocations to finish. GitHub actions do
+      # not provide a good way to limit the number of instances of a single
+      # workflow. We don't want multiple of these running at once since they
+      # push and will invalidate eachother.
+      - name: Turnstyle
+        uses: softprops/turnstyle@v1
+        with:
+          same-branch-only: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Checking out repository
         uses: actions/checkout@v2
         with:
