@@ -17,6 +17,8 @@ SUBMODULE_DIR="third_party/llvm-project"
 
 pushd "${SUBMODULE_DIR?}"
 START="$(git rev-parse HEAD)"
+# For help debugging https://github.com/actions/checkout/issues/363
+git remote -v
 git checkout "${BRANCH?}"
 git pull --ff-only origin "${BRANCH?}"
 git checkout "${START?}"
