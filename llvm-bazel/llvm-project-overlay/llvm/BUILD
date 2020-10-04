@@ -2141,6 +2141,7 @@ gentbl(
             ":Core",
             ":IPO",
             ":MC",
+            ":Passes",  # TODO(chandlerc): Likely a layering violation.
             ":ProfileData",
             ":Scalar",
             ":Support",
