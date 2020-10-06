@@ -159,9 +159,12 @@ cc_library(
     hdrs = [
         "include/mlir-c/Bindings/Python/Interop.h",
     ],
+    tags = [
+        "manual",  # TODO(gcmn): Add support for this target
+    ],
     deps = [
         ":CAPIIR",
-        "//third_party/python_runtime:headers",
+        "@python_runtime//:headers",
     ],
 )
 
@@ -3183,13 +3186,15 @@ cc_binary(
 cc_library(
     name = "tools/libcuda-runtime-wrappers",
     srcs = ["tools/mlir-cuda-runner/cuda-runtime-wrappers.cpp"],
-    compatible_with = ["//buildenv/target:prod"],
+    tags = [
+        "manual",  # TODO(gcmn): Add support for this target
+    ],
     deps = [
         ":mlir_c_runner_utils",
         "//llvm:Support",
-        "//third_party/gpus/cuda:cuda_headers",
-        "//third_party/gpus/cuda:cuda_runtime",
-        "//third_party/gpus/cuda:libcuda",
+        "@cuda//:cuda_headers",
+        "@cuda//:cuda_runtime",
+        "@cuda//:libcuda",
     ],
 )
 
@@ -3210,6 +3215,9 @@ cc_library(
     hdrs = [
         "tools/mlir-vulkan-runner/VulkanRuntime.h",
     ],
+    tags = [
+        "manual",  # Requires an external dependency.
+    ],
     deps = [
         ":IR",
         ":Pass",
@@ -3218,7 +3226,7 @@ cc_library(
         ":StandardOps",
         ":Support",
         "//llvm:Support",
-        "//third_party/vulkan_headers",
+        "@vulkan_headers",
         "@vulkan_sdk//:sdk",
     ],
 )
@@ -3227,6 +3235,9 @@ cc_binary(
     name = "tools/libvulkan-runtime-wrappers.so",
     srcs = ["tools/mlir-vulkan-runner/vulkan-runtime-wrappers.cpp"],
     linkshared = True,
+    tags = [
+        "manual",  # Requires an external dependency.
+    ],
     deps = [
         ":VulkanRuntime",
         "//llvm:Support",
@@ -3258,9 +3269,9 @@ cc_binary(
         ":Transforms",
         "//devtools/build/runtime:get_runfiles_dir",
         "//llvm:Support",
-        "//third_party/gpus/cuda:cuda_headers",
-        "//third_party/gpus/cuda:cuda_runtime",
-        "//third_party/gpus/cuda:libcuda",
+        "@cuda//:cuda_headers",
+        "@cuda//:cuda_runtime",
+        "@cuda//:libcuda",
     ],
 )
 
