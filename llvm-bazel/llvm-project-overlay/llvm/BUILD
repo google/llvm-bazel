@@ -192,11 +192,14 @@ template_rule(
         # Define if we have z3 and want to build it */
         "#cmakedefine LLVM_WITH_Z3 ${LLVM_WITH_Z3}": "/* #undef LLVM_WITH_Z3 */",
 
-        # Define if LLVM was built with a dependency to the libtensorflow dynamic library */
+        # Define if LLVM was built with a dependency to the libtensorflow dynamic library
         "#cmakedefine LLVM_HAVE_TF_API": "/* #undef LLVM_HAVE_TF_API */",
 
-        # Define if LLVM was built with a dependency to the tensorflow compiler */
+        # Define if LLVM was built with a dependency to the tensorflow compiler
         "#cmakedefine LLVM_HAVE_TF_AOT": "/* #undef LLVM_HAVE_TF_AOT */",
+
+        # Define to 1 if you have the <sysexits.h> header file.
+        "#cmakedefine HAVE_SYSEXITS_H ${HAVE_SYSEXITS_H}": "#define HAVE_SYSEXITS_H 1",
     },
 )
 
@@ -417,9 +420,6 @@ template_rule(
 
         # Define to 1 if you have the <sys/types.h> header file.
         "#cmakedefine HAVE_SYS_TYPES_H ${HAVE_SYS_TYPES_H}": "#define HAVE_SYS_TYPES_H 1",
-
-        # Define to 1 if you have the <sysexits.h> header file.
-        "#cmakedefine HAVE_SYSEXITS_H ${HAVE_SYSEXITS_H}": "#define HAVE_SYSEXITS_H 1",
 
         # Define if the setupterm() function is supported this platform.
         # FIXME: Enable this correctly by detecting the system library if possible.
