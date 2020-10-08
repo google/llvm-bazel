@@ -15,8 +15,8 @@ suitable for more general usage.
 
 # Status
 
-MLIR has Cuda and Vulkan support disabled. LLVM does not yet have configuration
-detection and hardcodes values in the config.
+MLIR has Cuda support and the mlir-vulkan-runner disabled. LLVM does not yet
+have configuration detection and hardcodes values in the config.
 
 # Usage
 
