@@ -125,6 +125,7 @@ cc_library(
     name = "CAPIIR",
     srcs = [
         "lib/CAPI/IR/AffineMap.cpp",
+        "lib/CAPI/IR/Diagnostics.cpp",
         "lib/CAPI/IR/IR.cpp",
         "lib/CAPI/IR/StandardAttributes.cpp",
         "lib/CAPI/IR/StandardTypes.cpp",
@@ -133,12 +134,14 @@ cc_library(
     ],
     hdrs = [
         "include/mlir-c/AffineMap.h",
+        "include/mlir-c/Diagnostics.h",
         "include/mlir-c/IR.h",
         "include/mlir-c/StandardAttributes.h",
         "include/mlir-c/StandardDialect.h",
         "include/mlir-c/StandardTypes.h",
         "include/mlir-c/Support.h",
         "include/mlir/CAPI/AffineMap.h",
+        "include/mlir/CAPI/Diagnostics.h",
         "include/mlir/CAPI/IR.h",
         "include/mlir/CAPI/Support.h",
         "include/mlir/CAPI/Utils.h",
@@ -164,7 +167,7 @@ cc_library(
     ],
     deps = [
         ":CAPIIR",
-        "//third_party/python_runtime:headers",
+        "@python_runtime//:headers",
     ],
 )
 
@@ -1016,6 +1019,7 @@ cc_library(
         ":Support",
         ":VectorInterfaces",
         ":VectorOpsIncGen",
+        ":ViewLikeInterface",
         "//llvm:Support",
     ],
 )
@@ -3217,9 +3221,9 @@ cc_library(
     deps = [
         ":mlir_c_runner_utils",
         "//llvm:Support",
-        "//third_party/gpus/cuda:cuda_headers",
-        "//third_party/gpus/cuda:cuda_runtime",
-        "//third_party/gpus/cuda:libcuda",
+        "@cuda//:cuda_headers",
+        "@cuda//:cuda_runtime",
+        "@cuda//:libcuda",
     ],
 )
 
@@ -3261,7 +3265,7 @@ cc_binary(
     srcs = ["tools/mlir-vulkan-runner/vulkan-runtime-wrappers.cpp"],
     linkshared = True,
     tags = [
-        "manual",  # Requires an external dependency (via VulkanRuntime)
+        "manual",  # Requires an external dependency.
     ],
     deps = [
         ":VulkanRuntime",
@@ -3294,9 +3298,9 @@ cc_binary(
         ":Transforms",
         "//devtools/build/runtime:get_runfiles_dir",
         "//llvm:Support",
-        "//third_party/gpus/cuda:cuda_headers",
-        "//third_party/gpus/cuda:cuda_runtime",
-        "//third_party/gpus/cuda:libcuda",
+        "@cuda//:cuda_headers",
+        "@cuda//:cuda_runtime",
+        "@cuda//:libcuda",
     ],
 )
 
@@ -3953,6 +3957,7 @@ filegroup(
     srcs = [
         "include/mlir/Dialect/Vector/VectorOps.td",
         "include/mlir/Interfaces/VectorInterfaces.td",
+        "include/mlir/Interfaces/ViewLikeInterface.td",
         ":AffineOpsTdFiles",
         ":OpBaseTdFiles",
     ],
