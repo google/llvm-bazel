@@ -28,7 +28,7 @@ if [[ "$(git rev-parse ${BRANCH?})" == "${START?}" ]]; then
   exit 0
 fi
 
-readarray -t commits < <(git rev-list --reverse --ancestry-path ${START?}..${BRANCH?})
+readarray -t commits < <(git rev-list --reverse --ancestry-path "${START?}..${BRANCH?}")
 if [[ ${#commits[@]} == 0 ]]; then
   echo "Failed to find path between current HEAD and ${BRANCH?}"
   popd

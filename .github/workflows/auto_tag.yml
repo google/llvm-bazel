@@ -11,20 +11,14 @@ on:
     branches: [main]
 
 jobs:
-  auto_integrate:
+  auto_tag:
     runs-on: ubuntu-18.04
     steps:
       - name: Checking out repository
         uses: actions/checkout@v2
         with:
-          submodules: true
-      - name: Tagging head commit
-        run: ./scripts/tag_rev.sh
+          fetch-depth: 0
+      - name: Tagging new commits
+        run: ./scripts/tag_since.sh "${{ github.event.before }}"
       - name: Pushing changes
-        uses: ad-m/github-push-action@v0.6.0
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ github.ref }}
-          tags: true
-          # Override existing tags
-          force: true
+        run: git push origin --tags --force
