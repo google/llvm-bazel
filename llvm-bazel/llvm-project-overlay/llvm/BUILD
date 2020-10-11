@@ -2522,7 +2522,9 @@ cc_library(
         "-lxml2",
     ],
     tags = [
-        "manual",  # TODO(gcmn): Fix remote execution and re-enable
+        # TODO(gcmn): Fix remote execution and re-enable
+        "nobuildkite",
+        "manual",
     ],
     deps = [
         ":Support",
@@ -2573,7 +2575,9 @@ cc_library(
     copts = llvm_copts + ["-DHAVE_LIBPFM=1"],
     defines = ["LLVM_EXEGESIS_INITIALIZE_NATIVE_TARGET=InitializeX86ExegesisTarget"],
     tags = [
-        "manual",  # TODO(chandlerc): Add support for fetching and building libpfm4 and enable this.
+        # TODO(chandlerc): Add support for fetching and building libpfm4 and enable this.
+        "nobuildkite",
+        "manual",
     ],
     deps = [
         ":AllTargetsAsmParsers",
@@ -2965,7 +2969,9 @@ cc_binary(
     copts = llvm_copts + ["-DHAVE_LIBPFM=0"],
     stamp = 0,
     tags = [
-        "manual",  # TODO(chandlerc): Remove when the library builds.
+        # TODO(chandlerc): Enable when the library builds.
+        "nobuildkite",
+        "manual",
     ],
     deps = [
         ":AllTargetsAsmParsers",
@@ -3246,7 +3252,9 @@ cc_binary(
     copts = llvm_copts,
     stamp = 0,
     tags = [
-        "manual" # TODO(gcmn): Fix remote execution and re-enable
+        # TODO(gcmn): Enable when WindowsManifest builds.
+        "nobuildkite",
+        "manual",
     ],
     deps = [
         ":MtTableGen",
