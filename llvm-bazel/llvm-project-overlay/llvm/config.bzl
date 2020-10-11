@@ -48,8 +48,8 @@ llvm_config_defines = select({
     "//conditions:default": (
         native_arch_defines("X86") +
         [
-            "LLVM_HOST_TRIPLE=\\\"x86_64-unknown-linux_gnu\\\"",
-            "LLVM_DEFAULT_TARGET_TRIPLE=\\\"x86_64-unknown-linux_gnu\\\"",
+            "LLVM_HOST_TRIPLE=\\\"x86_64-unknown-linux-gnu\\\"",
+            "LLVM_DEFAULT_TARGET_TRIPLE=\\\"x86_64-unknown-linux-gnu\\\"",
         ] + posix_defines
     ),
 })
