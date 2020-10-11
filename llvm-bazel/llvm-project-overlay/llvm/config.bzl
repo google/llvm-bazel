@@ -4,6 +4,17 @@
 
 """Defines variables that use selects to configure LLVM based on platform."""
 
+def native_arch_defines(arch):
+    return [
+        "LLVM_NATIVE_ARCH=\\\"{}\\\"".format(arch),
+        "LLVM_NATIVE_ASMPARSER=LLVMInitialize{}AsmParser".format(arch),
+        "LLVM_NATIVE_ASMPRINTER=LLVMInitialize{}AsmPrinter".format(arch),
+        "LLVM_NATIVE_DISASSEMBLER=LLVMInitialize{}Disassembler".format(arch),
+        "LLVM_NATIVE_TARGET=LLVMInitialize{}Target".format(arch),
+        "LLVM_NATIVE_TARGETINFO=LLVMInitialize{}TargetInfo".format(arch),
+        "LLVM_NATIVE_TARGETMC=LLVMInitialize{}TargetMC".format(arch),
+    ]
+
 posix_defines = [
     "LLVM_ON_UNIX=1",
     "HAVE_BACKTRACE=1",
@@ -28,17 +39,17 @@ win32_defines = [
 
 llvm_config_defines = select({
     "@bazel_tools//src/conditions:windows": (
+        native_arch_defines("X86") +
         [
             "LLVM_HOST_TRIPLE=\\\"x86_64-pc-win32\\\"",
             "LLVM_DEFAULT_TARGET_TRIPLE=\\\"x86_64-pc-win32\\\"",
-            "LLVM_NATIVE_ARCH=\\\"X86\\\"",
         ] + win32_defines
     ),
     "//conditions:default": (
+        native_arch_defines("X86") +
         [
             "LLVM_HOST_TRIPLE=\\\"x86_64-unknown-linux_gnu\\\"",
             "LLVM_DEFAULT_TARGET_TRIPLE=\\\"x86_64-unknown-linux_gnu\\\"",
-            "LLVM_NATIVE_ARCH=\\\"X86\\\"",
         ] + posix_defines
     ),
 })

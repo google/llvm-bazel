@@ -9,10 +9,10 @@
 
 /* This is a manual port of config.h.cmake for the symbols that do not change
    based on platform. Those that do change should not be defined here and
-   instead use Bazel cc_library defines. Some cursory attempt has been made to
-   extract such symbols that do vary based on platform into Bazel defines, but
-   it is by no means complete, so if you see something that looks wrong, it
-   probably is.  */
+   instead use Bazel cc_library defines. Some attempt has been made to extract
+   such symbols that do vary based on platform (for the platforms we care about)
+   into Bazel defines, but it is by no means complete, so if you see something
+   that looks wrong, it probably is. */
 
 
 /* This file enumerates variables from the LLVM configuration so that they
@@ -26,7 +26,7 @@
 /* #undef LLVM_ENABLE_DUMP */
 
 /* Target triple LLVM will generate code for by default */
-#define LLVM_DEFAULT_TARGET_TRIPLE "x86_64-unknown-linux-gnu"
+/* LLVM_DEFAULT_TARGET_TRIPLE defined in Bazel */
 
 /* Define if threads enabled */
 /* LLVM_ENABLE_THREADS defined in Bazel */
@@ -35,28 +35,28 @@
 #define LLVM_HAS_ATOMICS 1
 
 /* Host triple LLVM will be executed on */
-#define LLVM_HOST_TRIPLE "x86_64-unknown-linux-gnu"
+/* LLVM_HOST_TRIPLE defined in Bazel */
 
 /* LLVM architecture name for the native architecture, if available */
-#define LLVM_NATIVE_ARCH X86
+/* LLVM_NATIVE_ARCH defined in Bazel */
 
 /* LLVM name for the native AsmParser init function, if available */
-#define LLVM_NATIVE_ASMPARSER LLVMInitializeX86AsmParser
+/* LLVM_NATIVE_ASMPARSER defined in Bazel */
 
 /* LLVM name for the native AsmPrinter init function, if available */
-#define LLVM_NATIVE_ASMPRINTER LLVMInitializeX86AsmPrinter
+/* LLVM_NATIVE_ASMPRINTER defined in Bazel */
 
 /* LLVM name for the native Disassembler init function, if available */
-#define LLVM_NATIVE_DISASSEMBLER LLVMInitializeX86Disassembler
+/* LLVM_NATIVE_DISASSEMBLER defined in Bazel */
 
 /* LLVM name for the native Target init function, if available */
-#define LLVM_NATIVE_TARGET LLVMInitializeX86Target
+/* LLVM_NATIVE_TARGET defined in Bazel */
 
 /* LLVM name for the native TargetInfo init function, if available */
-#define LLVM_NATIVE_TARGETINFO LLVMInitializeX86TargetInfo
+/* LLVM_NATIVE_TARGETINFO defined in Bazel */
 
 /* LLVM name for the native target MC init function, if available */
-#define LLVM_NATIVE_TARGETMC LLVMInitializeX86TargetMC
+/* LLVM_NATIVE_TARGETMC defined in Bazel */
 
 /* Define if this is Unixish platform */
 /* LLVM_ON_UNIX defined in Bazel */

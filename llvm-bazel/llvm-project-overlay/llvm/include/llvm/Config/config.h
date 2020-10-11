@@ -1,4 +1,4 @@
-/*===------- llvm/Config/llvm-config.h - llvm configuration -------*- C -*-===*/
+/*===------- llvm/Config/config.h - llvm configuration ------------*- C -*-===*/
 /*                                                                            */
 /* Part of the LLVM Project, under the Apache License v2.0 with LLVM          */
 /* Exceptions.                                                                */
@@ -9,10 +9,10 @@
 
 /* This is a manual port of config.h.cmake for the symbols that do not change
    based on platform. Those that do change should not be defined here and
-   instead use Bazel cc_library defines. Some cursory attempt has been made to
-   extract such symbols that do vary based on platform into Bazel defines, but
-   it is by no means complete, so if you see something that looks wrong, it
-   probably is.  */
+   instead use Bazel cc_library defines. Some attempt has been made to extract
+   such symbols that do vary based on platform (for the platforms we care about)
+   into Bazel defines, but it is by no means complete, so if you see something
+   that looks wrong, it probably is. */
 
 #ifndef CONFIG_H
 #define CONFIG_H
