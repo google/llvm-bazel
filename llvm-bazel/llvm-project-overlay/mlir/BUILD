@@ -1279,6 +1279,30 @@ gentbl(
 )
 
 gentbl(
+    name = "GPUBaseIncGen",
+    strip_include_prefix = "include",
+    tbl_outs = [
+        (
+            "-gen-dialect-decls -dialect=gpu",
+            "include/mlir/Dialect/GPU/GPUOpsDialect.h.inc",
+        ),
+        (
+            "-gen-op-interface-decls",
+            "include/mlir/Dialect/GPU/GPUOpInterfaces.h.inc",
+        ),
+        (
+            "-gen-op-interface-defs",
+            "include/mlir/Dialect/GPU/GPUOpInterfaces.cpp.inc",
+        ),
+    ],
+    tblgen = ":mlir-tblgen",
+    td_file = "include/mlir/Dialect/GPU/GPUBase.td",
+    td_srcs = [
+        ":GPUOpsTdFiles",
+    ],
+)
+
+gentbl(
     name = "GPUOpsIncGen",
     strip_include_prefix = "include",
     tbl_outs = [
@@ -1289,10 +1313,6 @@ gentbl(
         (
             "-gen-op-defs",
             "include/mlir/Dialect/GPU/GPUOps.cpp.inc",
-        ),
-        (
-            "-gen-dialect-decls -dialect=gpu",
-            "include/mlir/Dialect/GPU/GPUOpsDialect.h.inc",
         ),
     ],
     tblgen = ":mlir-tblgen",
@@ -1315,12 +1335,14 @@ cc_library(
     ]),
     includes = ["include"],
     deps = [
+        ":GPUBaseIncGen",
         ":GPUOpsIncGen",
         ":IR",
         ":LLVMDialect",
         ":SideEffectInterfaces",
         ":StandardOps",
         ":Support",
+        "//llvm:Support",
     ],
 )
 
@@ -3824,6 +3846,7 @@ cc_library(
         ":ConversionPassIncGen",
         ":IR",
         ":LinalgOps",
+        ":LinalgTransforms",
         ":Pass",
         ":SCFDialect",
         ":StandardOps",
