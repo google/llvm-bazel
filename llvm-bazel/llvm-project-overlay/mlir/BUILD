@@ -3289,7 +3289,7 @@ cc_binary(
     srcs = ["tools/mlir-vulkan-runner/vulkan-runtime-wrappers.cpp"],
     linkshared = True,
     tags = [
-        "manual",  # Requires an external dependency.
+        "manual",  # External dependency (through VulkanRuntime)
     ],
     deps = [
         ":VulkanRuntime",
