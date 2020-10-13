@@ -2,8 +2,9 @@
 # See https://llvm.org/LICENSE.txt for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-load("//llvm:template_rule.bzl", "template_rule")
-load("//llvm:tblgen.bzl", "gentbl")
+load(":template_rule.bzl", "template_rule")
+load(":tblgen.bzl", "gentbl")
+load(":config.bzl", "llvm_config_defines")
 
 package(
     default_visibility = ["//visibility:public"],
@@ -11,8 +12,6 @@ package(
 )
 
 exports_files(["LICENSE.TXT"])
-
-llvm_host_triple = "x86_64-unknown-linux_gnu"
 
 # It may be tempting to add compiler flags here, but that should be avoided.
 # The necessary warnings and other compile flags should be provided by the
@@ -110,99 +109,6 @@ genrule(
     cmd = "echo \"#define LLVM_VERSION_INFO \\\"git\\\"\" > $@",
 )
 
-# These rules substitute fairly generic Linux and x86 flavored configs
-# currently. We could extend it in-place with selects-style switching on
-# platforms, or by extracting parts of the dictionary to be computed in with
-# a separate starlark function where the config switching can be managed.
-#
-# TODO: Priority list of enhancements needed here:
-# - Reflect `opt`, `dbg`, etc. features.
-# - Basic port to Mac for convenience.
-# - Extract into something cleaner based on Starlark.
-
-template_rule(
-    name = "llvm_config_h_gen",
-    src = "include/llvm/Config/llvm-config.h.cmake",
-    out = "include/llvm/Config/llvm-config.h",
-    substitutions = {
-        # Define if LLVM_ENABLE_DUMP is enabled
-        "#cmakedefine LLVM_ENABLE_DUMP": "/* #undef LLVM_ENABLE_DUMP */",
-
-        # Target triple LLVM will generate code for by default
-        "#cmakedefine LLVM_DEFAULT_TARGET_TRIPLE \"${LLVM_DEFAULT_TARGET_TRIPLE}\"": "#define LLVM_DEFAULT_TARGET_TRIPLE \"x86_64-unknown-linux-gnu\"",
-
-        # Define if threads enabled
-        "#cmakedefine01 LLVM_ENABLE_THREADS": "#define LLVM_ENABLE_THREADS 1",
-
-        # Has gcc/MSVC atomic intrinsics
-        "#cmakedefine01 LLVM_HAS_ATOMICS": "#define LLVM_HAS_ATOMICS 1",
-
-        # Host triple LLVM will be executed on
-        "#cmakedefine LLVM_HOST_TRIPLE \"${LLVM_HOST_TRIPLE}\"": "#define LLVM_HOST_TRIPLE \"x86_64-unknown-linux-gnu\"",
-
-        # LLVM architecture name for the native architecture, if available
-        "#cmakedefine LLVM_NATIVE_ARCH ${LLVM_NATIVE_ARCH}": "#define LLVM_NATIVE_ARCH X86",
-
-        # LLVM name for the native AsmParser init function, if available
-        "#cmakedefine LLVM_NATIVE_ASMPARSER LLVMInitialize${LLVM_NATIVE_ARCH}AsmParser": "#define LLVM_NATIVE_ASMPARSER LLVMInitializeX86AsmParser",
-
-        # LLVM name for the native AsmPrinter init function, if available
-        "#cmakedefine LLVM_NATIVE_ASMPRINTER LLVMInitialize${LLVM_NATIVE_ARCH}AsmPrinter": "#define LLVM_NATIVE_ASMPRINTER LLVMInitializeX86AsmPrinter",
-
-        # LLVM name for the native Disassembler init function, if available
-        "#cmakedefine LLVM_NATIVE_DISASSEMBLER LLVMInitialize${LLVM_NATIVE_ARCH}Disassembler": "#define LLVM_NATIVE_DISASSEMBLER LLVMInitializeX86Disassembler",
-
-        # LLVM name for the native Target init function, if available
-        "#cmakedefine LLVM_NATIVE_TARGET LLVMInitialize${LLVM_NATIVE_ARCH}Target": "#define LLVM_NATIVE_TARGET LLVMInitializeX86Target",
-
-        # LLVM name for the native TargetInfo init function, if available
-        "#cmakedefine LLVM_NATIVE_TARGETINFO LLVMInitialize${LLVM_NATIVE_ARCH}TargetInfo": "#define LLVM_NATIVE_TARGETINFO LLVMInitializeX86TargetInfo",
-
-        # LLVM name for the native target MC init function, if available
-        "#cmakedefine LLVM_NATIVE_TARGETMC LLVMInitialize${LLVM_NATIVE_ARCH}TargetMC": "#define LLVM_NATIVE_TARGETMC LLVMInitializeX86TargetMC",
-
-        # Define if this is Unixish platform
-        "#cmakedefine LLVM_ON_UNIX ${LLVM_ON_UNIX}": "#define LLVM_ON_UNIX 1",
-
-        # Define if we have the Intel JIT API runtime support library
-        "#cmakedefine01 LLVM_USE_INTEL_JITEVENTS": "#define LLVM_USE_INTEL_JITEVENTS 0",
-
-        # Define if we have the oprofile JIT-support library
-        "#cmakedefine01 LLVM_USE_OPROFILE": "#define LLVM_USE_OPROFILE 0",
-
-        # Define if we have the perf JIT-support library
-        "#cmakedefine01 LLVM_USE_PERF": "#define LLVM_USE_PERF 0",
-
-        # Major version of the LLVM API
-        "#define LLVM_VERSION_MAJOR ${LLVM_VERSION_MAJOR}": "#define LLVM_VERSION_MAJOR 11",
-
-        # Minor version of the LLVM API
-        "#define LLVM_VERSION_MINOR ${LLVM_VERSION_MINOR}": "#define LLVM_VERSION_MINOR 0",
-
-        # Patch version of the LLVM API
-        "#define LLVM_VERSION_PATCH ${LLVM_VERSION_PATCH}": "#define LLVM_VERSION_PATCH 0",
-
-        # LLVM version string
-        "#define LLVM_VERSION_STRING \"${PACKAGE_VERSION}\"": "#define LLVM_VERSION_STRING \"11.0.0git\"",
-
-        # Whether LLVM records statistics for use with GetStatistics(),
-        # PrintStatistics() or PrintStatisticsJSON()
-        "#cmakedefine01 LLVM_FORCE_ENABLE_STATS": "#define LLVM_FORCE_ENABLE_STATS 0",
-
-        # Define if we have z3 and want to build it */
-        "#cmakedefine LLVM_WITH_Z3 ${LLVM_WITH_Z3}": "/* #undef LLVM_WITH_Z3 */",
-
-        # Define if LLVM was built with a dependency to the libtensorflow dynamic library
-        "#cmakedefine LLVM_HAVE_TF_API": "/* #undef LLVM_HAVE_TF_API */",
-
-        # Define if LLVM was built with a dependency to the tensorflow compiler
-        "#cmakedefine LLVM_HAVE_TF_AOT": "/* #undef LLVM_HAVE_TF_AOT */",
-
-        # Define to 1 if you have the <sysexits.h> header file.
-        "#cmakedefine HAVE_SYSEXITS_H ${HAVE_SYSEXITS_H}": "#define HAVE_SYSEXITS_H 1",
-    },
-)
-
 template_rule(
     name = "abi_breaking_h_gen",
     src = "include/llvm/Config/abi-breaking.h.cmake",
@@ -216,357 +122,12 @@ template_rule(
     },
 )
 
-template_rule(
-    name = "config_h_gen",
-    src = "include/llvm/Config/config.h.cmake",
-    out = "include/llvm/Config/config.h",
-    substitutions = {
-        # Bug report URL.
-        "#define BUG_REPORT_URL \"${BUG_REPORT_URL}\"": "#define BUG_REPORT_URL \"https://bugs.llvm.org/\"",
-
-        # Define to 1 to enable backtraces, and to 0 otherwise.
-        "#cmakedefine01 ENABLE_BACKTRACES": "#define ENABLE_BACKTRACES 1",
-
-        # Define to 1 to enable crash overrides, and to 0 otherwise.
-        "#cmakedefine01 ENABLE_CRASH_OVERRIDES": "#define ENABLE_CRASH_OVERRIDES 1",
-
-        # Define to 1 to enable crash memory dumps, and to 0 otherwise.
-        "#cmakedefine01 LLVM_ENABLE_CRASH_DUMPS": "#define LLVM_ENABLE_CRASH_DUMPS 0",
-
-        # Define to 1 if you have the `backtrace' function.
-        "#cmakedefine HAVE_BACKTRACE ${HAVE_BACKTRACE}": "#define HAVE_BACKTRACE TRUE",
-        "#define BACKTRACE_HEADER <${BACKTRACE_HEADER}>": "#define BACKTRACE_HEADER <execinfo.h>",
-
-        # Define to 1 if you have the <CrashReporterClient.h> header file.
-        "#cmakedefine HAVE_CRASHREPORTERCLIENT_H": "/* #undef HAVE_CRASHREPORTERCLIENT_H */",
-
-        # can use __crashreporter_info__
-        "#cmakedefine01 HAVE_CRASHREPORTER_INFO": "#define HAVE_CRASHREPORTER_INFO 0",
-
-        # Define to 1 if you have the declaration of `arc4random', and to 0 if you don't.
-        "#cmakedefine01 HAVE_DECL_ARC4RANDOM": "#define HAVE_DECL_ARC4RANDOM 0",
-
-        # Define to 1 if you have the declaration of `FE_ALL_EXCEPT', and to 0 if you don't.
-        "#cmakedefine01 HAVE_DECL_FE_ALL_EXCEPT": "#define HAVE_DECL_FE_ALL_EXCEPT 1",
-
-        # Define to 1 if you have the declaration of `FE_INEXACT', and to 0 if you don't.
-        "#cmakedefine01 HAVE_DECL_FE_INEXACT": "#define HAVE_DECL_FE_INEXACT 1",
-
-        # Define to 1 if you have the declaration of `strerror_s', and to 0 if you don't.
-        "#cmakedefine01 HAVE_DECL_STRERROR_S": "#define HAVE_DECL_STRERROR_S 0",
-
-        # Define to 1 if you have the DIA SDK installed, and to 0 if you don't.
-        "#cmakedefine01 LLVM_ENABLE_DIA_SDK": "#define LLVM_ENABLE_DIA_SDK 0",
-
-        # Define to 1 if you have the <dlfcn.h> header file.
-        "#cmakedefine HAVE_DLFCN_H ${HAVE_DLFCN_H}": "#define HAVE_DLFCN_H 1",
-
-        # Define if dlopen() is available on this platform.
-        "#cmakedefine HAVE_DLOPEN ${HAVE_DLOPEN}": "#define HAVE_DLOPEN 1",
-
-        # Define if dladdr() is available on this platform.
-        "#cmakedefine HAVE_DLADDR ${HAVE_DLADDR}": "/* #undef HAVE_DLADDR */",
-
-        # Define to 1 if you have the <errno.h> header file.
-        "#cmakedefine HAVE_ERRNO_H ${HAVE_ERRNO_H}": "#define HAVE_ERRNO_H 1",
-
-        # Define to 1 if you have the <fcntl.h> header file.
-        "#cmakedefine HAVE_FCNTL_H ${HAVE_FCNTL_H}": "#define HAVE_FCNTL_H 1",
-
-        # Define to 1 if you have the <fenv.h> header file.
-        "#cmakedefine HAVE_FENV_H ${HAVE_FENV_H}": "#define HAVE_FENV_H 1",
-
-        # Define if libffi is available on this platform.
-        "#cmakedefine HAVE_FFI_CALL ${HAVE_FFI_CALL}": "/* #undef HAVE_FFI_CALL */",
-
-        # Define to 1 if you have the <ffi/ffi.h> header file.
-        "#cmakedefine HAVE_FFI_FFI_H ${HAVE_FFI_FFI_H}": "/* #undef HAVE_FFI_FFI_H */",
-
-        # Define to 1 if you have the <ffi.h> header file.
-        "#cmakedefine HAVE_FFI_H ${HAVE_FFI_H}": "/* #undef HAVE_FFI_H */",
-
-        # Define to 1 if you have the `futimens' function.
-        "#cmakedefine HAVE_FUTIMENS ${HAVE_FUTIMENS}": "#define HAVE_FUTIMENS 1",
-
-        # Define to 1 if you have the `futimes' function.
-        "#cmakedefine HAVE_FUTIMES ${HAVE_FUTIMES}": "#define HAVE_FUTIMES 1",
-
-        # Define to 1 if you have the `getpagesize' function.
-        "#cmakedefine HAVE_GETPAGESIZE ${HAVE_GETPAGESIZE}": "#define HAVE_GETPAGESIZE 1",
-
-        # Define to 1 if you have the `getrlimit' function.
-        "#cmakedefine HAVE_GETRLIMIT ${HAVE_GETRLIMIT}": "#define HAVE_GETRLIMIT 1",
-
-        # Define to 1 if you have the `getrusage' function.
-        "#cmakedefine HAVE_GETRUSAGE ${HAVE_GETRUSAGE}": "#define HAVE_GETRUSAGE 1",
-
-        # Define to 1 if you have the `isatty' function.
-        "#cmakedefine HAVE_ISATTY 1": "#define HAVE_ISATTY 1",
-
-        # Define to 1 if you have the `edit' library (-ledit).
-        "#cmakedefine HAVE_LIBEDIT ${HAVE_LIBEDIT}": "/* #undef HAVE_LIBEDIT */",
-
-        # Define to 1 if you have the `pfm' library (-lpfm).
-        "#cmakedefine HAVE_LIBPFM ${HAVE_LIBPFM}": "/* #undef HAVE_LIBPFM */",
-
-        # Define to 1 if the `perf_branch_entry' struct has field cycles.
-        "#cmakedefine LIBPFM_HAS_FIELD_CYCLES ${LIBPFM_HAS_FIELD_CYCLES}": "/* #undef LIBPFM_HAS_FIELD_CYCLES */",
-
-        # Define to 1 if you have the `psapi' library (-lpsapi).
-        "#cmakedefine HAVE_LIBPSAPI ${HAVE_LIBPSAPI}": "/* #undef HAVE_LIBPSAPI */",
-
-        # Define to 1 if you have the `pthread' library (-lpthread).
-        "#cmakedefine HAVE_LIBPTHREAD ${HAVE_LIBPTHREAD}": "#define HAVE_LIBPTHREAD 1",
-
-        # Define to 1 if you have the `pthread_getname_np' function.
-        "#cmakedefine HAVE_PTHREAD_GETNAME_NP ${HAVE_PTHREAD_GETNAME_NP}": "#define HAVE_PTHREAD_GETNAME_NP 1",
-
-        # Define to 1 if you have the `pthread_setname_np' function.
-        "#cmakedefine HAVE_PTHREAD_SETNAME_NP ${HAVE_PTHREAD_SETNAME_NP}": "#define HAVE_PTHREAD_SETNAME_NP 1",
-
-        # Define to 1 if you have the `z' library (-lz).
-        # FIXME: Enable this by detecting the system library.
-        "#cmakedefine HAVE_LIBZ ${HAVE_LIBZ}": "/* #undef HAVE_LIBZ */",
-
-        # Define to 1 if you have the <link.h> header file.
-        "#cmakedefine HAVE_LINK_H ${HAVE_LINK_H}": "#define HAVE_LINK_H 1",
-
-        # Define to 1 if you have the `lseek64' function.
-        "#cmakedefine HAVE_LSEEK64 ${HAVE_LSEEK64}": "#define HAVE_LSEEK64 1",
-
-        # Define to 1 if you have the <mach/mach.h> header file.
-        "#cmakedefine HAVE_MACH_MACH_H ${HAVE_MACH_MACH_H}": "/* #undef HAVE_MACH_MACH_H */",
-
-        # Define to 1 if you have the `mallctl' function.
-        "#cmakedefine HAVE_MALLCTL ${HAVE_MALLCTL}": "/* #undef HAVE_MALLCTL */",
-
-        # Define to 1 if you have the `mallinfo' function.
-        "#cmakedefine HAVE_MALLINFO ${HAVE_MALLINFO}": "#define HAVE_MALLINFO 1",
-
-        # Define to 1 if you have the <malloc/malloc.h> header file.
-        "#cmakedefine HAVE_MALLOC_MALLOC_H ${HAVE_MALLOC_MALLOC_H}": "/* #undef HAVE_MALLOC_MALLOC_H */",
-
-        # Define to 1 if you have the `malloc_zone_statistics' function.
-        "#cmakedefine HAVE_MALLOC_ZONE_STATISTICS ${HAVE_MALLOC_ZONE_STATISTICS}": "/* #undef HAVE_MALLOC_ZONE_STATISTICS */",
-
-        # Define to 1 if you have the `posix_fallocate' function.
-        "#cmakedefine HAVE_POSIX_FALLOCATE ${HAVE_POSIX_FALLOCATE}": "#define HAVE_POSIX_FALLOCATE 1",
-
-        # Define to 1 if you have the `posix_spawn' function.
-        "#cmakedefine HAVE_POSIX_SPAWN ${HAVE_POSIX_SPAWN}": "#define HAVE_POSIX_SPAWN 1",
-
-        # Define to 1 if you have the `pread' function.
-        "#cmakedefine HAVE_PREAD ${HAVE_PREAD}": "#define HAVE_PREAD 1",
-
-        # Have pthread_getspecific
-        "#cmakedefine HAVE_PTHREAD_GETSPECIFIC ${HAVE_PTHREAD_GETSPECIFIC}": "#define HAVE_PTHREAD_GETSPECIFIC 1",
-
-        # Define to 1 if you have the <pthread.h> header file.
-        "#cmakedefine HAVE_PTHREAD_H ${HAVE_PTHREAD_H}": "#define HAVE_PTHREAD_H 1",
-
-        # Have pthread_mutex_lock
-        "#cmakedefine HAVE_PTHREAD_MUTEX_LOCK ${HAVE_PTHREAD_MUTEX_LOCK}": "#define HAVE_PTHREAD_MUTEX_LOCK 1",
-
-        # Have pthread_rwlock_init
-        "#cmakedefine HAVE_PTHREAD_RWLOCK_INIT ${HAVE_PTHREAD_RWLOCK_INIT}": "#define HAVE_PTHREAD_RWLOCK_INIT 1",
-
-        # Define to 1 if you have the `sbrk' function.
-        "#cmakedefine HAVE_SBRK ${HAVE_SBRK}": "#define HAVE_SBRK 1",
-
-        # Define to 1 if you have the `setenv' function.
-        "#cmakedefine HAVE_SETENV ${HAVE_SETENV}": "#define HAVE_SETENV 1",
-
-        # Define to 1 if you have the `setrlimit' function.
-        "#cmakedefine HAVE_SETRLIMIT ${HAVE_SETRLIMIT}": "#define HAVE_SETRLIMIT 1",
-
-        # Define to 1 if you have the `sigaltstack' function.
-        "#cmakedefine HAVE_SIGALTSTACK ${HAVE_SIGALTSTACK}": "#define HAVE_SIGALTSTACK 1",
-
-        # Define to 1 if you have the <signal.h> header file.
-        "#cmakedefine HAVE_SIGNAL_H ${HAVE_SIGNAL_H}": "#define HAVE_SIGNAL_H 1",
-
-        # Define to 1 if you have the `strerror' function.
-        "#cmakedefine HAVE_STRERROR ${HAVE_STRERROR}": "#define HAVE_STRERROR 1",
-
-        # Define to 1 if you have the `strerror_r' function.
-        "#cmakedefine HAVE_STRERROR_R ${HAVE_STRERROR_R}": "#define HAVE_STRERROR_R 1",
-
-        # Define to 1 if you have the `sysconf' function.
-        "#cmakedefine HAVE_SYSCONF ${HAVE_SYSCONF}": "#define HAVE_SYSCONF 1",
-
-        # Define to 1 if you have the <sys/ioctl.h> header file.
-        "#cmakedefine HAVE_SYS_IOCTL_H ${HAVE_SYS_IOCTL_H}": "#define HAVE_SYS_IOCTL_H 1",
-
-        # Define to 1 if you have the <sys/mman.h> header file.
-        "#cmakedefine HAVE_SYS_MMAN_H ${HAVE_SYS_MMAN_H}": "#define HAVE_SYS_MMAN_H 1",
-
-        # Define to 1 if you have the <sys/param.h> header file.
-        "#cmakedefine HAVE_SYS_PARAM_H ${HAVE_SYS_PARAM_H}": "#define HAVE_SYS_PARAM_H 1",
-
-        # Define to 1 if you have the <sys/resource.h> header file.
-        "#cmakedefine HAVE_SYS_RESOURCE_H ${HAVE_SYS_RESOURCE_H}": "#define HAVE_SYS_RESOURCE_H 1",
-
-        # Define to 1 if you have the <sys/stat.h> header file.
-        "#cmakedefine HAVE_SYS_STAT_H ${HAVE_SYS_STAT_H}": "#define HAVE_SYS_STAT_H 1",
-
-        # Define to 1 if you have the <sys/time.h> header file.
-        "#cmakedefine HAVE_SYS_TIME_H ${HAVE_SYS_TIME_H}": "#define HAVE_SYS_TIME_H 1",
-
-        # Define to 1 if stat struct has st_mtimespec member .
-        "#cmakedefine HAVE_STRUCT_STAT_ST_MTIMESPEC_TV_NSEC ${HAVE_STRUCT_STAT_ST_MTIMESPEC_TV_NSEC}": "/* #undef HAVE_STRUCT_STAT_ST_MTIMESPEC_TV_NSEC */",
-
-        # Define to 1 if stat struct has st_mtim member.
-        "#cmakedefine HAVE_STRUCT_STAT_ST_MTIM_TV_NSEC ${HAVE_STRUCT_STAT_ST_MTIM_TV_NSEC}": "#define HAVE_STRUCT_STAT_ST_MTIM_TV_NSEC 1",
-
-        # Define to 1 if you have the <sys/types.h> header file.
-        "#cmakedefine HAVE_SYS_TYPES_H ${HAVE_SYS_TYPES_H}": "#define HAVE_SYS_TYPES_H 1",
-
-        # Define if the setupterm() function is supported this platform.
-        # FIXME: Enable this correctly by detecting the system library if possible.
-        "#cmakedefine LLVM_ENABLE_TERMINFO ${LLVM_ENABLE_TERMINFO}": "/* #undef LLVM_ENABLE_TERMINFO */",
-
-        # Define if the xar_open() function is supported this platform.
-        "#cmakedefine HAVE_LIBXAR ${HAVE_LIBXAR}": "/* #undef HAVE_LIBXAR */",
-
-        # Define to 1 if you have the <termios.h> header file.
-        "#cmakedefine HAVE_TERMIOS_H ${HAVE_TERMIOS_H}": "#define HAVE_TERMIOS_H 1",
-
-        # Define to 1 if you have the <unistd.h> header file.
-        "#cmakedefine HAVE_UNISTD_H ${HAVE_UNISTD_H}": "#define HAVE_UNISTD_H 1",
-
-        # Define to 1 if you have the <valgrind/valgrind.h> header file.
-        "#cmakedefine HAVE_VALGRIND_VALGRIND_H ${HAVE_VALGRIND_VALGRIND_H}": "/* #undef HAVE_VALGRIND_VALGRIND_H */",
-
-        # Define to 1 if you have the <zlib.h> header file.
-        # FIXME: Enable this by detecting the system library.
-        "#cmakedefine HAVE_ZLIB_H ${HAVE_ZLIB_H}": "/* #undef HAVE_ZLIB_H */",
-
-        # Have host's _alloca
-        "#cmakedefine HAVE__ALLOCA ${HAVE__ALLOCA}": "/* #undef HAVE__ALLOCA */",
-
-        # Define to 1 if you have the `_chsize_s' function.
-        "#cmakedefine HAVE__CHSIZE_S ${HAVE__CHSIZE_S}": "/* #undef HAVE__CHSIZE_S */",
-
-        # Define to 1 if you have the `_Unwind_Backtrace' function.
-        "#cmakedefine HAVE__UNWIND_BACKTRACE ${HAVE__UNWIND_BACKTRACE}": "#define HAVE__UNWIND_BACKTRACE 1",
-
-        # Have host's __alloca
-        "#cmakedefine HAVE___ALLOCA ${HAVE___ALLOCA}": "/* #undef HAVE___ALLOCA */",
-
-        # Have host's __ashldi3
-        "#cmakedefine HAVE___ASHLDI3 ${HAVE___ASHLDI3}": "/* #undef HAVE___ASHLDI3 */",
-
-        # Have host's __ashrdi3
-        "#cmakedefine HAVE___ASHRDI3 ${HAVE___ASHRDI3}": "/* #undef HAVE___ASHRDI3 */",
-
-        # Have host's __chkstk
-        "#cmakedefine HAVE___CHKSTK ${HAVE___CHKSTK}": "/* #undef HAVE___CHKSTK */",
-
-        # Have host's __chkstk_ms
-        "#cmakedefine HAVE___CHKSTK_MS ${HAVE___CHKSTK_MS}": "/* #undef HAVE___CHKSTK_MS */",
-
-        # Have host's __cmpdi2
-        "#cmakedefine HAVE___CMPDI2 ${HAVE___CMPDI2}": "/* #undef HAVE___CMPDI2 */",
-
-        # Have host's __divdi3
-        "#cmakedefine HAVE___DIVDI3 ${HAVE___DIVDI3}": "/* #undef HAVE___DIVDI3 */",
-
-        # Have host's __fixdfdi
-        "#cmakedefine HAVE___FIXDFDI ${HAVE___FIXDFDI}": "/* #undef HAVE___FIXDFDI */",
-
-        # Have host's __fixsfdi
-        "#cmakedefine HAVE___FIXSFDI ${HAVE___FIXSFDI}": "/* #undef HAVE___FIXSFDI */",
-
-        # Have host's __floatdidf
-        "#cmakedefine HAVE___FLOATDIDF ${HAVE___FLOATDIDF}": "/* #undef HAVE___FLOATDIDF */",
-
-        # Have host's __lshrdi3
-        "#cmakedefine HAVE___LSHRDI3 ${HAVE___LSHRDI3}": "/* #undef HAVE___LSHRDI3 */",
-
-        # Have host's __main
-        "#cmakedefine HAVE___MAIN ${HAVE___MAIN}": "/* #undef HAVE___MAIN */",
-
-        # Have host's __moddi3
-        "#cmakedefine HAVE___MODDI3 ${HAVE___MODDI3}": "/* #undef HAVE___MODDI3 */",
-
-        # Have host's __udivdi3
-        "#cmakedefine HAVE___UDIVDI3 ${HAVE___UDIVDI3}": "/* #undef HAVE___UDIVDI3 */",
-
-        # Have host's __umoddi3
-        "#cmakedefine HAVE___UMODDI3 ${HAVE___UMODDI3}": "/* #undef HAVE___UMODDI3 */",
-
-        # Have host's ___chkstk
-        "#cmakedefine HAVE____CHKSTK ${HAVE____CHKSTK}": "/* #undef HAVE____CHKSTK */",
-
-        # Have host's ___chkstk_ms
-        "#cmakedefine HAVE____CHKSTK_MS ${HAVE____CHKSTK_MS}": "/* #undef HAVE____CHKSTK_MS */",
-
-        # Linker version detected at compile time.
-        "#cmakedefine HOST_LINK_VERSION \"${HOST_LINK_VERSION}\"": "/* #undef HOST_LINK_VERSION */",
-
-        # Target triple LLVM will generate code for by default
-        # Doesn't use `cmakedefine` because it is allowed to be empty.
-        "#define LLVM_DEFAULT_TARGET_TRIPLE \"${LLVM_DEFAULT_TARGET_TRIPLE}\"": "#define LLVM_DEFAULT_TARGET_TRIPLE \"x86_64-unknown-linux-gnu\"",
-
-        # Define if zlib compression is available
-        # FIXME: Enable this by detecting the system library.
-        "#cmakedefine01 LLVM_ENABLE_ZLIB": "/* #undef LLVM_ENABLE_ZLIB */",
-
-        # Define if overriding target triple is enabled
-        "#cmakedefine LLVM_TARGET_TRIPLE_ENV \"${LLVM_TARGET_TRIPLE_ENV}\"": "/* #undef LLVM_TARGET_TRIPLE_ENV */",
-
-        # LLVM version information
-        "#cmakedefine LLVM_VERSION_INFO \"${LLVM_VERSION_INFO}\"": "/* #undef LLVM_VERSION_INFO */",
-
-        # Whether tools show host and target info when invoked with --version
-        "#cmakedefine01 LLVM_VERSION_PRINTER_SHOW_HOST_TARGET_INFO": "#define LLVM_VERSION_PRINTER_SHOW_HOST_TARGET_INFO 1",
-
-        # Define if libxml2 is supported on this platform.
-        "#cmakedefine LLVM_ENABLE_LIBXML2 ${LLVM_ENABLE_LIBXML2}": "/* #undef LLVM_ENABLE_LIBXML2 */",
-
-        # Define to the extension used for shared libraries, say, \".so\".
-        "#cmakedefine LTDL_SHLIB_EXT \"${LTDL_SHLIB_EXT}\"": "#define LTDL_SHLIB_EXT \".so\"",
-
-        # Define to the address where bug reports for this package should be sent.
-        "#cmakedefine PACKAGE_BUGREPORT \"${PACKAGE_BUGREPORT}\"": "#define PACKAGE_BUGREPORT \"https://bugs.llvm.org/\"",
-
-        # Define to the full name of this package.
-        "#cmakedefine PACKAGE_NAME \"${PACKAGE_NAME}\"": "#define PACKAGE_NAME \"LLVM\"",
-
-        # Define to the full name and version of this package.
-        "#cmakedefine PACKAGE_STRING \"${PACKAGE_STRING}\"": "#define PACKAGE_STRING \"LLVM 11.0.0git\"",
-
-        # Define to the version of this package.
-        "#cmakedefine PACKAGE_VERSION \"${PACKAGE_VERSION}\"": "#define PACKAGE_VERSION \"11.0.0git\"",
-
-        # Define to the vendor of this package.
-        "#cmakedefine PACKAGE_VENDOR \"${PACKAGE_VENDOR}\"": "/* #undef PACKAGE_VENDOR */",
-
-        # Define as the return type of signal handlers (`int' or `void').
-        "#cmakedefine RETSIGTYPE ${RETSIGTYPE}": "#define RETSIGTYPE void",
-
-        # Define if std::is_trivially_copyable is supported
-        "#cmakedefine HAVE_STD_IS_TRIVIALLY_COPYABLE ${HAVE_STD_IS_TRIVIALLY_COPYABLE}": "#define HAVE_STD_IS_TRIVIALLY_COPYABLE 1",
-
-        # Define to a function implementing stricmp
-        "#cmakedefine stricmp ${stricmp}": "/* #undef stricmp */",
-
-        # Define to a function implementing strdup
-        "#cmakedefine strdup ${strdup}": "/* #undef strdup */",
-
-        # Whether GlobalISel rule coverage is being collected
-        "#cmakedefine01 LLVM_GISEL_COV_ENABLED": "#define LLVM_GISEL_COV_ENABLED 0",
-
-        # Define if we have z3 and want to build it
-        "#cmakedefine LLVM_WITH_Z3 ${LLVM_WITH_Z3}": "/* #undef LLVM_WITH_Z3 */",
-
-        # Define to the default GlobalISel coverage file prefix
-        "#cmakedefine LLVM_GISEL_COV_PREFIX \"${LLVM_GISEL_COV_PREFIX}\"": "/* #undef LLVM_GISEL_COV_PREFIX */",
-
-        # Whether Timers signpost passes in Xcode Instruments
-        "#cmakedefine01 LLVM_SUPPORT_XCODE_SIGNPOSTS": "#define LLVM_SUPPORT_XCODE_SIGNPOSTS 0",
-    },
-)
+# To enable diff testing out of tree
+exports_files([
+    "include/llvm/Config/config.h.cmake",
+    "include/llvm/Config/llvm-config.h.cmake",
+    "include/llvm/Config/abi-breaking.h.cmake",
+])
 
 cc_library(
     name = "config",
@@ -576,6 +137,7 @@ cc_library(
         "include/llvm/Config/llvm-config.h",
     ],
     copts = llvm_copts,
+    defines = llvm_config_defines,
     includes = ["include"],
     textual_hdrs = [
         "include/llvm/Config/AsmParsers.def",
@@ -619,9 +181,16 @@ cc_library(
         "lib/Support/*.cpp",
         "lib/Support/*.h",
         "lib/Support/*.inc",
-        "lib/Support/Unix/*.h",
-        "lib/Support/Unix/*.inc",
-    ]),
+    ]) + select({
+        "@bazel_tools//src/conditions:windows": glob([
+            "lib/Support/Windows/*.h",
+            "lib/Support/Windows/*.inc",
+        ]),
+        "//conditions:default": glob([
+            "lib/Support/Unix/*.h",
+            "lib/Support/Unix/*.inc",
+        ]),
+    }),
     hdrs = glob([
         "include/llvm/Support/*.h",
         "include/llvm/ADT/*.h",
