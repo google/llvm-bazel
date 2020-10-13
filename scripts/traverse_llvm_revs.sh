@@ -22,7 +22,7 @@ git remote -v
 git checkout "${BRANCH?}"
 git pull --ff-only origin "${BRANCH?}"
 
-if [[ "$(git rev-parse ${BRANCH?})" == "${START?}" ]]; then
+if [[ "$(git rev-parse "${BRANCH?}")" == "${START?}" ]]; then
   echo "Current HEAD is already up to date with ${BRANCH?}"
   popd
   exit 0
