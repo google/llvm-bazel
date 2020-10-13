@@ -3246,7 +3246,7 @@ cc_binary(
     copts = llvm_copts,
     stamp = 0,
     tags = [
-        "manual" # TODO(gcmn): Fix remote execution and re-enable
+        "manual",  # TODO(gcmn): Fix remote execution and re-enable
     ],
     deps = [
         ":MtTableGen",
