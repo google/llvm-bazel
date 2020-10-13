@@ -70,6 +70,7 @@ def _overlay_directories_impl(repository_ctx):
 overlay_directories = repository_rule(
     implementation = _overlay_directories_impl,
     local = True,
+    configure = True,
     attrs = {
         "_overlay_script": attr.label(
             default = Label("//:overlay_directories.py"),
