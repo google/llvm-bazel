@@ -1343,6 +1343,7 @@ cc_library(
         ":SideEffectInterfaces",
         ":StandardOps",
         ":Support",
+        "//llvm:Support",
     ],
 )
 
@@ -3947,6 +3948,7 @@ cc_library(
         "include/mlir/Dialect/Linalg/EDSC/Builders.h",
         "include/mlir/Dialect/Linalg/EDSC/FoldedIntrinsics.h",
         "include/mlir/Dialect/Linalg/Passes.h",
+        "include/mlir/Dialect/Linalg/Transforms/CodegenStrategy.h",
         "include/mlir/Dialect/Linalg/Transforms/Hoisting.h",
         "include/mlir/Dialect/Linalg/Transforms/Transforms.h",
         "include/mlir/Dialect/Linalg/Utils/Utils.h",
@@ -3974,6 +3976,7 @@ cc_library(
         ":Transforms",
         ":TransformsPassIncGen",
         ":VectorOps",
+        ":VectorToSCF",
         "//llvm:Core",
         "//llvm:Support",
     ],
@@ -4062,7 +4065,6 @@ cc_library(
         ":EDSC",
         ":IR",
         ":LLVMDialect",
-        ":LinalgTransforms",
         ":Pass",
         ":SCFDialect",
         ":StandardOps",
