@@ -99,6 +99,7 @@ cc_library(
     srcs = [
         "lib/Dialect/Test/TestDialect.cpp",
         "lib/Dialect/Test/TestPatterns.cpp",
+        "lib/Dialect/Test/TestTraits.cpp",
     ],
     hdrs = [
         "lib/Dialect/Test/TestDialect.h",
