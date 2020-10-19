@@ -1976,6 +1976,7 @@ cc_library(
         "include/llvm/ExecutionEngine/Orc/*.h",
         "include/llvm/ExecutionEngine/Orc/RPC/*.h",
     ]) + [
+        "include/llvm-c/LLJIT.h",
         "include/llvm-c/Orc.h",
     ],
     copts = llvm_copts,
