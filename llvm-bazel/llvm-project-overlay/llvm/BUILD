@@ -1977,7 +1977,6 @@ cc_library(
         "include/llvm/ExecutionEngine/Orc/RPC/*.h",
     ]) + [
         "include/llvm-c/Orc.h",
-        "include/llvm-c/OrcBindings.h",
     ],
     copts = llvm_copts,
     deps = [
