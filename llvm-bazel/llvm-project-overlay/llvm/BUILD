@@ -1978,6 +1978,7 @@ cc_library(
     ]) + [
         "include/llvm-c/LLJIT.h",
         "include/llvm-c/Orc.h",
+        "include/llvm-c/OrcEE.h",
     ],
     copts = llvm_copts,
     deps = [
