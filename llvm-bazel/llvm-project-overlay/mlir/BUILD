@@ -163,7 +163,8 @@ cc_library(
         "include/mlir-c/Bindings/Python/Interop.h",
     ],
     tags = [
-        "manual",  # TODO(gcmn): Add support for this target
+        "manual",  # External dependency
+        "nobuildkite",  # TODO(gcmn): Add support for this target
     ],
     deps = [
         ":CAPIIR",
@@ -3239,7 +3240,8 @@ cc_library(
     name = "tools/libcuda-runtime-wrappers",
     srcs = ["tools/mlir-cuda-runner/cuda-runtime-wrappers.cpp"],
     tags = [
-        "manual",  # TODO(gcmn): Add support for this target
+        "manual",  # External dependency
+        "nobuildkite",  # TODO(gcmn): Add support for this target
     ],
     deps = [
         ":mlir_c_runner_utils",
@@ -3254,7 +3256,8 @@ cc_binary(
     name = "tools/libcuda-runtime-wrappers.so",
     linkshared = True,
     tags = [
-        "manual",  # TODO(gcmn): Add support for this target
+        "manual",  # External dependency
+        "nobuildkite",  # TODO(gcmn): Add support for this target
     ],
     deps = [":tools/libcuda-runtime-wrappers"],
 )
@@ -3268,7 +3271,7 @@ cc_library(
         "tools/mlir-vulkan-runner/VulkanRuntime.h",
     ],
     tags = [
-        "manual",  # Requires an external dependency.
+        "manual",  # External dependency
     ],
     deps = [
         ":IR",
@@ -3288,7 +3291,7 @@ cc_binary(
     srcs = ["tools/mlir-vulkan-runner/vulkan-runtime-wrappers.cpp"],
     linkshared = True,
     tags = [
-        "manual",  # Requires an external dependency.
+        "manual",  # External dependency
     ],
     deps = [
         ":VulkanRuntime",
@@ -3301,7 +3304,8 @@ cc_binary(
     srcs = ["tools/mlir-cuda-runner/mlir-cuda-runner.cpp"],
     data = [":tools/libcuda-runtime-wrappers.so"],
     tags = [
-        "manual",  # TODO(gcmn): Add support for this target
+        "manual",  # External dependency
+        "nobuildkite",  # TODO(gcmn): Add support for this target
     ],
     deps = [
         ":AllPassesAndDialectsNoRegistration",
@@ -3335,7 +3339,8 @@ cc_binary(
         "//mlir/test/mlir-cpu-runner:libmlir_runner_utils.so",
     ],
     tags = [
-        "manual",  # TODO(gcmn): Add support for this target
+        "manual",  # External dependency
+        "nobuildkite",  # TODO(gcmn): Add support for this target
     ],
     deps = [
         ":AllPassesAndDialectsNoRegistration",
