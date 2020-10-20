@@ -92,10 +92,13 @@ cc_library(
         "include/mlir/Pass/*.h",
     ]),
     includes = ["include"],
-    linkopts = [
-        "-lm",
-        "-lpthread",
-    ],
+    linkopts = select({
+        "@bazel_tools//src/conditions:windows": [],
+        "//conditions:default": [
+            "-lpthread",
+            "-ldl",
+        ],
+    }),
     deps = [
         ":IR",
         ":Support",
@@ -3227,7 +3230,10 @@ cc_library(
 cc_binary(
     name = "mlir-cpu-runner",
     srcs = ["tools/mlir-cpu-runner/mlir-cpu-runner.cpp"],
-    linkopts = ["-ldl"],
+    linkopts = select({
+        "@bazel_tools//src/conditions:windows": [],
+        "//conditions:default": ["-ldl"],
+    }),
     deps = [
         ":AllPassesAndDialectsNoRegistration",
         ":ExecutionEngineUtils",
@@ -3390,10 +3396,13 @@ cc_binary(
         "tools/mlir-tblgen/*.h",
         "tools/mlir-tblgen/*.cpp",
     ]),
-    linkopts = [
-        "-lm",
-        "-lpthread",
-    ],
+    linkopts = select({
+        "@bazel_tools//src/conditions:windows": [],
+        "//conditions:default": [
+            "-lm",
+            "-lpthread",
+        ],
+    }),
     deps = [
         ":MlirTableGenMain",
         ":Support",
@@ -3409,10 +3418,13 @@ cc_binary(
     srcs = glob([
         "tools/mlir-linalg-ods-gen/mlir-linalg-ods-gen.cpp",
     ]),
-    linkopts = [
-        "-lm",
-        "-lpthread",
-    ],
+    linkopts = select({
+        "@bazel_tools//src/conditions:windows": [],
+        "//conditions:default": [
+            "-lm",
+            "-lpthread",
+        ],
+    }),
     deps = [
         ":IR",
         ":Support",

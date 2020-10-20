@@ -21,6 +21,13 @@ posix_defines = [
     "BACKTRACE_HEADER=<execinfo.h>",
     "LTDL_SHLIB_EXT=\\\".so\\\"",
     "LLVM_ENABLE_THREADS=1",
+    "HAVE_SYSEXITS_H=1",
+    "HAVE_UNISTD_H=1",
+    "HAVE_STRERROR_R=1",
+    "HAVE_LIBPTHREAD=1",
+    "HAVE_PTHREAD_GETNAME_NP=1",
+    "HAVE_PTHREAD_SETNAME_NP=1",
+    "HAVE_PTHREAD_GETSPECIFIC=1",
 ]
 
 win32_defines = [

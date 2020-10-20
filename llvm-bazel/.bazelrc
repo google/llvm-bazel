@@ -63,6 +63,48 @@ build:generic_gcc --copt=-Wno-misleading-indentation --host_copt=-Wno-misleading
 build:generic_gcc --copt=-Werror --host_copt=-Werror
 
 ###############################################################################
+# Windows specific flags for building with VC.
+###############################################################################
+
+build:msvc --copt=/WX     # Treat warnings as errors...
+
+# ...but disable the ones that are violated
+build:msvc --copt=/wd4624 # destructor was implicitly defined as deleted
+build:msvc --copt=/wd4244 # possible loss of data
+build:msvc --copt=/wd4005 # macro redefinition
+build:msvc --copt=/wd4141 # inline used more than once
+build:msvc --copt=/wd4267 # initializing: possible loss of data
+build:msvc --copt=/wd4273 # multiple definitions with different dllimport
+build:msvc --copt=/wd4319 # zero-extending after complement
+build:msvc --copt=/wd4804 # comparisons between bool and int
+build:msvc --copt=/wd4805 # comparisons between bool and int
+
+build:msvc --linkopt=/WX # Treat warnings as errors...
+
+# ...but disable the ones that are violated.
+build:msvc --linkopt=/IGNORE:4001 # no object files
+build:msvc --linkopt=/IGNORE:4217 # mismatch import/export declspec
+
+# Enables unix-style runfiles link trees (requires symlink permission).
+# See: https://blogs.msvc.com/msvcdeveloper/2016/12/02/symlinks-msvc-10/
+# Generally: Enable Developer Mode in the Developer Settings page of the
+# system settings.
+build:msvc --experimental_enable_runfiles
+build:msvc --copt=/arch:AVX
+# Host and target are the same in msvc so don't waste time building both.
+build:msvc --distinct_host_configuration=false
+# Avoids incompatible versions of winsock and other badness.
+build:msvc --copt=/DWIN32_LEAN_AND_MEAN --host_copt=/DWIN32_LEAN_AND_MEAN
+# Why are min/max macros? No one knows.
+build:msvc --copt=/DNOMINMAX --host_copt=/DNOMINMAX
+# Yay for security warnings. Boo for non-standard.
+build:msvc --copt=/D_CRT_SECURE_NO_WARNINGS --host_copt=/D_CRT_SECURE_NO_WARNINGS
+# Necessary for M_* math constants.
+build:msvc --copt=/D_USE_MATH_DEFINES --host_copt=/D_USE_MATH_DEFINES
+
+###############################################################################
+
+###############################################################################
 # Configuration for building remotely using Remote Build Execution (RBE)
 # https://cloud.google.com/remote-build-execution/
 # Based on https://github.com/bazelbuild/bazel-toolchains/blob/master/bazelrc/bazel-1.0.0.bazelrc

@@ -97,6 +97,6 @@
 /* #undef LLVM_HAVE_TF_AOT */
 
 /* Define to 1 if you have the <sysexits.h> header file. */
-#define HAVE_SYSEXITS_H 1
+/* HAVE_SYSEXITS_H defined in Bazel */
 
 #endif
