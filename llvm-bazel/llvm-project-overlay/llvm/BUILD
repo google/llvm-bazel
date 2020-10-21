@@ -5,6 +5,7 @@
 load(":template_rule.bzl", "template_rule")
 load(":tblgen.bzl", "gentbl")
 load(":config.bzl", "llvm_config_defines")
+load(":binary_alias.bzl", "binary_alias")
 
 package(
     default_visibility = ["//visibility:public"],
@@ -2287,19 +2288,19 @@ cc_binary(
 
 # We need to run llvm-ar with different basenames to make it run with
 # different behavior.
-sh_binary(
+binary_alias(
     name = "llvm-dlltool",
-    srcs = [":llvm-ar"],
+    binary = ":llvm-ar",
 )
 
-sh_binary(
+binary_alias(
     name = "llvm-lib",
-    srcs = [":llvm-ar"],
+    binary = ":llvm-ar",
 )
 
-sh_binary(
+binary_alias(
     name = "llvm-ranlib",
-    srcs = [":llvm-ar"],
+    binary = ":llvm-ar",
 )
 
 cc_binary(
@@ -2929,19 +2930,19 @@ cc_binary(
     ],
 )
 
-sh_binary(
+binary_alias(
     name = "llvm-strip",
-    srcs = [":llvm-objcopy"],
+    binary = ":llvm-objcopy",
 )
 
-sh_binary(
+binary_alias(
     name = "llvm-bitcode-strip",
-    srcs = [":llvm-objcopy"],
+    binary = ":llvm-objcopy",
 )
 
-sh_binary(
+binary_alias(
     name = "llvm-install-name-tool",
-    srcs = [":llvm-objcopy"],
+    binary = ":llvm-objcopy",
 )
 
 cc_binary(
@@ -3077,9 +3078,9 @@ cc_binary(
 )
 
 # Create an 'llvm-readelf' named binary from the 'llvm-readobj' tool.
-sh_binary(
+binary_alias(
     name = "llvm-readelf",
-    srcs = [":llvm-readobj"],
+    binary = ":llvm-readobj",
 )
 
 cc_binary(
@@ -3194,9 +3195,9 @@ cc_binary(
     ],
 )
 
-sh_binary(
+binary_alias(
     name = "llvm-addr2line",
-    srcs = [":llvm-symbolizer"],
+    binary = ":llvm-symbolizer",
 )
 
 cc_binary(
