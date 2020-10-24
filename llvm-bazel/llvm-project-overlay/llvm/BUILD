@@ -209,10 +209,13 @@ cc_library(
     ],
     copts = llvm_copts,
     includes = ["include"],
-    linkopts = [
-        "-pthread",
-        "-ldl",
-    ],
+    linkopts = select({
+        "@bazel_tools//src/conditions:windows": [],
+        "//conditions:default": [
+            "-pthread",
+            "-ldl",
+        ],
+    }),
     textual_hdrs = glob([
         "include/llvm/Support/*.def",
     ]),
@@ -2239,15 +2242,18 @@ cc_binary(
     copts = llvm_copts,
     # ll scripts rely on symbols from dependent
     # libraries being resolvable.
-    linkopts = [
-        "-Wl,--undefined=_ZTIi",
-        "-Wl,--export-dynamic-symbol=_ZTIi",
-        "-Wl,--export-dynamic-symbol=__cxa_begin_catch",
-        "-Wl,--export-dynamic-symbol=__cxa_end_catch",
-        "-Wl,--export-dynamic-symbol=__gxx_personality_v0",
-        "-Wl,--export-dynamic-symbol=__cxa_allocate_exception",
-        "-Wl,--export-dynamic-symbol=__cxa_throw",
-    ],
+    linkopts = select({
+        "@bazel_tools//src/conditions:windows": [],
+        "//conditions:default": [
+            "-Wl,--undefined=_ZTIi",
+            "-Wl,--export-dynamic-symbol=_ZTIi",
+            "-Wl,--export-dynamic-symbol=__cxa_begin_catch",
+            "-Wl,--export-dynamic-symbol=__cxa_end_catch",
+            "-Wl,--export-dynamic-symbol=__gxx_personality_v0",
+            "-Wl,--export-dynamic-symbol=__cxa_allocate_exception",
+            "-Wl,--export-dynamic-symbol=__cxa_throw",
+        ],
+    }),
     stamp = 0,
     deps = [
         ":AllTargetsAsmParsers",
@@ -2597,15 +2603,18 @@ cc_binary(
     ]),
     copts = llvm_copts,
     # Make symbols from the standard library dynamically resolvable.
-    linkopts = [
-        "-Wl,--undefined=_ZTIi",
-        "-Wl,--export-dynamic-symbol=_ZTIi",
-        "-Wl,--export-dynamic-symbol=__cxa_begin_catch",
-        "-Wl,--export-dynamic-symbol=__cxa_end_catch",
-        "-Wl,--export-dynamic-symbol=__gxx_personality_v0",
-        "-Wl,--export-dynamic-symbol=__cxa_allocate_exception",
-        "-Wl,--export-dynamic-symbol=__cxa_throw",
-    ],
+    linkopts = select({
+        "@bazel_tools//src/conditions:windows": [],
+        "//conditions:default": [
+            "-Wl,--undefined=_ZTIi",
+            "-Wl,--export-dynamic-symbol=_ZTIi",
+            "-Wl,--export-dynamic-symbol=__cxa_begin_catch",
+            "-Wl,--export-dynamic-symbol=__cxa_end_catch",
+            "-Wl,--export-dynamic-symbol=__gxx_personality_v0",
+            "-Wl,--export-dynamic-symbol=__cxa_allocate_exception",
+            "-Wl,--export-dynamic-symbol=__cxa_throw",
+        ],
+    }),
     stamp = 0,
     deps = [
         ":AllTargetsAsmParsers",
@@ -3240,7 +3249,10 @@ cc_binary(
         "tools/opt/*.h",
     ]),
     copts = llvm_copts,
-    linkopts = ["-Wl,--export-dynamic"],
+    linkopts = select({
+        "@bazel_tools//src/conditions:windows": [],
+        "//conditions:default": ["-Wl,--export-dynamic"],
+    }),
     stamp = 0,
     deps = [
         ":AllTargetsAsmParsers",
@@ -3353,10 +3365,12 @@ cc_library(
     copts = llvm_copts + ["-Iexternal/llvm-project/llvm/utils/unittest/googletest"],
     defines = [
         "GTEST_HAS_RTTI=0",
-        "GTEST_USE_OWN_TR1_TUPLE",
         "__STDC_LIMIT_MACROS",
         "__STDC_CONSTANT_MACROS",
-    ],
+    ] + select({
+        "@bazel_tools//src/conditions:windows": ["GTEST_USE_OWN_TR1_TUPLE=0"],
+        "//conditions:default": ["GTEST_USE_OWN_TR1_TUPLE=1"],
+    }),
     includes = [
         "include",
         "utils/unittest/googletest/include",
@@ -3488,10 +3502,13 @@ cc_binary(
     # from libstdc++ such as __cxa_begin_catch and _ZTIi. The latter
     # isn't even used in the main binary, so we also need to force it
     # to be included.
-    linkopts = [
-        "-rdynamic",
-        "-u_ZTIi",
-    ],
+    linkopts = select({
+        "@bazel_tools//src/conditions:windows": [],
+        "//conditions:default": [
+            "-rdynamic",
+            "-u_ZTIi",
+        ],
+    }),
     stamp = 0,
     deps = [
         ":OrcJIT",

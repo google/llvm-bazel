@@ -29,7 +29,7 @@
 /* LLVM_DEFAULT_TARGET_TRIPLE defined in Bazel */
 
 /* Define if threads enabled */
-/* LLVM_ENABLE_THREADS defined in Bazel */
+#define LLVM_ENABLE_THREADS 1
 
 /* Has gcc/MSVC atomic intrinsics */
 #define LLVM_HAS_ATOMICS 1
@@ -97,6 +97,6 @@
 /* #undef LLVM_HAVE_TF_AOT */
 
 /* Define to 1 if you have the <sysexits.h> header file. */
-#define HAVE_SYSEXITS_H 1
+/* HAVE_SYSEXITS_H defined in Bazel */
 
 #endif
