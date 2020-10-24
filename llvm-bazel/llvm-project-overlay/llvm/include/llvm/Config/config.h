@@ -192,7 +192,7 @@
 #define HAVE_STRERROR 1
 
 /* Define to 1 if you have the `strerror_r' function. */
-#define HAVE_STRERROR_R 1
+/* HAVE_STRERROR_R defined in Bazel */
 
 /* Define to 1 if you have the `sysconf' function. */
 #define HAVE_SYSCONF 1
@@ -234,7 +234,7 @@
 #define HAVE_TERMIOS_H 1
 
 /* Define to 1 if you have the <unistd.h> header file. */
-#define HAVE_UNISTD_H 1
+/* HAVE_UNISTD_H defined in Bazel */
 
 /* Define to 1 if you have the <valgrind/valgrind.h> header file. */
 /* #undef HAVE_VALGRIND_VALGRIND_H */
