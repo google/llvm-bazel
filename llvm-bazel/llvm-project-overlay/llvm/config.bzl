@@ -37,11 +37,6 @@ win32_defines = [
 
     # LLVM features
     "LTDL_SHLIB_EXT=\\\".dll\\\"",
-
-    # ThreadPoolExecutor global destructor and thread handshaking do not work
-    # on this platform when used as a DLL.
-    # See: https://bugs.llvm.org/show_bug.cgi?id=44211
-    "LLVM_ENABLE_THREADS=0",
 ]
 
 llvm_config_defines = select({
