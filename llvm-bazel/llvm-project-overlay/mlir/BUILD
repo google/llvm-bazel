@@ -124,6 +124,7 @@ cc_library(
 cc_library(
     name = "CAPIIR",
     srcs = [
+        "lib/CAPI/IR/AffineExpr.cpp",
         "lib/CAPI/IR/AffineMap.cpp",
         "lib/CAPI/IR/Diagnostics.cpp",
         "lib/CAPI/IR/IR.cpp",
@@ -133,6 +134,7 @@ cc_library(
         "lib/CAPI/Standard/StandardDialect.cpp",
     ],
     hdrs = [
+        "include/mlir-c/AffineExpr.h",
         "include/mlir-c/AffineMap.h",
         "include/mlir-c/Diagnostics.h",
         "include/mlir-c/IR.h",
@@ -140,6 +142,7 @@ cc_library(
         "include/mlir-c/StandardDialect.h",
         "include/mlir-c/StandardTypes.h",
         "include/mlir-c/Support.h",
+        "include/mlir/CAPI/AffineExpr.h",
         "include/mlir/CAPI/AffineMap.h",
         "include/mlir/CAPI/Diagnostics.h",
         "include/mlir/CAPI/IR.h",
@@ -591,6 +594,28 @@ cc_library(
 )
 
 cc_library(
+    name = "AsyncTransforms",
+    srcs = glob([
+        "lib/Dialect/Async/Transforms/*.cpp",
+        "lib/Dialect/Async/Transforms/*.h",
+    ]),
+    includes = ["include"],
+    deps = [
+        ":Async",
+        ":IR",
+        ":Pass",
+        ":SCFDialect",
+        ":StandardOps",
+        ":Support",
+        ":TransformUtils",
+        ":Transforms",
+        ":TransformsPassIncGen",
+        "//llvm:Core",
+        "//llvm:Support",
+    ],
+)
+
+cc_library(
     name = "AffineUtils",
     srcs = glob(
         [
@@ -673,6 +698,7 @@ cc_library(
     deps = [
         ":AVX512ToLLVM",
         ":AffineToStandard",
+        ":AsyncToLLVM",
         ":ConversionPassIncGen",
         ":GPUToGPURuntimeTransforms",
         ":GPUToNVVMTransforms",
@@ -693,6 +719,27 @@ cc_library(
         ":VectorToROCDL",
         ":VectorToSCF",
         ":VectorToSPIRV",
+    ],
+)
+
+cc_library(
+    name = "AsyncToLLVM",
+    srcs = glob([
+        "lib/Conversion/AsyncToLLVM/*.cpp",
+        "lib/Conversion/AsyncToLLVM/*.h",
+    ]) + ["lib/Conversion/PassDetail.h"],
+    hdrs = glob(["include/mlir/Conversion/AsyncToLLVM/*.h"]),
+    includes = ["include"],
+    deps = [
+        ":Async",
+        ":ConversionPassIncGen",
+        ":IR",
+        ":LLVMDialect",
+        ":Pass",
+        ":StandardOps",
+        ":Support",
+        ":Transforms",
+        "//llvm:Support",
     ],
 )
 
@@ -985,6 +1032,7 @@ cc_library(
         ":ControlFlowInterfaces",
         ":IR",
         ":Pass",
+        ":SCFDialect",
         ":StandardOps",
         ":StandardOpsTransformsPassIncGen",
         ":Support",
@@ -1667,6 +1715,7 @@ cc_library(
     includes = ["include"],
     deps = [
         ":ConversionPassIncGen",
+        ":GPUDialect",
         ":IR",
         ":LLVMDialect",
         ":Pass",
@@ -2813,11 +2862,13 @@ cc_library(
     deps = [
         ":Affine",
         ":CallOpInterfaces",
+        ":ControlFlowInterfaces",
         ":IR",
         ":LinalgOps",
         ":SCFDialect",
         ":StandardOps",
         ":Support",
+        ":ViewLikeInterface",
         "//llvm:Support",
     ],
 )
@@ -2980,6 +3031,7 @@ cc_library(
     deps = [
         "//llvm:Analysis",
         "//llvm:Core",
+        "//llvm:Coroutines",
         "//llvm:IPO",
         "//llvm:Support",
         "//llvm:Target",
@@ -3082,6 +3134,8 @@ cc_library(
         ":AffineToStandard",
         ":AffineTransforms",
         ":Async",
+        ":AsyncToLLVM",
+        ":AsyncTransforms",
         ":ConversionPasses",
         ":GPUDialect",
         ":GPUPassIncGen",
@@ -3206,6 +3260,17 @@ cc_library(
     ],
     hdrs = [
         "include/mlir/ExecutionEngine/CRunnerUtils.h",
+    ],
+    includes = ["include"],
+)
+
+cc_library(
+    name = "mlir_async_runtime",
+    srcs = [
+        "lib/ExecutionEngine/AsyncRuntime.cpp",
+    ],
+    hdrs = [
+        "include/mlir/ExecutionEngine/AsyncRuntime.h",
     ],
     includes = ["include"],
 )
