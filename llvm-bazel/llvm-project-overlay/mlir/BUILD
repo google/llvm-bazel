@@ -1621,6 +1621,7 @@ cc_library(
         ":IR",
         ":LLVMDialect",
         ":Pass",
+        ":SPIRVToLLVM",
         ":StandardToLLVM",
         ":Support",
         ":TargetNVVMIR",
@@ -1693,6 +1694,7 @@ cc_library(
     includes = ["include"],
     deps = [
         ":ConversionPassIncGen",
+        ":GPUDialect",
         ":IR",
         ":LLVMDialect",
         ":Pass",
