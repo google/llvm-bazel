@@ -465,6 +465,9 @@ cc_test(
         "$(STACK_FRAME_UNLIMITED)",
     ],
     linkstatic = 1,
+    tags = [
+        "local", # Not compatible with the sandbox on MacOS
+    ],
     visibility = ["//visibility:private"],
     deps = [
         "//llvm:AllTargetsCodeGens",
