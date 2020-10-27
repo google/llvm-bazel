@@ -4,7 +4,7 @@
 
 """Defines variables that use selects to configure LLVM based on platform."""
 
-def native_arch_defines(arch):
+def native_arch_defines(arch, triple):
     return [
         "LLVM_NATIVE_ARCH=\\\"{}\\\"".format(arch),
         "LLVM_NATIVE_ASMPARSER=LLVMInitialize{}AsmParser".format(arch),
@@ -13,6 +13,8 @@ def native_arch_defines(arch):
         "LLVM_NATIVE_TARGET=LLVMInitialize{}Target".format(arch),
         "LLVM_NATIVE_TARGETINFO=LLVMInitialize{}TargetInfo".format(arch),
         "LLVM_NATIVE_TARGETMC=LLVMInitialize{}TargetMC".format(arch),
+        "LLVM_HOST_TRIPLE=\\\"{}\\\"".format(triple),
+        "LLVM_DEFAULT_TARGET_TRIPLE=\\\"{}\\\"".format(triple),
     ]
 
 posix_defines = [
@@ -30,6 +32,21 @@ posix_defines = [
     "HAVE_PTHREAD_GETSPECIFIC=1",
 ]
 
+linux_defines = posix_defines + [
+    "HAVE_LINK_H=1",
+    "HAVE_LSEEK64=1",
+    "HAVE_MALLINFO=1",
+    "HAVE_POSIX_FALLOCATE=1",
+    "HAVE_SBRK=1",
+    "HAVE_STRUCT_STAT_ST_MTIM_TV_NSEC=1",
+]
+
+macos_defines = posix_defines + [
+    "HAVE_MACH_MACH_H=1",
+    "HAVE_MALLOC_MALLOC_H=1",
+    "HAVE_MALLOC_ZONE_STATISTICS=1",
+]
+
 win32_defines = [
     # MSVC specific
     "stricmp=_stricmp",
@@ -39,19 +56,17 @@ win32_defines = [
     "LTDL_SHLIB_EXT=\\\".dll\\\"",
 ]
 
-llvm_config_defines = select({
-    "@bazel_tools//src/conditions:windows": (
-        native_arch_defines("X86") +
-        [
-            "LLVM_HOST_TRIPLE=\\\"x86_64-pc-win32\\\"",
-            "LLVM_DEFAULT_TARGET_TRIPLE=\\\"x86_64-pc-win32\\\"",
-        ] + win32_defines
-    ),
-    "//conditions:default": (
-        native_arch_defines("X86") +
-        [
-            "LLVM_HOST_TRIPLE=\\\"x86_64-unknown-linux-gnu\\\"",
-            "LLVM_DEFAULT_TARGET_TRIPLE=\\\"x86_64-unknown-linux-gnu\\\"",
-        ] + posix_defines
-    ),
+# TODO: We should switch to platforms-based config settings to make this easier
+# to express.
+os_defines = select({
+    "@bazel_tools//src/conditions:windows": win32_defines,
+    "@bazel_tools//src/conditions:darwin": macos_defines,
+    "//conditions:default": linux_defines,
+})
+
+# TODO: We should split out host vs. target here.
+llvm_config_defines = os_defines + select({
+    "@bazel_tools//src/conditions:windows": native_arch_defines("X86", "x86_64-pc-win32"),
+    "@bazel_tools//src/conditions:darwin": native_arch_defines("X86", "x86_64-unknown-darwin"),
+    "//conditions:default": native_arch_defines("X86", "x86_64-unknown-linux-gnu"),
 })
