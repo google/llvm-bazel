@@ -153,7 +153,7 @@ cc_test(
         #"DebugInfo/PDB/*.h",
     ]),
     args = [
-        # Skip a test tha relies on reading files in a way that doesn't easily
+        # Skip a test that relies on reading files in a way that doesn't easily
         # work with Bazel.
         "--gtest_filter=-NativeSymbolReuseTest.*",
     ],
