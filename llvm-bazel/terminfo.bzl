@@ -48,15 +48,19 @@ def _find_c_compiler(repository_ctx):
     cc_env = repository_ctx.os.environ.get("CC")
     cc = None
     if cc_env:
-        cc = repository_ctx.which(cc_env)
-    if not cc:
-        # Look for Clang, GCC, and the POSIX / UNIX specified C compiler
-        # binaries.
-        for compiler in ["clang", "gcc", "c99", "c89", "cc"]:
-            cc = repository_ctx.which(compiler)
-            if cc:
-                break
-    return cc
+        if "/" in cc_env:
+            return repository_ctx.path(cc_env)
+        else:
+            return repository_ctx.which(cc_env)
+
+    # Look for Clang, GCC, and the POSIX / UNIX specified C compiler
+    # binaries.
+    for compiler in ["clang", "gcc", "c99", "c89", "cc"]:
+        cc = repository_ctx.which(compiler)
+        if cc:
+            return cc
+
+    return None
 
 def _try_link(repository_ctx, cc, source, linker_flags):
     """Returns `True` if able to link the source with the linker flag.
