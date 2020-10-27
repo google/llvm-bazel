@@ -607,6 +607,7 @@ cc_library(
         ":Affine",
         ":IR",
         ":Support",
+        ":TransformUtils",
         "//llvm:Support",
     ],
 )
@@ -687,6 +688,7 @@ cc_library(
         ":LinalgToSPIRV",
         ":LinalgToStandard",
         ":OpenMPToLLVM",
+        ":PDLToPDLInterp",
         ":SCFToGPUPass",
         ":SCFToStandard",
         ":SPIRVToLLVM",
@@ -1682,6 +1684,30 @@ cc_library(
 )
 
 cc_library(
+    name = "PDLToPDLInterp",
+    srcs = glob([
+        "lib/Conversion/PDLToPDLInterp/*.cpp",
+        "lib/Conversion/PDLToPDLInterp/*.h",
+    ]) + [
+        "lib/Conversion/PassDetail.h",
+    ],
+    hdrs = [
+        "include/mlir/Conversion/PDLToPDLInterp/PDLToPDLInterp.h",
+    ],
+    includes = ["include"],
+    deps = [
+        ":ConversionPassIncGen",
+        ":IR",
+        ":InferTypeOpInterface",
+        ":PDLDialect",
+        ":PDLInterpDialect",
+        ":Pass",
+        ":Support",
+        "//llvm:Support",
+    ],
+)
+
+cc_library(
     name = "SPIRVToLLVM",
     srcs = glob([
         "lib/Conversion/SPIRVToLLVM/*.cpp",
@@ -2336,6 +2362,22 @@ cc_library(
 )
 
 cc_library(
+    name = "Rewrite",
+    srcs = glob([
+        "lib/Rewrite/*.cpp",
+        "lib/Rewrite/*.h",
+    ]),
+    hdrs = glob(["include/mlir/Rewrite/*.h"]),
+    includes = ["include"],
+    deps = [
+        ":IR",
+        ":Pass",
+        ":Support",
+        "//llvm:Support",
+    ],
+)
+
+cc_library(
     name = "TransformUtils",
     srcs = glob([
         "lib/Transforms/Utils/*.cpp",
@@ -2351,6 +2393,7 @@ cc_library(
         ":ControlFlowInterfaces",
         ":IR",
         ":Pass",
+        ":Rewrite",
         ":SCFDialect",
         ":SideEffectInterfaces",
         ":StandardOps",
@@ -2510,6 +2553,7 @@ cc_library(
         ":LinalgOps",
         ":LoopLikeInterface",
         ":Pass",
+        ":Rewrite",
         ":SCFDialect",
         ":SideEffectInterfaces",
         ":StandardOps",
@@ -3138,6 +3182,7 @@ cc_library(
         ":OpenMPToLLVM",
         ":PDLDialect",
         ":PDLInterpDialect",
+        ":PDLToPDLInterp",
         ":QuantOps",
         ":QuantPassIncGen",
         ":ROCDLDialect",
