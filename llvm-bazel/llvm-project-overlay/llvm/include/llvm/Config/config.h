@@ -132,28 +132,28 @@
 #define HAVE_PTHREAD_SETNAME_NP 1
 
 /* Define to 1 if you have the <link.h> header file. */
-#define HAVE_LINK_H 1
+/* HAVE_LINK_H defined in Bazel */
 
 /* Define to 1 if you have the `lseek64' function. */
-#define HAVE_LSEEK64 1
+/* HAVE_LSEEK64 defined in Bazel */
 
 /* Define to 1 if you have the <mach/mach.h> header file. */
-/* #undef HAVE_MACH_MACH_H */
+/* HAVE_MACH_MACH_H defined in Bazel */
 
 /* Define to 1 if you have the `mallctl' function. */
 /* #undef HAVE_MALLCTL */
 
 /* Define to 1 if you have the `mallinfo' function. */
-#define HAVE_MALLINFO 1
+/* HAVE_MALLINFO defined in Bazel */
 
 /* Define to 1 if you have the <malloc/malloc.h> header file. */
-/* #undef HAVE_MALLOC_MALLOC_H */
+/* HAVE_MALLOC_MALLOC_H defined in Bazel */
 
 /* Define to 1 if you have the `malloc_zone_statistics' function. */
-/* #undef HAVE_MALLOC_ZONE_STATISTICS */
+/* HAVE_MALLOC_ZONE_STATISTICS defined in Bazel */
 
 /* Define to 1 if you have the `posix_fallocate' function. */
-#define HAVE_POSIX_FALLOCATE 1
+/* HAVE_POSIX_FALLOCATE defined in Bazel */
 
 /* Define to 1 if you have the `posix_spawn' function. */
 #define HAVE_POSIX_SPAWN 1
@@ -174,7 +174,7 @@
 #define HAVE_PTHREAD_RWLOCK_INIT 1
 
 /* Define to 1 if you have the `sbrk' function. */
-#define HAVE_SBRK 1
+/* HAVE_SBRK defined in Bazel */
 
 /* Define to 1 if you have the `setenv' function. */
 #define HAVE_SETENV 1
@@ -219,7 +219,7 @@
 /* #undef HAVE_STRUCT_STAT_ST_MTIMESPEC_TV_NSEC */
 
 /* Define to 1 if stat struct has st_mtim member. */
-#define HAVE_STRUCT_STAT_ST_MTIM_TV_NSEC 1
+/* HAVE_STRUCT_STAT_ST_MTIM_TV_NSEC defined in Bazel */
 
 /* Define to 1 if you have the <sys/types.h> header file. */
 #define HAVE_SYS_TYPES_H 1

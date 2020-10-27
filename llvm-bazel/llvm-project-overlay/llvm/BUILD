@@ -2244,6 +2244,7 @@ cc_binary(
     # libraries being resolvable.
     linkopts = select({
         "@bazel_tools//src/conditions:windows": [],
+        "@bazel_tools//src/conditions:darwin": [],
         "//conditions:default": [
             "-Wl,--undefined=_ZTIi",
             "-Wl,--export-dynamic-symbol=_ZTIi",
@@ -2605,6 +2606,7 @@ cc_binary(
     # Make symbols from the standard library dynamically resolvable.
     linkopts = select({
         "@bazel_tools//src/conditions:windows": [],
+        "@bazel_tools//src/conditions:darwin": [],
         "//conditions:default": [
             "-Wl,--undefined=_ZTIi",
             "-Wl,--export-dynamic-symbol=_ZTIi",
@@ -3251,6 +3253,7 @@ cc_binary(
     copts = llvm_copts,
     linkopts = select({
         "@bazel_tools//src/conditions:windows": [],
+        "@bazel_tools//src/conditions:darwin": [],
         "//conditions:default": ["-Wl,--export-dynamic"],
     }),
     stamp = 0,
@@ -3504,6 +3507,7 @@ cc_binary(
     # to be included.
     linkopts = select({
         "@bazel_tools//src/conditions:windows": [],
+        "@bazel_tools//src/conditions:darwin": [],
         "//conditions:default": [
             "-rdynamic",
             "-u_ZTIi",

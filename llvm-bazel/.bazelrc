@@ -34,6 +34,10 @@ build:generic_clang --repo_env=CC=clang
 # C++14 standard version is required.
 build:generic_clang --cxxopt=-std=c++14 --host_cxxopt=-std=c++14
 
+# The Clang available on MacOS has a warning that isn't clean on MLIR code. The
+# warning doesn't show up with more recent Clangs, so just disable for now.
+build:generic_clang --cxxopt=-Wno-range-loop-analysis --host_cxxopt=-Wno-range-loop-analysis
+
 # Use `-Wall` and `-Werror` for Clang.
 build:generic_clang --copt=-Wall --copt=-Werror --host_copt=-Wall --host_copt=-Werror
 
