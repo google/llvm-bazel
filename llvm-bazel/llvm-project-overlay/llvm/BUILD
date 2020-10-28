@@ -193,7 +193,7 @@ cc_library(
         ]),
     }),
     hdrs = glob([
-        "include/llvm/Support/*.h",
+        "include/llvm/Support/**/*.h",
         "include/llvm/ADT/*.h",
     ]) + [
         "include/llvm/Support/VCSRevision.h",
