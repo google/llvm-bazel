@@ -364,6 +364,9 @@ cc_library(
     ]),
     copts = [
         "-DHAVE_VCS_VERSION_INC",
+        # TODO: Would be good to remove the odd #include lines within the
+        # implementation of the basic library that require this. Specifying the
+        # exact path to the library this way relies on Bazel internals.
         "-Iexternal/llvm-project/clang/lib/Basic",
         "$(STACK_FRAME_UNLIMITED)",
     ],
@@ -695,14 +698,10 @@ cc_library(
 
 cc_library(
     name = "index",
-    srcs = glob(
-        [
+    srcs = glob([
             "lib/Index/*.cpp",
             "lib/Index/*.h",
-        ],
-        # Broken upstream after r367615, and currently unused.
-        exclude = ["lib/Index/SimpleFormatContext.h"],
-    ),
+    ]),
     hdrs = glob([
         "include/clang/Index/*.h",
         "include/clang-c/*.h",

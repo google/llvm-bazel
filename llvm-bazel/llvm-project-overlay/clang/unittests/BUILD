@@ -207,7 +207,12 @@ cc_test(
             "Rename/*.h",
         ],
     ),
-    copts = ["-Iexternal/llvm-project/clang"],
+    copts = [
+        # TODO: The `:tooling_test_hdrs` are reached using include paths that
+        # need this, but it would be better to restructure things so they could
+        # have a more natural location and not rely on a Bazel internal.
+        "-Iexternal/llvm-project/clang",
+    ],
     deps = [
         ":tooling_tests_hdrs",
         "//clang:ast_matchers",
@@ -342,7 +347,9 @@ cc_test(
         "Tooling/RecursiveASTVisitorTests/CallbacksCommon.h",
     ],
     copts = [
-        "-Iexternal/llvm-project/clang/unittests/Tooling",  # include "TestVisitor.h"
+        # TOOD: Would be nice to rework the headers here to avoid the need for
+        # this and relying on Bazel internals.
+        "-Iexternal/llvm-project/clang/unittests/Tooling",
     ],
     deps = [
         ":tooling_tests_hdrs",
