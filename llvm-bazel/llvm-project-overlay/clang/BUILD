@@ -341,7 +341,7 @@ cc_library(
 genrule(
     name = "vcs_version_gen",
     # This should be under lib/Basic, but because of how the include paths
-    # are passed through blaze, it's easier to drop generated files next to
+    # are passed through bazel, it's easier to drop generated files next to
     # the other includes.
     outs = ["include/VCSVersion.inc"],
     cmd = "echo \"#define CLANG_REVISION \\\"git\\\"\" > $@",
@@ -1349,7 +1349,7 @@ gentbl(
 )
 
 # We generate the set of builtin headers under a special subdirectory in the
-# 'bin' section of the blaze output so that they can be used as data
+# 'bin' section of the bazel output so that they can be used as data
 # dependencies. It requires listing explicitly all the generated inputs here.
 builtin_headers = glob(["lib/Headers/**/*.h"]) + [
     "lib/Headers/arm_cde.h",
@@ -1646,7 +1646,6 @@ cc_library(
     hdrs = glob(["include/clang-c/*.h"]),
     deps = [
         ":libclang",
-        #"//clang-tools-extra/clang-include-fixer:include-fixer-plugin",
     ],
     alwayslink = 1,
 )
