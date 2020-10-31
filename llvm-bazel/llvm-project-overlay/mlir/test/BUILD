@@ -272,6 +272,7 @@ cc_library(
         "//mlir:IR",
         "//mlir:Pass",
         "//mlir:SPIRVDialect",
+        "//mlir:SPIRVLinking",
         "//mlir:SPIRVLowering",
     ],
 )
