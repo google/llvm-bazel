@@ -2366,6 +2366,25 @@ cc_library(
 )
 
 cc_library(
+    name = "SPIRVLinking",
+    srcs = glob(
+        [
+            "lib/Dialect/SPIRV/Linking/ModuleCombiner/*.cpp",
+        ],
+    ),
+    hdrs = [
+        "include/mlir/Dialect/SPIRV/ModuleCombiner.h",
+    ],
+    includes = ["include"],
+    deps = [
+        ":IR",
+        ":SPIRVDialect",
+        ":Support",
+        "//llvm:Support",
+    ],
+)
+
+cc_library(
     name = "SPIRVTranslateRegistration",
     srcs = [
         "lib/Dialect/SPIRV/Serialization/TranslateRegistration.cpp",
@@ -4082,6 +4101,7 @@ cc_library(
         ":SCFToStandard",
         ":SCFTransforms",
         ":StandardOps",
+        ":StandardOpsTransforms",
         ":StandardToLLVM",
         ":Support",
         ":TransformUtils",
