@@ -346,6 +346,7 @@ cc_test(
     srcs = glob(["Object/*.cpp"]),
     deps = [
         "//llvm:Object",
+        "//llvm:ObjectYAML",
         "//llvm:TestingSupport",
         "//llvm:gtest",
         "//llvm:gtest_main",
