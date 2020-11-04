@@ -127,6 +127,7 @@ cc_library(
         "lib/CAPI/IR/AffineMap.cpp",
         "lib/CAPI/IR/Diagnostics.cpp",
         "lib/CAPI/IR/IR.cpp",
+        "lib/CAPI/IR/Pass.cpp",
         "lib/CAPI/IR/StandardAttributes.cpp",
         "lib/CAPI/IR/StandardTypes.cpp",
         "lib/CAPI/IR/Support.cpp",
@@ -137,6 +138,7 @@ cc_library(
         "include/mlir-c/AffineMap.h",
         "include/mlir-c/Diagnostics.h",
         "include/mlir-c/IR.h",
+        "include/mlir-c/Pass.h",
         "include/mlir-c/StandardAttributes.h",
         "include/mlir-c/StandardDialect.h",
         "include/mlir-c/StandardTypes.h",
@@ -145,6 +147,7 @@ cc_library(
         "include/mlir/CAPI/AffineMap.h",
         "include/mlir/CAPI/Diagnostics.h",
         "include/mlir/CAPI/IR.h",
+        "include/mlir/CAPI/Pass.h",
         "include/mlir/CAPI/Support.h",
         "include/mlir/CAPI/Utils.h",
         "include/mlir/CAPI/Wrap.h",
@@ -153,9 +156,27 @@ cc_library(
     deps = [
         ":IR",
         ":Parser",
+        ":Pass",
         ":StandardOps",
         ":Support",
         "//llvm:Support",
+    ],
+)
+
+cc_library(
+    name = "CAPITransforms",
+    srcs = [
+        "lib/CAPI/Transforms/Passes.cpp",
+    ],
+    hdrs = [
+        "include/mlir-c/Transforms.h",
+    ],
+    includes = ["include"],
+    deps = [
+        ":CAPIIR",
+        ":Pass",
+        ":Transforms",
+        ":TransformsPassIncGen",
     ],
 )
 
@@ -1272,7 +1293,6 @@ cc_library(
         ":ControlFlowInterfaces",
         ":IR",
         ":LLVMOpsIncGen",
-        ":OpenMPDialect",
         ":SideEffectInterfaces",
         ":Support",
         "//llvm:AsmParser",
@@ -2594,6 +2614,14 @@ gentbl(
             "-gen-pass-decls -name Transforms",
             "include/mlir/Transforms/Passes.h.inc",
         ),
+        (
+            "-gen-pass-capi-header --prefix Transforms",
+            "include/mlir/Transforms/Transforms.capi.h.inc",
+        ),
+        (
+            "-gen-pass-capi-impl --prefix Transforms",
+            "include/mlir/Transforms/Transforms.capi.cpp.inc",
+        ),
     ],
     tblgen = ":mlir-tblgen",
     td_file = "include/mlir/Transforms/Passes.td",
@@ -3024,6 +3052,7 @@ cc_library(
         ":LLVMConversionIncGen",
         ":LLVMDialect",
         ":LLVMIRModuleTranslation",
+        ":OpenMPDialect",
         ":Support",
         ":TargetLLVMAVX512Intr",
         ":Translation",
