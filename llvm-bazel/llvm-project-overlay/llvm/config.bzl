@@ -33,6 +33,7 @@ posix_defines = [
 ]
 
 linux_defines = posix_defines + [
+    "_GNU_SOURCE",
     "HAVE_LINK_H=1",
     "HAVE_LSEEK64=1",
     "HAVE_MALLINFO=1",

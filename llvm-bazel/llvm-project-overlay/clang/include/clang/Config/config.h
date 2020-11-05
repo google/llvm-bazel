@@ -1,4 +1,18 @@
-/* This generated file is for internal use. Do not include it from headers. */
+/*===------- clang/Config/config.h - llvm configuration -----------*- C -*-===*/
+/*                                                                            */
+/* Part of the LLVM Project, under the Apache License v2.0 with LLVM          */
+/* Exceptions.                                                                */
+/* See https://llvm.org/LICENSE.txt for license information.                  */
+/* SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception                    */
+/*                                                                            */
+/*===----------------------------------------------------------------------===*/
+
+/* This is a manual port of config.h.cmake for the symbols that do not change
+   based on platform. Those that do change should not be defined here and
+   instead use Bazel cc_library defines. Some attempt has been made to extract
+   such symbols that do vary based on platform (for the platforms we care about)
+   into Bazel defines, but it is by no means complete, so if you see something
+   that looks wrong, it probably is. */
 
 #ifdef CLANG_CONFIG_H
 #error config.h can only be included once

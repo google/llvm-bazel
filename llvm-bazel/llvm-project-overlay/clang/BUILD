@@ -329,9 +329,9 @@ cc_library(
         "include/clang/Basic/Version.inc",
         "include/clang/Config/config.h",
     ],
-    defines = [
-        "_GNU_SOURCE",  # Needed for <string.h> to include strdup()
-        "CLANG_ENABLE_REWRITER",
+    deps = [
+        # We rely on the LLVM config library to provide configuration defines.
+        "//llvm:config",
     ],
     includes = ["include"],
 )
