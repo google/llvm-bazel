@@ -6,6 +6,11 @@ load(":template_rule.bzl", "template_rule")
 load(":tblgen.bzl", "gentbl")
 load(":config.bzl", "llvm_config_defines")
 load(":binary_alias.bzl", "binary_alias")
+load(
+    ":include_search_copts.bzl",
+    "include_search_genfiles_dir",
+    "include_search_source_dir",
+)
 
 package(
     default_visibility = ["//visibility:public"],
@@ -1653,7 +1658,9 @@ gentbl(
         name = target["name"] + "Info",
         srcs = ["lib/Target/" + target["name"] + "/TargetInfo/" + target["name"] + "TargetInfo.cpp"],
         hdrs = glob(["lib/Target/" + target["name"] + "/TargetInfo/*.h"]),
-        copts = llvm_copts,
+        copts = llvm_copts +
+            include_search_source_dir("llvm/lib/Target/" + target["name"]) +
+            include_search_genfiles_dir("llvm/lib/Target/" + target["name"]),
         deps = [
             ":" + target["name"] + "CommonTableGen",
             ":Support",
@@ -1673,7 +1680,9 @@ gentbl(
             "lib/Target/" + target["name"] + "/MCTargetDesc/*.h",
             "lib/Target/" + target["name"] + "/Utils/*.h",
         ]),
-        copts = llvm_copts,
+        copts = llvm_copts +
+            include_search_source_dir("llvm/lib/Target/" + target["name"]) +
+            include_search_genfiles_dir("llvm/lib/Target/" + target["name"]),
         textual_hdrs = glob([
             "lib/Target/" + target["name"] + "/*.def",
             "lib/Target/" + target["name"] + "/*.inc",
@@ -1702,7 +1711,9 @@ gentbl(
             "lib/Target/" + target["name"] + "/*.h",
         ]),
         hdrs = ["lib/Target/" + target["name"] + "/" + target["short_name"] + ".h"],
-        copts = llvm_copts,
+        copts = llvm_copts +
+            include_search_source_dir("llvm/lib/Target/" + target["name"]) +
+            include_search_genfiles_dir("llvm/lib/Target/" + target["name"]),
         textual_hdrs = glob([
             "lib/Target/" + target["name"] + "/*.def",
             "lib/Target/" + target["name"] + "/*.inc",
@@ -1734,7 +1745,9 @@ gentbl(
             "lib/Target/" + target["name"] + "/AsmParser/*.cpp",
             "lib/Target/" + target["name"] + "/AsmParser/*.h",
         ]),
-        copts = llvm_copts,
+        copts = llvm_copts +
+            include_search_source_dir("llvm/lib/Target/" + target["name"]) +
+            include_search_genfiles_dir("llvm/lib/Target/" + target["name"]),
         deps = [
             ":BinaryFormat",
             ":MC",
@@ -1753,7 +1766,9 @@ gentbl(
             "lib/Target/" + target["name"] + "/Disassembler/*.c",
             "lib/Target/" + target["name"] + "/Disassembler/*.h",
         ]),
-        copts = llvm_copts,
+        copts = llvm_copts +
+            include_search_source_dir("llvm/lib/Target/" + target["name"]) +
+            include_search_genfiles_dir("llvm/lib/Target/" + target["name"]),
         deps = [
             ":CodeGen",
             ":Core",
@@ -2031,7 +2046,8 @@ cc_library(
     name = "DlltoolDriver",
     srcs = glob(["lib/ToolDrivers/llvm-dlltool/*.cpp"]),
     hdrs = glob(["include/llvm/ToolDrivers/llvm-dlltool/*.h"]),
-    copts = llvm_copts,
+    copts = llvm_copts +
+        include_search_genfiles_dir("llvm/lib/ToolDrivers/llvm-dlltool"),
     deps = [
         ":DllOptionsTableGen",
         ":Object",
@@ -2055,7 +2071,8 @@ cc_library(
     name = "LibDriver",
     srcs = glob(["lib/ToolDrivers/llvm-lib/*.cpp"]),
     hdrs = glob(["include/llvm/ToolDrivers/llvm-lib/*.h"]),
-    copts = llvm_copts,
+    copts = llvm_copts +
+        include_search_genfiles_dir("llvm/lib/ToolDrivers/llvm-lib"),
     deps = [
         ":BinaryFormat",
         ":LibOptionsTableGen",
@@ -2189,7 +2206,7 @@ cc_binary(
         "tools/dsymutil/*.cpp",
         "tools/dsymutil/*.h",
     ]),
-    copts = llvm_copts,
+    copts = llvm_copts + include_search_genfiles_dir("llvm/tools/dsymutil"),
     stamp = 0,
     deps = [
         ":AllTargetsCodeGens",
@@ -2416,7 +2433,7 @@ cc_binary(
         "tools/llvm-cvtres/*.cpp",
         "tools/llvm-cvtres/*.h",
     ]),
-    copts = llvm_copts,
+    copts = llvm_copts + include_search_genfiles_dir("llvm/tools/llvm-cvtres"),
     stamp = 0,
     deps = [
         ":CvtResTableGen",
@@ -2687,7 +2704,7 @@ cc_binary(
     srcs = [
         "tools/llvm-lipo/llvm-lipo.cpp",
     ],
-    copts = llvm_copts,
+    copts = llvm_copts + include_search_genfiles_dir("llvm/tools/llvm-lipo"),
     stamp = 0,
     deps = [
         ":LipoOptsTableGen",
@@ -2925,7 +2942,9 @@ cc_binary(
         "tools/llvm-objcopy/**/*.cpp",
         "tools/llvm-objcopy/**/*.h",
     ]),
-    copts = llvm_copts,
+    copts = llvm_copts +
+        include_search_genfiles_dir("llvm/tools/llvm-objcopy") +
+        include_search_source_dir("llvm/tools/llvm-objcopy"),
     stamp = 0,
     deps = [
         ":BinaryFormat",
@@ -3058,7 +3077,7 @@ cc_binary(
         "tools/llvm-rc/*.cpp",
         "tools/llvm-rc/*.h",
     ]),
-    copts = llvm_copts,
+    copts = llvm_copts + include_search_genfiles_dir("llvm/tools/llvm-rc"),
     stamp = 0,
     deps = [
         ":Object",
@@ -3194,7 +3213,7 @@ cc_binary(
         "tools/llvm-symbolizer/*.cpp",
         "tools/llvm-symbolizer/*.h",
     ]),
-    copts = llvm_copts,
+    copts = llvm_copts + include_search_genfiles_dir("llvm/tools/llvm-symbolizer"),
     stamp = 0,
     deps = [
         ":DebugInfoDWARF",

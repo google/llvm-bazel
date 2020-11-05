@@ -28,11 +28,7 @@ def gentbl(name, tblgen, td_file, td_srcs, tbl_outs, library = True, **kwargs):
     """
     if td_file not in td_srcs:
         td_srcs += [td_file]
-    includes = []
     for (opts, out) in tbl_outs:
-        outdir = out[:out.rindex("/")]
-        if outdir not in includes:
-            includes.append(outdir)
         rule_suffix = "_".join(opts.replace("-", "_").replace("=", "_").split(" "))
         native.genrule(
             name = "%s_%s_genrule" % (name, rule_suffix),
@@ -58,6 +54,5 @@ def gentbl(name, tblgen, td_file, td_srcs, tbl_outs, library = True, **kwargs):
         native.cc_library(
             name = name,
             textual_hdrs = [f for (_, f) in tbl_outs],
-            includes = includes,
             **kwargs
         )
