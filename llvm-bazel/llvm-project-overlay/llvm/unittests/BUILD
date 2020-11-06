@@ -565,10 +565,8 @@ cc_test(
     ]) + [
         "tools/llvm-exegesis/Common/AssemblerUtils.h",
     ],
-    copts = [
-        "-Iexternal/llvm-project/llvm/tools/llvm-exegesis/lib/",
-        "-DHAVE_LIBPFM=1",
-    ],
+    copts = ["-DHAVE_LIBPFM=1"],
+    linkopts = ["-lpfm"],
     tags = [
         "manual",  # External dependency (libpfm4)
         "nobuildkite",  # TODO(chandlerc): Add support for fetching and building libpfm4 and enable this.

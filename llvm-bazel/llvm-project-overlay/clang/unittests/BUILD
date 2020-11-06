@@ -141,10 +141,10 @@ cc_test(
     srcs = glob([
         "Format/*.cpp",
         "Format/*.h",
+        "Tooling/*.h",
     ]),
     copts = ["$(STACK_FRAME_UNLIMITED)"],
     deps = [
-        ":tooling_tests_hdrs",
         "//clang:basic",
         "//clang:format",
         "//clang:frontend",
@@ -197,24 +197,35 @@ cc_test(
     ],
 )
 
+# A library to carefully expose the tooling headers using the include prefix
+# expected by the `rename_tests`.
+cc_library(
+    name = "rename_tests_tooling_hdrs",
+    testonly = 1,
+    hdrs = glob(["Tooling/*.h"]),
+    include_prefix = "unittests",
+    deps = [
+        "//clang:ast",
+        "//clang:basic",
+        "//clang:frontend",
+        "//clang:rewrite",
+        "//clang:tooling",
+        "//clang:tooling_core",
+        "//llvm:Support",
+        "//llvm:gtest",
+    ],
+)
+
 cc_test(
     name = "rename_tests",
     size = "small",
     timeout = "moderate",
-    srcs = glob(
-        [
-            "Rename/*.cpp",
-            "Rename/*.h",
-        ],
-    ),
-    copts = [
-        # TODO: The `:tooling_test_hdrs` are reached using include paths that
-        # need this, but it would be better to restructure things so they could
-        # have a more natural location and not rely on a Bazel internal.
-        "-Iexternal/llvm-project/clang",
-    ],
+    srcs = glob([
+        "Rename/*.cpp",
+        "Rename/*.h",
+    ]),
     deps = [
-        ":tooling_tests_hdrs",
+        ":rename_tests_tooling_hdrs",
         "//clang:ast_matchers",
         "//clang:basic",
         "//clang:format",
@@ -298,28 +309,14 @@ cc_test(
     ],
 )
 
-cc_library(
-    name = "tooling_tests_hdrs",
-    testonly = 1,
-    hdrs = glob(["Tooling/*.h"]),
-    deps = [
-        "//clang:ast",
-        "//clang:basic",
-        "//clang:frontend",
-        "//clang:rewrite",
-        "//clang:tooling",
-        "//clang:tooling_core",
-        "//llvm:Support",
-        "//llvm:gtest",
-    ],
-)
-
 cc_test(
     name = "tooling_tests",
     size = "medium",
-    srcs = glob(["Tooling/*.cpp"]),
+    srcs = glob([
+        "Tooling/*.cpp",
+        "Tooling/*.h",
+    ]),
     deps = [
-        ":tooling_tests_hdrs",
         "//clang:ast",
         "//clang:ast_matchers",
         "//clang:basic",
@@ -340,19 +337,33 @@ cc_test(
     ],
 )
 
+# A library to carefully expose the tooling headers using the include prefix
+# expected by the `tooling_recursive_ast_visitor_tests`.
+cc_library(
+    name = "tooling_recursive_ast_visitor_tests_tooling_hdrs",
+    testonly = 1,
+    hdrs = glob(["Tooling/*.h"]),
+    strip_include_prefix = "Tooling",
+    deps = [
+        "//clang:ast",
+        "//clang:basic",
+        "//clang:frontend",
+        "//clang:rewrite",
+        "//clang:tooling",
+        "//clang:tooling_core",
+        "//llvm:Support",
+        "//llvm:gtest",
+    ],
+)
+
 cc_test(
     name = "tooling_recursive_ast_visitor_tests",
     size = "medium",
     srcs = glob(["Tooling/RecursiveASTVisitorTests/*.cpp"]) + [
         "Tooling/RecursiveASTVisitorTests/CallbacksCommon.h",
     ],
-    copts = [
-        # TOOD: Would be nice to rework the headers here to avoid the need for
-        # this and relying on Bazel internals.
-        "-Iexternal/llvm-project/clang/unittests/Tooling",
-    ],
     deps = [
-        ":tooling_tests_hdrs",
+        ":tooling_recursive_ast_visitor_tests_tooling_hdrs",
         "//clang:ast",
         "//clang:basic",
         "//clang:frontend",
