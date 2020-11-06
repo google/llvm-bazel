@@ -459,7 +459,7 @@ cc_library(
         # to allow the `.cpp` files to use file-relative-inclusion to find
         # them, even though consumers of this library use inclusion relative to
         # `utils/TableGen` with the `strip_includes_prefix` of this library.
-        # This mixture is likely incompatible with header modules.
+        # This mixture appears to be incompatible with header modules.
         "utils/TableGen/*.h",
         "utils/TableGen/GlobalISel/*.h",
     ]),
