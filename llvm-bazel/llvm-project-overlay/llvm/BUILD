@@ -2998,10 +2998,20 @@ gentbl(
     ],
 )
 
+# FIXME: This library should use `textual_hdrs` instead of `hdrs` as we don't
+# want to parse or build modules for them (and haven't duplicated the necessary
+# dependencies), but unfortunately that doesn't work with
+# `strip_include_prefix`: https://github.com/bazelbuild/bazel/issues/12424
+#
+# For now, we simply disable features that might rely on the headers parsing.
 cc_library(
     name = "llvm-objcopy-headers",
     hdrs = glob(["tools/llvm-objcopy/**/*.h"]),
     strip_include_prefix = "tools/llvm-objcopy",
+    features = [
+        "-parse_headers",
+        "-header_modules",
+    ],
 )
 
 cc_binary(
