@@ -53,6 +53,15 @@ def gentbl(name, tblgen, td_file, td_srcs, tbl_outs, library = True, **kwargs):
     if library:
         native.cc_library(
             name = name,
-            textual_hdrs = [f for (_, f) in tbl_outs],
+            # FIXME: This should be `textual_hdrs` instead of `hdrs`, but
+            # unfortunately that doesn't work with `strip_include_prefix`:
+            # https://github.com/bazelbuild/bazel/issues/12424
+            #
+            # Once that issue is fixed and released, we can switch this to
+            # `textual_hdrs` and remove the feature disabling the various Bazel
+            # features (both current and under-development) that motivated the
+            # distinction between these two.
+            hdrs = [f for (_, f) in tbl_outs],
+            features = ["-parse_headers", "-header_modules"],
             **kwargs
         )

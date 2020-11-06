@@ -3,11 +3,6 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 load("//llvm:tblgen.bzl", "gentbl")
-load(
-    "//llvm:include_search_copts.bzl",
-    "include_search_genfiles_dir",
-    "include_search_source_dir",
-)
 
 package(
     default_visibility = ["//visibility:public"],
@@ -384,6 +379,7 @@ gentbl(
     td_srcs = [
         "//llvm:include/llvm/Option/OptParser.td",
     ],
+    strip_include_prefix = "Option",
 )
 
 gentbl(
@@ -397,6 +393,7 @@ gentbl(
     td_srcs = ["//llvm:common_target_td_sources"] + [
         "TableGen/Automata.td",
     ],
+    strip_include_prefix = "TableGen",
 )
 
 gentbl(
@@ -410,13 +407,13 @@ gentbl(
     td_srcs = ["//llvm:common_target_td_sources"] + [
         "TableGen/Automata.td",
     ],
+    strip_include_prefix = "TableGen",
 )
 
 cc_test(
     name = "option_tests",
     size = "small",
     srcs = glob(["Option/*.cpp"]),
-    copts = include_search_genfiles_dir("llvm/unittests/Option"),
     deps = [
         ":option_tests_gen",
         "//llvm:Option",
@@ -511,8 +508,6 @@ cc_test(
     srcs = glob([
         "TableGen/*.cpp",
     ]),
-    copts = include_search_source_dir("llvm/utils/TableGen") +
-        include_search_genfiles_dir("llvm/unittests/TableGen"),
     deps = [
         ":automata_automata_gen",
         ":automata_tables_gen",
@@ -530,8 +525,7 @@ cc_test(
     srcs = glob(["Target/AArch64/*.cpp"]),
     copts = [
         "$(STACK_FRAME_UNLIMITED)",
-    ] + include_search_source_dir("llvm/lib/Target/AArch64") +
-        include_search_genfiles_dir("llvm/lib/Target/AArch64"),
+    ],
     deps = [
         "//llvm:AArch64CodeGen",
         "//llvm:gtest",

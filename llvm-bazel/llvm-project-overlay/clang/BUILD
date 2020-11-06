@@ -4,10 +4,6 @@
 
 load("//llvm:tblgen.bzl", "gentbl")
 load("//llvm:binary_alias.bzl", "binary_alias")
-load(
-    "//llvm:include_search_copts.bzl",
-    "include_search_genfiles_dir",
-)
 
 package(
     default_visibility = ["//visibility:public"],
@@ -304,6 +300,7 @@ gentbl(
     td_srcs = [
         "lib/Sema/OpenCLBuiltins.td",
     ],
+    strip_include_prefix = "lib/Sema",
 )
 
 # Table definition files can be used for documentation:
@@ -791,8 +788,7 @@ cc_library(
         "include/clang/Sema/*.h",
         "include/clang-c/*.h",
     ]),
-    copts = ["$(STACK_FRAME_UNLIMITED)"] +
-        include_search_genfiles_dir("clang/lib/Sema"),
+    copts = ["$(STACK_FRAME_UNLIMITED)"],
     includes = ["include"],
     textual_hdrs = glob([
         "include/clang/Sema/AttrParsedAttrImpl.inc",
