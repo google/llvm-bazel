@@ -467,9 +467,9 @@ cc_library(
         "utils/TableGen/*.h",
         "utils/TableGen/GlobalISel/*.h",
     ]),
-    strip_include_prefix = "utils/TableGen",
-    features = ["-header_modules"],
     copts = llvm_copts,
+    features = ["-header_modules"],
+    strip_include_prefix = "utils/TableGen",
     deps = [
         ":MC",
         ":Support",
@@ -941,6 +941,7 @@ cc_library(
 
 gentbl(
     name = "InstCombineTableGen",
+    strip_include_prefix = "lib/Target/AMDGPU",
     tbl_outs = [(
         "-gen-searchable-tables",
         "lib/Target/AMDGPU/InstCombineTables.inc",
@@ -953,7 +954,6 @@ gentbl(
     ]) + [
         "include/llvm/TableGen/SearchableTable.td",
     ],
-    strip_include_prefix = "lib/Target/AMDGPU",
 )
 
 cc_library(
@@ -1610,6 +1610,7 @@ filegroup(
 
 gentbl(
     name = "amdgpu_isel_target_gen",
+    strip_include_prefix = "lib/Target/AMDGPU",
     tbl_outs = [
         ("-gen-global-isel", "lib/Target/AMDGPU/AMDGPUGenGlobalISel.inc"),
         ("-gen-global-isel-combiner -combiners=AMDGPUPreLegalizerCombinerHelper", "lib/Target/AMDGPU/AMDGPUGenPreLegalizeGICombiner.inc"),
@@ -1623,11 +1624,11 @@ gentbl(
     ] + glob([
         "lib/Target/AMDGPU/*.td",
     ]),
-    strip_include_prefix = "lib/Target/AMDGPU",
 )
 
 gentbl(
     name = "r600_target_gen",
+    strip_include_prefix = "lib/Target/AMDGPU",
     tbl_outs = [
         ("-gen-asm-writer", "lib/Target/AMDGPU/R600GenAsmWriter.inc"),
         ("-gen-callingconv", "lib/Target/AMDGPU/R600GenCallingConv.inc"),
@@ -1645,12 +1646,12 @@ gentbl(
     ] + glob([
         "lib/Target/AMDGPU/*.td",
     ]),
-    strip_include_prefix = "lib/Target/AMDGPU",
 )
 
 [[
     [gentbl(
         name = target["name"] + "CommonTableGen",
+        strip_include_prefix = "lib/Target/" + target["name"],
         tbl_outs = target["tbl_outs"],
         tblgen = ":llvm-tblgen",
         td_file = "lib/Target/" + target["name"] + "/" + target["short_name"] + ".td",
@@ -1661,14 +1662,13 @@ gentbl(
             "lib/Target/" + target["name"] + "/GISel/*.td",
         ]),
         deps = target.get("tbl_deps", []),
-        strip_include_prefix = "lib/Target/" + target["name"],
     )],
     [cc_library(
         name = target["name"] + "Info",
         srcs = ["lib/Target/" + target["name"] + "/TargetInfo/" + target["name"] + "TargetInfo.cpp"],
         hdrs = glob(["lib/Target/" + target["name"] + "/TargetInfo/*.h"]),
-        strip_include_prefix = "lib/Target/" + target["name"],
         copts = llvm_copts,
+        strip_include_prefix = "lib/Target/" + target["name"],
         deps = [
             ":" + target["name"] + "CommonTableGen",
             ":Support",
@@ -1715,9 +1715,12 @@ gentbl(
             "lib/Target/" + target["name"] + "/*.def",
             "lib/Target/" + target["name"] + "/*.inc",
         ]),
-        strip_include_prefix = "lib/Target/" + target["name"],
-        features = ["-parse_headers", "-header_modules"],
         copts = llvm_copts,
+        features = [
+            "-parse_headers",
+            "-header_modules",
+        ],
+        strip_include_prefix = "lib/Target/" + target["name"],
         deps = [
             ":BinaryFormat",
             # Depending on `:CodeGen` headers in this library is almost
@@ -1742,8 +1745,8 @@ gentbl(
             "lib/Target/" + target["name"] + "/*.h",
         ]),
         hdrs = ["lib/Target/" + target["name"] + "/" + target["short_name"] + ".h"],
-        strip_include_prefix = "lib/Target/" + target["name"],
         copts = llvm_copts,
+        strip_include_prefix = "lib/Target/" + target["name"],
         textual_hdrs = glob([
             "lib/Target/" + target["name"] + "/*.def",
             "lib/Target/" + target["name"] + "/*.inc",
@@ -1805,7 +1808,10 @@ gentbl(
         hdrs = glob([
             "lib/Target/" + target["name"] + "/Disassembler/*.h",
         ]),
-        features = ["-parse_headers", "-header_modules"],
+        features = [
+            "-parse_headers",
+            "-header_modules",
+        ],
         strip_include_prefix = "lib/Target/" + target["name"],
     )],
     [cc_library(
@@ -2081,6 +2087,7 @@ cc_library(
 
 gentbl(
     name = "DllOptionsTableGen",
+    strip_include_prefix = "lib/ToolDrivers/llvm-dlltool",
     tbl_outs = [(
         "-gen-opt-parser-defs",
         "lib/ToolDrivers/llvm-dlltool/Options.inc",
@@ -2088,7 +2095,6 @@ gentbl(
     tblgen = ":llvm-tblgen",
     td_file = "lib/ToolDrivers/llvm-dlltool/Options.td",
     td_srcs = ["include/llvm/Option/OptParser.td"],
-    strip_include_prefix = "lib/ToolDrivers/llvm-dlltool",
 )
 
 cc_library(
@@ -2106,6 +2112,7 @@ cc_library(
 
 gentbl(
     name = "LibOptionsTableGen",
+    strip_include_prefix = "lib/ToolDrivers/llvm-lib",
     tbl_outs = [(
         "-gen-opt-parser-defs",
         "lib/ToolDrivers/llvm-lib/Options.inc",
@@ -2113,7 +2120,6 @@ gentbl(
     tblgen = ":llvm-tblgen",
     td_file = "lib/ToolDrivers/llvm-lib/Options.td",
     td_srcs = ["include/llvm/Option/OptParser.td"],
-    strip_include_prefix = "lib/ToolDrivers/llvm-lib",
 )
 
 cc_library(
@@ -2239,6 +2245,7 @@ cc_library(
 
 gentbl(
     name = "DsymutilTableGen",
+    strip_include_prefix = "tools/dsymutil",
     tbl_outs = [(
         "-gen-opt-parser-defs",
         "tools/dsymutil/Options.inc",
@@ -2246,7 +2253,6 @@ gentbl(
     tblgen = ":llvm-tblgen",
     td_file = "tools/dsymutil/Options.td",
     td_srcs = ["include/llvm/Option/OptParser.td"],
-    strip_include_prefix = "tools/dsymutil",
 )
 
 cc_binary(
@@ -2467,6 +2473,7 @@ cc_binary(
 
 gentbl(
     name = "CvtResTableGen",
+    strip_include_prefix = "tools/llvm-cvtres",
     tbl_outs = [(
         "-gen-opt-parser-defs",
         "tools/llvm-cvtres/Opts.inc",
@@ -2474,7 +2481,6 @@ gentbl(
     tblgen = ":llvm-tblgen",
     td_file = "tools/llvm-cvtres/Opts.td",
     td_srcs = ["include/llvm/Option/OptParser.td"],
-    strip_include_prefix = "tools/llvm-cvtres",
 )
 
 cc_binary(
@@ -2740,6 +2746,7 @@ cc_binary(
 
 gentbl(
     name = "LipoOptsTableGen",
+    strip_include_prefix = "tools/llvm-lipo",
     tbl_outs = [(
         "-gen-opt-parser-defs",
         "tools/llvm-lipo/LipoOpts.inc",
@@ -2747,7 +2754,6 @@ gentbl(
     tblgen = ":llvm-tblgen",
     td_file = "tools/llvm-lipo/LipoOpts.td",
     td_srcs = ["include/llvm/Option/OptParser.td"],
-    strip_include_prefix = "tools/llvm-lipo",
 )
 
 cc_binary(
@@ -2882,6 +2888,7 @@ cc_binary(
 
 gentbl(
     name = "MtTableGen",
+    strip_include_prefix = "tools/llvm-mt",
     tbl_outs = [(
         "-gen-opt-parser-defs",
         "tools/llvm-mt/Opts.inc",
@@ -2889,7 +2896,6 @@ gentbl(
     tblgen = ":llvm-tblgen",
     td_file = "tools/llvm-mt/Opts.td",
     td_srcs = ["include/llvm/Option/OptParser.td"],
-    strip_include_prefix = "tools/llvm-mt",
 )
 
 cc_binary(
@@ -2934,6 +2940,7 @@ cc_binary(
 
 gentbl(
     name = "llvm-objcopy-opts",
+    strip_include_prefix = "tools/llvm-objcopy",
     tbl_outs = [(
         "-gen-opt-parser-defs",
         "tools/llvm-objcopy/ObjcopyOpts.inc",
@@ -2944,11 +2951,11 @@ gentbl(
         "include/llvm/Option/OptParser.td",
         "tools/llvm-objcopy/CommonOpts.td",
     ],
-    strip_include_prefix = "tools/llvm-objcopy",
 )
 
 gentbl(
     name = "llvm-installnametool-opts",
+    strip_include_prefix = "tools/llvm-objcopy",
     tbl_outs = [(
         "-gen-opt-parser-defs",
         "tools/llvm-objcopy/InstallNameToolOpts.inc",
@@ -2959,11 +2966,11 @@ gentbl(
         "include/llvm/Option/OptParser.td",
         "tools/llvm-objcopy/CommonOpts.td",
     ],
-    strip_include_prefix = "tools/llvm-objcopy",
 )
 
 gentbl(
     name = "llvm-strip-opts",
+    strip_include_prefix = "tools/llvm-objcopy",
     tbl_outs = [(
         "-gen-opt-parser-defs",
         "tools/llvm-objcopy/StripOpts.inc",
@@ -2974,11 +2981,11 @@ gentbl(
         "include/llvm/Option/OptParser.td",
         "tools/llvm-objcopy/CommonOpts.td",
     ],
-    strip_include_prefix = "tools/llvm-objcopy",
 )
 
 gentbl(
     name = "llvm-bitcode-strip-opts",
+    strip_include_prefix = "tools/llvm-objcopy",
     tbl_outs = [(
         "-gen-opt-parser-defs",
         "tools/llvm-objcopy/BitcodeStripOpts.inc",
@@ -2989,7 +2996,6 @@ gentbl(
         "include/llvm/Option/OptParser.td",
         "tools/llvm-objcopy/CommonOpts.td",
     ],
-    strip_include_prefix = "tools/llvm-objcopy",
 )
 
 cc_library(
@@ -3118,6 +3124,7 @@ cc_binary(
 
 gentbl(
     name = "RcTableGen",
+    strip_include_prefix = "tools/llvm-rc",
     tbl_outs = [(
         "-gen-opt-parser-defs",
         "tools/llvm-rc/Opts.inc",
@@ -3125,7 +3132,6 @@ gentbl(
     tblgen = ":llvm-tblgen",
     td_file = "tools/llvm-rc/Opts.td",
     td_srcs = ["include/llvm/Option/OptParser.td"],
-    strip_include_prefix = "tools/llvm-rc",
 )
 
 # Workaround inability to put `.def` files into `srcs` with a library.
@@ -3263,6 +3269,7 @@ cc_binary(
 
 gentbl(
     name = "SymbolizerOptsTableGen",
+    strip_include_prefix = "tools/llvm-symbolizer",
     tbl_outs = [(
         "-gen-opt-parser-defs",
         "tools/llvm-symbolizer/Opts.inc",
@@ -3270,7 +3277,6 @@ gentbl(
     tblgen = ":llvm-tblgen",
     td_file = "tools/llvm-symbolizer/Opts.td",
     td_srcs = ["include/llvm/Option/OptParser.td"],
-    strip_include_prefix = "tools/llvm-symbolizer",
 )
 
 cc_binary(

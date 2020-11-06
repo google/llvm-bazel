@@ -370,6 +370,7 @@ cc_test(
 
 gentbl(
     name = "option_tests_gen",
+    strip_include_prefix = "Option",
     tbl_outs = [(
         "-gen-opt-parser-defs",
         "Option/Opts.inc",
@@ -379,11 +380,11 @@ gentbl(
     td_srcs = [
         "//llvm:include/llvm/Option/OptParser.td",
     ],
-    strip_include_prefix = "Option",
 )
 
 gentbl(
     name = "automata_automata_gen",
+    strip_include_prefix = "TableGen",
     tbl_outs = [(
         "-gen-automata",
         "TableGen/AutomataAutomata.inc",
@@ -393,11 +394,11 @@ gentbl(
     td_srcs = ["//llvm:common_target_td_sources"] + [
         "TableGen/Automata.td",
     ],
-    strip_include_prefix = "TableGen",
 )
 
 gentbl(
     name = "automata_tables_gen",
+    strip_include_prefix = "TableGen",
     tbl_outs = [(
         "-gen-searchable-tables",
         "TableGen/AutomataTables.inc",
@@ -407,7 +408,6 @@ gentbl(
     td_srcs = ["//llvm:common_target_td_sources"] + [
         "TableGen/Automata.td",
     ],
-    strip_include_prefix = "TableGen",
 )
 
 cc_test(

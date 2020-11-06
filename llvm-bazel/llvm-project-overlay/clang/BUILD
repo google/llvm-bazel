@@ -291,6 +291,7 @@ gentbl(
 
 gentbl(
     name = "libsema_openclbuiltins_inc_gen",
+    strip_include_prefix = "lib/Sema",
     tbl_outs = [(
         "-gen-clang-opencl-builtins",
         "lib/Sema/OpenCLBuiltins.inc",
@@ -300,7 +301,6 @@ gentbl(
     td_srcs = [
         "lib/Sema/OpenCLBuiltins.td",
     ],
-    strip_include_prefix = "lib/Sema",
 )
 
 # Table definition files can be used for documentation:
