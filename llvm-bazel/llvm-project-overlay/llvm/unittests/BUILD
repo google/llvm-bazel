@@ -370,6 +370,7 @@ cc_test(
 
 gentbl(
     name = "option_tests_gen",
+    strip_include_prefix = "Option",
     tbl_outs = [(
         "-gen-opt-parser-defs",
         "Option/Opts.inc",
@@ -383,6 +384,7 @@ gentbl(
 
 gentbl(
     name = "automata_automata_gen",
+    strip_include_prefix = "TableGen",
     tbl_outs = [(
         "-gen-automata",
         "TableGen/AutomataAutomata.inc",
@@ -396,6 +398,7 @@ gentbl(
 
 gentbl(
     name = "automata_tables_gen",
+    strip_include_prefix = "TableGen",
     tbl_outs = [(
         "-gen-searchable-tables",
         "TableGen/AutomataTables.inc",
@@ -505,9 +508,6 @@ cc_test(
     srcs = glob([
         "TableGen/*.cpp",
     ]),
-    copts = [
-        "-Iexternal/llvm-project/llvm/utils/TableGen/",
-    ],
     deps = [
         ":automata_automata_gen",
         ":automata_tables_gen",

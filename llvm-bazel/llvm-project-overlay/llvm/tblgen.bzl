@@ -28,11 +28,7 @@ def gentbl(name, tblgen, td_file, td_srcs, tbl_outs, library = True, **kwargs):
     """
     if td_file not in td_srcs:
         td_srcs += [td_file]
-    includes = []
     for (opts, out) in tbl_outs:
-        outdir = out[:out.rindex("/")]
-        if outdir not in includes:
-            includes.append(outdir)
         rule_suffix = "_".join(opts.replace("-", "_").replace("=", "_").split(" "))
         native.genrule(
             name = "%s_%s_genrule" % (name, rule_suffix),
@@ -57,7 +53,15 @@ def gentbl(name, tblgen, td_file, td_srcs, tbl_outs, library = True, **kwargs):
     if library:
         native.cc_library(
             name = name,
-            textual_hdrs = [f for (_, f) in tbl_outs],
-            includes = includes,
+            # FIXME: This should be `textual_hdrs` instead of `hdrs`, but
+            # unfortunately that doesn't work with `strip_include_prefix`:
+            # https://github.com/bazelbuild/bazel/issues/12424
+            #
+            # Once that issue is fixed and released, we can switch this to
+            # `textual_hdrs` and remove the feature disabling the various Bazel
+            # features (both current and under-development) that motivated the
+            # distinction between these two.
+            hdrs = [f for (_, f) in tbl_outs],
+            features = ["-parse_headers", "-header_modules"],
             **kwargs
         )
