@@ -4,6 +4,8 @@
 
 """BUILD extensions for MLIR linalg generation."""
 
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
 def genlinalg(name, linalggen, src, linalg_outs):
     """genlinalg() generates code from a tc spec file.
 
@@ -36,7 +38,7 @@ def genlinalg(name, linalggen, src, linalg_outs):
 
     # List of opts that do not generate cc files.
     hdrs = [f for (opts, f) in linalg_outs]
-    native.cc_library(
+    cc_library(
         name = name,
         hdrs = hdrs,
         textual_hdrs = hdrs,

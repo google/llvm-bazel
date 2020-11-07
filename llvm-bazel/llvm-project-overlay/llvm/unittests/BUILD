@@ -2,6 +2,7 @@
 # See https://llvm.org/LICENSE.txt for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 load("//llvm:tblgen.bzl", "gentbl")
 
 package(
@@ -252,8 +253,9 @@ cc_test(
     srcs = glob([
         "IR/*.cpp",
         "IR/*.h",
+    ]) + [
         "Support/KnownBitsTest.h",
-    ]),
+    ],
     deps = [
         "//llvm:Analysis",
         "//llvm:AsmParser",
@@ -470,7 +472,7 @@ cc_test(
     ],
     linkstatic = 1,
     tags = [
-        "local", # Not compatible with the sandbox on MacOS
+        "local",  # Not compatible with the sandbox on MacOS
     ],
     visibility = ["//visibility:private"],
     deps = [

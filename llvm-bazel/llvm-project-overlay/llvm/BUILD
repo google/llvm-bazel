@@ -2,6 +2,7 @@
 # See https://llvm.org/LICENSE.txt for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
 load(":template_rule.bzl", "template_rule")
 load(":tblgen.bzl", "gentbl")
 load(":config.bzl", "llvm_config_defines")

@@ -12,6 +12,8 @@ TODO(chandlerc): Currently this expresses include-based dependencies as
 correctly understood by the build system.
 """
 
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
 def gentbl(name, tblgen, td_file, td_srcs, tbl_outs, library = True, **kwargs):
     """gentbl() generates tabular code from a table definition file.
 
@@ -27,7 +29,7 @@ def gentbl(name, tblgen, td_file, td_srcs, tbl_outs, library = True, **kwargs):
       **kwargs: Keyword arguments to pass to subsidiary cc_library() rule.
     """
     if td_file not in td_srcs:
-        td_srcs += [td_file]
+        td_srcs.append(td_file)
     for (opts, out) in tbl_outs:
         rule_suffix = "_".join(opts.replace("-", "_").replace("=", "_").split(" "))
         native.genrule(
@@ -51,7 +53,7 @@ def gentbl(name, tblgen, td_file, td_srcs, tbl_outs, library = True, **kwargs):
     # If this is not true, you should specify library = False
     # and list the generated '.inc' files in "srcs".
     if library:
-        native.cc_library(
+        cc_library(
             name = name,
             # FIXME: This should be `textual_hdrs` instead of `hdrs`, but
             # unfortunately that doesn't work with `strip_include_prefix`:

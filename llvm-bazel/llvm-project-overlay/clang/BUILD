@@ -2,6 +2,7 @@
 # See https://llvm.org/LICENSE.txt for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
 load("//llvm:tblgen.bzl", "gentbl")
 load("//llvm:binary_alias.bzl", "binary_alias")
 
@@ -710,8 +711,8 @@ cc_library(
 cc_library(
     name = "index",
     srcs = glob([
-            "lib/Index/*.cpp",
-            "lib/Index/*.h",
+        "lib/Index/*.cpp",
+        "lib/Index/*.h",
     ]),
     hdrs = glob([
         "include/clang/Index/*.h",
@@ -800,14 +801,6 @@ cc_library(
     ]),
     copts = ["$(STACK_FRAME_UNLIMITED)"],
     includes = ["include"],
-    textual_hdrs = glob([
-        "include/clang/Sema/AttrParsedAttrImpl.inc",
-        "include/clang/Sema/AttrParsedAttrKinds.inc",
-        "include/clang/Sema/AttrParsedAttrList.inc",
-        "include/clang/Sema/AttrSpellingListIndex.inc",
-        "include/clang/Sema/AttrTemplateInstantiate.inc",
-        "lib/Sema/OpenCLBuiltins.inc",
-    ]),
     deps = [
         ":analysis",
         ":ast",
@@ -1103,9 +1096,10 @@ cc_library(
     ),
     hdrs = glob([
         "include/clang/Format/*.h",
+    ]) + [
         "lib/Format/FormatTokenLexer.h",
         "lib/Format/Macros.h",
-    ]),
+    ],
     includes = ["include"],
     deps = [
         ":basic",
@@ -1549,10 +1543,8 @@ gentbl(
 cc_library(
     name = "serialization",
     srcs = glob([
-        "lib/Serialization/*.cp" + "p",
+        "lib/Serialization/*.cpp",
         "lib/Serialization/*.h",
-        "include/clang/Serialization/AttrPCHRead.inc",
-        "include/clang/Serialization/AttrPCHWrite.inc",
     ]),
     hdrs = glob([
         "include/clang/Serialization/*.h",

@@ -5,6 +5,7 @@
 # Description:
 #   The MLIR "Multi-Level Intermediate Representation" Compiler Infrastructure
 
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
 load(":tblgen.bzl", "gentbl")
 load(":linalggen.bzl", "genlinalg")
 
@@ -844,10 +845,10 @@ cc_library(
 filegroup(
     name = "ShapeOpsTdFiles",
     srcs = [
-        ":StdOpsTdFiles",
         "include/mlir/Dialect/Shape/IR/ShapeBase.td",
         "include/mlir/Dialect/Shape/IR/ShapeOps.td",
         "include/mlir/Interfaces/InferTypeOpInterface.td",
+        ":StdOpsTdFiles",
     ],
 )
 
@@ -932,7 +933,6 @@ gentbl(
         ":ShapeOpsTdFiles",
     ],
 )
-
 
 cc_library(
     name = "ShapeToStandard",
@@ -1387,9 +1387,7 @@ cc_library(
             "lib/Dialect/GPU/IR/*.h",
         ],
     ),
-    hdrs = glob([
-        "include/mlir/Dialect/GPU/GPUDialect.h",
-    ]),
+    hdrs = ["include/mlir/Dialect/GPU/GPUDialect.h"],
     includes = ["include"],
     deps = [
         ":GPUBaseIncGen",
@@ -3569,9 +3567,7 @@ cc_binary(
 
 cc_binary(
     name = "mlir-linalg-ods-gen",
-    srcs = glob([
-        "tools/mlir-linalg-ods-gen/mlir-linalg-ods-gen.cpp",
-    ]),
+    srcs = glob(["tools/mlir-linalg-ods-gen/*.cpp"]),
     linkopts = select({
         "@bazel_tools//src/conditions:windows": [],
         "//conditions:default": [

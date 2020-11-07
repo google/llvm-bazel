@@ -4,6 +4,8 @@
 
 """BUILD extensions for MLIR table generation."""
 
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
 def gentbl(name, tblgen, td_file, tbl_outs, td_srcs = [], td_includes = [], td_relative_includes = [], strip_include_prefix = None, test = False):
     """gentbl() generates tabular code from a table definition file.
 
@@ -89,7 +91,7 @@ def gentbl(name, tblgen, td_file, tbl_outs, td_srcs = [], td_includes = [], td_r
     # List of opts that do not generate cc files.
     skip_opts = ["-gen-op-doc"]
     hdrs = [f for (opts, f) in tbl_outs if opts not in skip_opts]
-    native.cc_library(
+    cc_library(
         name = name,
         # include_prefix does not apply to textual_hdrs.
         hdrs = hdrs if strip_include_prefix else [],
