@@ -330,11 +330,11 @@ cc_library(
         "include/clang/Basic/Version.inc",
         "include/clang/Config/config.h",
     ],
+    includes = ["include"],
     deps = [
         # We rely on the LLVM config library to provide configuration defines.
         "//llvm:config",
     ],
-    includes = ["include"],
 )
 
 # TODO: This should get replaced with something that actually generates the
@@ -346,6 +346,19 @@ genrule(
     # the other includes.
     outs = ["include/VCSVersion.inc"],
     cmd = "echo \"#define CLANG_REVISION \\\"git\\\"\" > $@",
+)
+
+# A hacky library to expose some internal headers of the `basic` library to its
+# own implementation source files using a stripped include prefix rather than
+# file-relative-inclusion. This is inherently non-modular as these headers will
+# be repeated in the sources below for file-relative-inclusion.
+cc_library(
+    name = "basic_internal_headers",
+    hdrs = glob([
+        "lib/Basic/*.h",
+    ]),
+    features = ["-header_modules"],
+    strip_include_prefix = "lib/Basic",
 )
 
 cc_library(
@@ -365,10 +378,6 @@ cc_library(
     ]),
     copts = [
         "-DHAVE_VCS_VERSION_INC",
-        # TODO: Would be good to remove the odd #include lines within the
-        # implementation of the basic library that require this. Specifying the
-        # exact path to the library this way relies on Bazel internals.
-        "-Iexternal/llvm-project/clang/lib/Basic",
         "$(STACK_FRAME_UNLIMITED)",
     ],
     includes = ["include"],
@@ -410,6 +419,7 @@ cc_library(
         ":basic_arm_sve_builtins_gen",
         ":basic_arm_sve_typeflags_gen",
         ":basic_attr_gen",
+        ":basic_internal_headers",
         ":config",
         ":diagnostic_defs_gen",
         ":sema_attr_gen",

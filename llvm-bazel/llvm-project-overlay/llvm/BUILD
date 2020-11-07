@@ -2177,6 +2177,22 @@ cc_library(
     ],
 )
 
+# FIXME: This library should use `textual_hdrs` instead of `hdrs` as we don't
+# want to parse or build modules for them (and haven't duplicated the necessary
+# dependencies), but unfortunately that doesn't work with
+# `strip_include_prefix`: https://github.com/bazelbuild/bazel/issues/12424
+#
+# For now, we simply disable features that might rely on the headers parsing.
+cc_library(
+    name = "llvm-objcopy-headers",
+    hdrs = glob(["tools/llvm-objcopy/**/*.h"]),
+    features = [
+        "-parse_headers",
+        "-header_modules",
+    ],
+    strip_include_prefix = "tools/llvm-objcopy",
+)
+
 cc_library(
     name = "MCA",
     srcs = glob([
@@ -2193,6 +2209,15 @@ cc_library(
         ":Object",
         ":Support",
     ],
+)
+
+cc_library(
+    name = "llvm-mca-headers",
+    hdrs = glob([
+        "tools/llvm-mca/*.h",
+        "tools/llvm-mca/Views/*.h",
+    ]),
+    strip_include_prefix = "tools/llvm-mca",
 )
 
 cc_library(
@@ -2215,10 +2240,19 @@ cc_library(
         "tools/llvm-exegesis/lib/*.cpp",
         "tools/llvm-exegesis/lib/X86/*.cpp",
         "tools/llvm-exegesis/lib/X86/*.h",
+
+        # We have to include these headers here as well as in the `hdrs` below
+        # to allow the `.cpp` files to use file-relative-inclusion to find
+        # them, even though consumers of this library use inclusion relative to
+        # `tools/llvm-exegesis/lib` with the `strip_includes_prefix` of this
+        # library. This mixture appears to be incompatible with header modules.
+        "tools/llvm-exegesis/lib/*.h",
     ]),
     hdrs = glob(["tools/llvm-exegesis/lib/*.h"]),
     copts = llvm_copts + ["-DHAVE_LIBPFM=1"],
     defines = ["LLVM_EXEGESIS_INITIALIZE_NATIVE_TARGET=InitializeX86ExegesisTarget"],
+    features = ["-header_modules"],
+    strip_include_prefix = "tools/llvm-exegesis/lib",
     tags = [
         "manual",  # External dependency (libpfm4)
         "nobuildkite",  # TODO(chandlerc): Add support for fetching and building libpfm4 and enable this.
@@ -2617,6 +2651,7 @@ cc_binary(
         "tools/llvm-exegesis/llvm-exegesis.cpp",
     ],
     copts = llvm_copts + ["-DHAVE_LIBPFM=0"],
+    linkopts = ["-lpfm"],
     stamp = 0,
     tags = [
         "manual",  # TODO(chandlerc): Enable when the library builds.
@@ -2836,11 +2871,9 @@ cc_binary(
     name = "llvm-mca",
     srcs = glob([
         "tools/llvm-mca/*.cpp",
-        "tools/llvm-mca/*.h",
         "tools/llvm-mca/Views/*.cpp",
-        "tools/llvm-mca/Views/*.h",
     ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/tools/llvm-mca"],
+    copts = llvm_copts,
     stamp = 0,
     deps = [
         ":AllTargetsAsmParsers",
@@ -2850,6 +2883,7 @@ cc_binary(
         ":MCA",
         ":MCParser",
         ":Support",
+        ":llvm-mca-headers",
     ],
 )
 
@@ -2995,22 +3029,6 @@ gentbl(
     td_srcs = [
         "include/llvm/Option/OptParser.td",
         "tools/llvm-objcopy/CommonOpts.td",
-    ],
-)
-
-# FIXME: This library should use `textual_hdrs` instead of `hdrs` as we don't
-# want to parse or build modules for them (and haven't duplicated the necessary
-# dependencies), but unfortunately that doesn't work with
-# `strip_include_prefix`: https://github.com/bazelbuild/bazel/issues/12424
-#
-# For now, we simply disable features that might rely on the headers parsing.
-cc_library(
-    name = "llvm-objcopy-headers",
-    hdrs = glob(["tools/llvm-objcopy/**/*.h"]),
-    strip_include_prefix = "tools/llvm-objcopy",
-    features = [
-        "-parse_headers",
-        "-header_modules",
     ],
 )
 
@@ -3447,6 +3465,26 @@ cc_library(
     ],
 )
 
+# A hacky library to expose some internal headers of gtest to its own
+# implementation source files using a stripped include prefix rather than
+# file-relative-inclusion.
+#
+# FIXME: This file should be in `textual_hdrs` instead of `hdrs`, but
+# unfortunately that doesn't work with `strip_include_prefix`:
+# https://github.com/bazelbuild/bazel/issues/12424
+#
+# For now, simply disable parsing and header modules.
+cc_library(
+    name = "gtest_internal_headers",
+    testonly = True,
+    hdrs = ["utils/unittest/googletest/src/gtest-internal-inl.h"],
+    features = [
+        "-parse_headers",
+        "-header_modules",
+    ],
+    strip_include_prefix = "utils/unittest/googletest",
+)
+
 cc_library(
     name = "gtest",
     testonly = True,
@@ -3462,11 +3500,7 @@ cc_library(
     ) + [
     ],
     hdrs = ["utils/unittest/googletest/include/gtest/gtest.h"],
-    # TODO: the hard-coding of `external/llvm-project` path components here is
-    # really unfortunate. It is essentially baking in an implementation detail
-    # of how Bazel runs the compiler when compiling LLVM in the exact
-    # configuration we use.
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/utils/unittest/googletest"],
+    copts = llvm_copts,
     defines = [
         "GTEST_HAS_RTTI=0",
         "__STDC_LIMIT_MACROS",
@@ -3481,9 +3515,11 @@ cc_library(
     ],
     textual_hdrs = [
         "utils/unittest/googletest/include/gtest/gtest_pred_impl.h",
-        "utils/unittest/googletest/src/gtest-internal-inl.h",
     ],
-    deps = [":Support"],
+    deps = [
+        ":Support",
+        ":gtest_internal_headers",
+    ],
 )
 
 cc_library(
@@ -3509,11 +3545,7 @@ cc_library(
         exclude = ["utils/unittest/googlemock/src/gmock-all.cc"],
     ),
     hdrs = ["utils/unittest/googlemock/include/gmock/gmock.h"],
-    # TODO: the hard-coding of `external/llvm-project` path components here is
-    # really unfortunate. It is essentially baking in an implementation detail
-    # of how Bazel runs the compiler when compiling LLVM in the exact
-    # configuration we use.
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/utils/unittest/googlemock"],
+    copts = llvm_copts,
     includes = [
         "include",
         "utils/unittest/googlemock/include",
