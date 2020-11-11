@@ -3304,6 +3304,7 @@ cc_library(
         ":StandardOpsTransformsPassIncGen",
         ":StandardToLLVM",
         ":StandardToSPIRVTransforms",
+        ":TosaDialect",
         ":Transforms",
         ":TransformsPassIncGen",
         ":VectorOps",
@@ -3346,6 +3347,7 @@ cc_binary(
         "//mlir/test:TestPass",
         "//mlir/test:TestReducer",
         "//mlir/test:TestSPIRV",
+        "//mlir/test:TestTosaDialect",
         "//mlir/test:TestTransforms",
         "//mlir/test:TestTypeDialect",
     ],
@@ -4261,6 +4263,112 @@ cc_library(
         ":VectorOps",
         "//llvm:Core",
         "//llvm:Support",
+    ],
+)
+
+gentbl(
+    name = "TosaDialectIncGen",
+    strip_include_prefix = "include",
+    tbl_outs = [
+        (
+            "-gen-op-decls",
+            "include/mlir/Dialect/Tosa/IR/TosaOps.h.inc",
+        ),
+        (
+            "-gen-op-defs",
+            "include/mlir/Dialect/Tosa/IR/TosaOps.cpp.inc",
+        ),
+        (
+            "-gen-struct-attr-decls",
+            "include/mlir/Dialect/Tosa/IR/TosaStructs.h.inc",
+        ),
+        (
+            "-gen-struct-attr-defs",
+            "include/mlir/Dialect/Tosa/IR/TosaStructs.cpp.inc",
+        ),
+        (
+            "-gen-dialect-decls",
+            "include/mlir/Dialect/Tosa/IR/TosaOpsDialect.h.inc",
+        ),
+        (
+            "-gen-op-doc",
+            "g3doc/Dialects/Tosa/TosaOps.md",
+        ),
+    ],
+    tblgen = ":mlir-tblgen",
+    td_file = "include/mlir/Dialect/Tosa/IR/TosaOps.td",
+    td_srcs = [
+        ":OpBaseTdFiles",
+        "include/mlir/Dialect/Tosa/IR/TosaOpBase.td",
+        "include/mlir/Dialect/Tosa/IR/TosaInterfaces.td",
+        "include/mlir/Dialect/Tosa/IR/TosaTypesBase.td",
+        "include/mlir/Interfaces/SideEffectInterfaces.td",
+        "include/mlir/Interfaces/LoopLikeInterface.td",
+    ],
+)
+
+gentbl(
+    name = "TosaInterfacesIncGen",
+    strip_include_prefix = "include",
+    tbl_outs = [
+        (
+            "-gen-op-interface-decls",
+            "include/mlir/Dialect/Tosa/IR/TosaInterfaces.h.inc",
+        ),
+        (
+            "-gen-op-interface-defs",
+            "include/mlir/Dialect/Tosa/IR/TosaInterfaces.cpp.inc",
+        ),
+    ],
+    tblgen = ":mlir-tblgen",
+    td_file = "include/mlir/Dialect/Tosa/IR/TosaInterfaces.td",
+    td_srcs = [
+        ":OpBaseTdFiles",
+    ],
+)
+
+gentbl(
+    name = "TosaPassIncGen",
+    strip_include_prefix = "include",
+    tbl_outs = [
+        (
+            "-gen-pass-decls -name TosaOpt",
+            "include/mlir/Dialect/Tosa/Transforms/Passes.h.inc",
+        ),
+    ],
+    tblgen = ":mlir-tblgen",
+    td_file = "include/mlir/Dialect/Tosa/Transforms/Passes.td",
+    td_srcs = [
+        ":PassBaseTdFiles",
+    ],
+)
+
+cc_library(
+    name = "TosaDialect",
+    srcs = glob([
+        "lib/Dialect/Tosa/IR/*.cpp",
+        "lib/Dialect/Tosa/IR/*.h",
+        "lib/Dialect/Tosa/Utils/*.cpp",
+        "lib/Dialect/Tosa/Transforms/*.cpp",
+    ]),
+    hdrs = glob([
+        "include/mlir/Dialect/Tosa/IR/*.h",
+        "include/mlir/Dialect/Tosa/Utils/*.h",
+        "include/mlir/Dialect/Tosa/Transforms/*.h",
+    ]),
+    includes = ["include"],
+    deps = [
+        ":Dialect",
+        ":IR",
+        ":LoopLikeInterface",
+        ":Pass",
+        ":QuantOps",
+        ":SideEffectInterfaces",
+        ":StandardOps",
+        ":TosaDialectIncGen",
+        ":TosaInterfacesIncGen",
+        ":TosaPassIncGen",
+        ":TransformUtils",
     ],
 )
 
