@@ -16,6 +16,7 @@ cc_test(
         "ADT/*.cpp",
         "ADT/*.h",
     ]),
+    shard_count = 20,
     deps = [
         "//llvm:Core",
         "//llvm:Support",
@@ -254,6 +255,7 @@ cc_test(
         "IR/*.h",
         "Support/KnownBitsTest.h",
     ]),
+    shard_count = 20,
     deps = [
         "//llvm:Analysis",
         "//llvm:AsmParser",
@@ -470,7 +472,7 @@ cc_test(
     ],
     linkstatic = 1,
     tags = [
-        "local", # Not compatible with the sandbox on MacOS
+        "local",  # Not compatible with the sandbox on MacOS
     ],
     visibility = ["//visibility:private"],
     deps = [

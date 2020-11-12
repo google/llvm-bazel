@@ -102,7 +102,7 @@ build:rbe --remote_instance_name=projects/llvm-bazel/instances/default_instance
 # this higher can make builds faster by allowing more jobs to run in parallel.
 # Setting it too high can result in jobs that timeout, however, while waiting
 # for a remote machine to execute them.
-build:rbe --jobs=50
+build:rbe --jobs=150
 
 # Set several flags related to specifying the platform, toolchain and java
 # properties.

@@ -14,7 +14,7 @@ cc_test(
         "AST/*.cpp",
         "AST/*.h",
     ]),
-    shard_count = len(glob(["AST/*Test.cpp"])),
+    shard_count = 20,
     deps = [
         "//clang:ast",
         "//clang:ast_matchers",
@@ -49,7 +49,7 @@ cc_test(
     name = "ast_matchers_tests",
     size = "medium",
     srcs = glob(["ASTMatchers/*.cpp"]),
-    shard_count = len(glob(["ASTMatchers/*Test.cpp"])),
+    shard_count = 20,
     deps = [
         ":ast_matchers_tests_hdrs",
         "//clang:ast",
@@ -145,7 +145,7 @@ cc_test(
         "Tooling/*.h",
     ]),
     copts = ["$(STACK_FRAME_UNLIMITED)"],
-    shard_count = len(glob(["Format/*Test.cpp"])),
+    shard_count = 20,
     deps = [
         "//clang:basic",
         "//clang:format",
@@ -226,7 +226,7 @@ cc_test(
         "Rename/*.cpp",
         "Rename/*.h",
     ]),
-    shard_count = len(glob(["Rename/*Test.cpp"])),
+    shard_count = 20,
     deps = [
         ":rename_tests_tooling_hdrs",
         "//clang:ast_matchers",
@@ -319,6 +319,7 @@ cc_test(
         "Tooling/*.cpp",
         "Tooling/*.h",
     ]),
+    shard_count = 20,
     deps = [
         "//clang:ast",
         "//clang:ast_matchers",
@@ -388,6 +389,7 @@ cc_test(
         "Tooling/Syntax/*.cpp",
         "Tooling/Syntax/*.h",
     ]),
+    shard_count = 20,
     deps = [
         "//clang:ast",
         "//clang:basic",
