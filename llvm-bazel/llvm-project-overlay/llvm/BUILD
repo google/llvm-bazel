@@ -2017,6 +2017,7 @@ cc_library(
     deps = [
         ":ExecutionEngine",
         ":Object",
+        ":OrcTargetProcess",
         ":Support",
         ":config",
     ],
@@ -2052,7 +2053,6 @@ cc_library(
     ]),
     hdrs = glob([
         "include/llvm/ExecutionEngine/Orc/*.h",
-        "include/llvm/ExecutionEngine/Orc/RPC/*.h",
     ]) + [
         "include/llvm-c/LLJIT.h",
         "include/llvm-c/Orc.h",
@@ -2067,9 +2067,64 @@ cc_library(
         ":JITLink",
         ":MC",
         ":Object",
+        ":OrcTargetProcess",
         ":Support",
         ":Target",
         ":TransformUtils",
+        ":config",
+    ],
+)
+
+cc_library(
+    name = "OrcShared",
+    srcs = glob([
+        "lib/ExecutionEngine/Orc/Shared/*.cpp",
+    ]),
+    hdrs = glob([
+        "include/llvm/ExecutionEngine/Orc/RPC/*.h",
+        "include/llvm/ExecutionEngine/Orc/Shared/*.h",
+        "include/llvm/ExecutionEngine/Orc/*.h",
+    ]),
+    copts = llvm_copts,
+    deps = [
+        ":BinaryFormat",
+        ":CodeGen",
+        ":Core",
+        ":DebugInfo",
+        ":ExecutionEngine",
+        ":MC",
+        ":MCDisassembler",
+        ":Object",
+        ":Passes",
+        ":Support",
+        ":Target",
+        ":config",
+    ],
+)
+
+cc_library(
+    name = "OrcTargetProcess",
+    srcs = glob([
+        "lib/ExecutionEngine/Orc/TargetProcess/*.cpp",
+    ]),
+    hdrs = glob([
+        "include/llvm/ExecutionEngine/Orc/TargetProcess/*.h",
+        "include/llvm/ExecutionEngine/Orc/*.h",
+    ]),
+    copts = llvm_copts,
+    deps = [
+        ":BinaryFormat",
+        ":CodeGen",
+        ":Core",
+        ":DebugInfo",
+        ":ExecutionEngine",
+        ":MC",
+        ":MCDisassembler",
+        ":Object",
+        ":OrcShared",
+        ":Passes",
+        ":Support",
+        ":Target",
         ":config",
     ],
 )
