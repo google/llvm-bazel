@@ -21,8 +21,6 @@ jobs:
     # Don't run on forks
     if: github.repository == 'google/llvm-bazel'
     runs-on: ubuntu-18.04
-    # Mostly so that busy-waiting through turnstyle is not indefinite.
-    timeout-minutes: 15
     env:
       MERGING_BRANCH: "main"
       INTEGRATION_BRANCH: "auto-integrate"
@@ -35,6 +33,7 @@ jobs:
         uses: softprops/turnstyle@v1
         with:
           same-branch-only: false
+          abort-after-seconds: 900
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Checking out repository
