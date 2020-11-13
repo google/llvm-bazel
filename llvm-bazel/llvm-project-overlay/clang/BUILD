@@ -1026,7 +1026,7 @@ cc_library(
 )
 
 gentbl(
-    name = "tooling_syntax_nodes_gen",
+    name = "tooling_syntax_gen",
     tbl_outs = [
         ("-gen-clang-syntax-node-list", "include/clang/Tooling/Syntax/Nodes.inc"),
         ("-gen-clang-syntax-node-classes", "include/clang/Tooling/Syntax/NodeClasses.inc"),
@@ -1048,7 +1048,7 @@ cc_library(
         ":basic",
         ":lex",
         ":tooling_core",
-        ":tooling_syntax_nodes_gen",
+        ":tooling_syntax_gen",
         "//llvm:Support",
     ],
 )
