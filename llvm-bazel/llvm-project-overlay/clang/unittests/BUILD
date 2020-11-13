@@ -10,11 +10,11 @@ package(
 cc_test(
     name = "ast_tests",
     size = "medium",
-    timeout = "long",
     srcs = glob([
         "AST/*.cpp",
         "AST/*.h",
     ]),
+    shard_count = 20,
     deps = [
         "//clang:ast",
         "//clang:ast_matchers",
@@ -47,8 +47,9 @@ cc_library(
 
 cc_test(
     name = "ast_matchers_tests",
-    size = "large",
+    size = "medium",
     srcs = glob(["ASTMatchers/*.cpp"]),
+    shard_count = 20,
     deps = [
         ":ast_matchers_tests_hdrs",
         "//clang:ast",
@@ -144,6 +145,7 @@ cc_test(
         "Tooling/*.h",
     ]),
     copts = ["$(STACK_FRAME_UNLIMITED)"],
+    shard_count = 20,
     deps = [
         "//clang:basic",
         "//clang:format",
@@ -224,6 +226,7 @@ cc_test(
         "Rename/*.cpp",
         "Rename/*.h",
     ]),
+    shard_count = 20,
     deps = [
         ":rename_tests_tooling_hdrs",
         "//clang:ast_matchers",
@@ -316,6 +319,7 @@ cc_test(
         "Tooling/*.cpp",
         "Tooling/*.h",
     ]),
+    shard_count = 20,
     deps = [
         "//clang:ast",
         "//clang:ast_matchers",
@@ -385,6 +389,7 @@ cc_test(
         "Tooling/Syntax/*.cpp",
         "Tooling/Syntax/*.h",
     ]),
+    shard_count = 20,
     deps = [
         "//clang:ast",
         "//clang:basic",
