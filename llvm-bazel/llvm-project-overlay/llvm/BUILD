@@ -1654,6 +1654,12 @@ gentbl(
         strip_include_prefix = "lib/Target/" + target["name"],
         tbl_outs = target["tbl_outs"],
         tblgen = ":llvm-tblgen",
+        # MSVC isn't happy with long string literals, while other compilers
+        # which support them get significant compile time improvements with
+        # them enabled. Ideally this flag would only be enabled on Windows via
+        # a select() on `@bazel_tools//src/conditions:windows,`, but that would
+        # require refactoring gentbl from a macro into a rule.
+        tblgen_args = "--long-string-literals=0",
         td_file = "lib/Target/" + target["name"] + "/" + target["short_name"] + ".td",
         td_srcs = [
             ":common_target_td_sources",
