@@ -1659,6 +1659,7 @@ gentbl(
         # them enabled. Ideally this flag would only be enabled on Windows via
         # a select() on `@bazel_tools//src/conditions:windows,`, but that would
         # require refactoring gentbl from a macro into a rule.
+        # TODO(#92): Refactor gentbl to support this use
         tblgen_args = "--long-string-literals=0",
         td_file = "lib/Target/" + target["name"] + "/" + target["short_name"] + ".td",
         td_srcs = [
