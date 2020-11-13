@@ -547,6 +547,10 @@ llvm_target_intrinsics_list = [
         "intrinsic_prefix": "r600",
     },
     {
+        "name": "VE",
+        "intrinsic_prefix": "ve",
+    },
+    {
         "name": "RISCV",
         "intrinsic_prefix": "riscv",
     },
