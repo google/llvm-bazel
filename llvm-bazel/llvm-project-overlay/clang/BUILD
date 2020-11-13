@@ -710,8 +710,8 @@ cc_library(
 cc_library(
     name = "index",
     srcs = glob([
-            "lib/Index/*.cpp",
-            "lib/Index/*.h",
+        "lib/Index/*.cpp",
+        "lib/Index/*.h",
     ]),
     hdrs = glob([
         "include/clang/Index/*.h",
@@ -1025,6 +1025,20 @@ cc_library(
     ],
 )
 
+gentbl(
+    name = "tooling_syntax_nodes_gen",
+    tbl_outs = [
+        ("-gen-clang-syntax-node-list", "include/clang/Tooling/Syntax/Nodes.inc"),
+        ("-gen-clang-syntax-node-classes", "include/clang/Tooling/Syntax/NodeClasses.inc"),
+    ],
+    tblgen = ":clang-tblgen",
+    td_file = "include/clang/Tooling/Syntax/Nodes.td",
+    td_srcs = [
+        "include/clang/Tooling/Syntax/Nodes.td",
+        "include/clang/Tooling/Syntax/Syntax.td",
+    ],
+)
+
 cc_library(
     name = "tooling_syntax",
     srcs = glob(["lib/Tooling/Syntax/**/*.cpp"]),
@@ -1034,6 +1048,7 @@ cc_library(
         ":basic",
         ":lex",
         ":tooling_core",
+        ":tooling_syntax_nodes_gen",
         "//llvm:Support",
     ],
 )
