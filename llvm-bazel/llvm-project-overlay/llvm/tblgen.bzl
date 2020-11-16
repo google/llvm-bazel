@@ -12,7 +12,15 @@ TODO(chandlerc): Currently this expresses include-based dependencies as
 correctly understood by the build system.
 """
 
-def gentbl(name, tblgen, td_file, td_srcs, tbl_outs, library = True, **kwargs):
+def gentbl(
+        name,
+        tblgen,
+        td_file,
+        td_srcs,
+        tbl_outs,
+        library = True,
+        tblgen_args = "",
+        **kwargs):
     """gentbl() generates tabular code from a table definition file.
 
     Args:
@@ -24,6 +32,7 @@ def gentbl(name, tblgen, td_file, td_srcs, tbl_outs, library = True, **kwargs):
         options passed to tblgen, and the out is the corresponding output file
         produced.
       library: Whether to bundle the generated files into a library.
+      tblgen_args: Extra arguments string to pass to the tblgen binary.
       **kwargs: Keyword arguments to pass to subsidiary cc_library() rule.
     """
     if td_file not in td_srcs:
@@ -39,11 +48,12 @@ def gentbl(name, tblgen, td_file, td_srcs, tbl_outs, library = True, **kwargs):
             cmd = (("$(location %s) -I external/llvm-project/llvm/include " +
                     "-I external/llvm-project/clang/include " +
                     "-I $$(dirname $(location %s)) " +
-                    "%s $(location %s) -o $@") % (
+                    "%s $(location %s) %s -o $@") % (
                 tblgen,
                 td_file,
                 opts,
                 td_file,
+                tblgen_args,
             )),
         )
 
