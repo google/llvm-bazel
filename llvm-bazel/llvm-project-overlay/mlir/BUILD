@@ -3729,7 +3729,7 @@ gentbl(
             "include/mlir/Dialect/OpenMP/OpenMPOpsEnums.cpp.inc",
         ),
         (
-            "-gen-dialect-decls",
+            "-gen-dialect-decls -dialect=omp",
             "include/mlir/Dialect/OpenMP/OpenMPOpsDialect.h.inc",
         ),
         (
