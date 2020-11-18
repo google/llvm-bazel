@@ -249,6 +249,21 @@ filegroup(
     ],
 )
 
+filegroup(
+    name = "SideEffectBaseTdFiles",
+    srcs = [
+        "include/mlir/Interfaces/SideEffectInterfaceBase.td",
+    ],
+)
+
+filegroup(
+    name = "SideEffectTdFiles",
+    srcs = [
+        "include/mlir/Interfaces/SideEffectInterfaces.td",
+        ":SideEffectBaseTdFiles",
+    ],
+)
+
 ##---------------------------------------------------------------------------##
 # Affine dialect.
 ##---------------------------------------------------------------------------##
@@ -267,8 +282,8 @@ filegroup(
         "include/mlir/Dialect/Affine/IR/AffineOps.td",
         "include/mlir/Interfaces/ControlFlowInterfaces.td",
         "include/mlir/Interfaces/LoopLikeInterface.td",
-        "include/mlir/Interfaces/SideEffectInterfaces.td",
         ":OpBaseTdFiles",
+        ":SideEffectTdFiles",
     ],
 )
 
@@ -326,8 +341,8 @@ filegroup(
         "include/mlir/Dialect/Async/IR/AsyncBase.td",
         "include/mlir/Dialect/Async/IR/AsyncOps.td",
         "include/mlir/Interfaces/ControlFlowInterfaces.td",
-        "include/mlir/Interfaces/SideEffectInterfaces.td",
         ":OpBaseTdFiles",
+        ":SideEffectTdFiles",
     ],
 )
 
@@ -365,7 +380,7 @@ filegroup(
         "include/mlir/Dialect/AVX512/AVX512.td",
         "include/mlir/Dialect/LLVMIR/LLVMOpBase.td",
         "include/mlir/IR/OpBase.td",
-        "include/mlir/Interfaces/SideEffectInterfaces.td",
+        ":SideEffectTdFiles",
     ],
 )
 
@@ -451,8 +466,8 @@ filegroup(
         "include/mlir/Dialect/SCF/SCFOps.td",
         "include/mlir/Interfaces/ControlFlowInterfaces.td",
         "include/mlir/Interfaces/LoopLikeInterface.td",
-        "include/mlir/Interfaces/SideEffectInterfaces.td",
         ":OpBaseTdFiles",
+        ":SideEffectTdFiles",
     ],
 )
 
@@ -524,10 +539,10 @@ filegroup(
         "include/mlir/IR/SymbolInterfaces.td",
         "include/mlir/Interfaces/CallInterfaces.td",
         "include/mlir/Interfaces/ControlFlowInterfaces.td",
-        "include/mlir/Interfaces/SideEffectInterfaces.td",
         "include/mlir/Interfaces/VectorInterfaces.td",
         "include/mlir/Interfaces/ViewLikeInterface.td",
         ":OpBaseTdFiles",
+        ":SideEffectTdFiles",
     ],
 )
 
@@ -1393,8 +1408,8 @@ filegroup(
         "include/mlir/Dialect/GPU/GPUOps.td",
         "include/mlir/Dialect/LLVMIR/LLVMOpBase.td",
         "include/mlir/IR/SymbolInterfaces.td",
-        "include/mlir/Interfaces/SideEffectInterfaces.td",
         ":OpBaseTdFiles",
+        ":SideEffectTdFiles",
     ],
 )
 
@@ -1548,8 +1563,8 @@ filegroup(
         "include/mlir/Dialect/LLVMIR/LLVMOps.td",
         "include/mlir/IR/SymbolInterfaces.td",
         "include/mlir/Interfaces/ControlFlowInterfaces.td",
-        "include/mlir/Interfaces/SideEffectInterfaces.td",
         ":OpBaseTdFiles",
+        ":SideEffectTdFiles",
     ],
 )
 
@@ -1935,8 +1950,8 @@ filegroup(
     srcs = [
         "include/mlir/Dialect/LLVMIR/LLVMOpBase.td",
         "include/mlir/Dialect/LLVMIR/NVVMOps.td",
-        "include/mlir/Interfaces/SideEffectInterfaces.td",
         ":OpBaseTdFiles",
+        ":SideEffectTdFiles",
     ],
 )
 
@@ -2007,8 +2022,8 @@ filegroup(
     srcs = [
         "include/mlir/Dialect/LLVMIR/LLVMOpBase.td",
         "include/mlir/Dialect/LLVMIR/ROCDLOps.td",
-        "include/mlir/Interfaces/SideEffectInterfaces.td",
         ":OpBaseTdFiles",
+        ":SideEffectTdFiles",
     ],
 )
 
@@ -2078,8 +2093,8 @@ filegroup(
         "include/mlir/Dialect/PDL/IR/PDLBase.td",
         "include/mlir/Dialect/PDL/IR/PDLOps.td",
         "include/mlir/IR/SymbolInterfaces.td",
-        "include/mlir/Interfaces/SideEffectInterfaces.td",
         ":OpBaseTdFiles",
+        ":SideEffectTdFiles",
     ],
 )
 
@@ -2133,8 +2148,8 @@ filegroup(
     srcs = [
         "include/mlir/Dialect/PDL/IR/PDLBase.td",
         "include/mlir/Dialect/PDLInterp/IR/PDLInterpOps.td",
-        "include/mlir/Interfaces/SideEffectInterfaces.td",
         ":OpBaseTdFiles",
+        ":SideEffectTdFiles",
     ],
 )
 
@@ -2169,7 +2184,7 @@ filegroup(
         "include/mlir/IR/SymbolInterfaces.td",
         "include/mlir/Interfaces/CallInterfaces.td",
         "include/mlir/Interfaces/ControlFlowInterfaces.td",
-        "include/mlir/Interfaces/SideEffectInterfaces.td",
+        ":SideEffectTdFiles",
         ":OpBaseTdFiles",
     ] + glob(["include/mlir/Dialect/SPIRV/*.td"]),
 )
@@ -2980,6 +2995,7 @@ gentbl(
     td_file = "include/mlir/Interfaces/SideEffectInterfaces.td",
     td_srcs = [
         ":OpBaseTdFiles",
+        ":SideEffectBaseTdFiles",
     ],
 )
 
@@ -3807,10 +3823,10 @@ gentbl(
     td_srcs = [
         ":OpBaseTdFiles",
         ":OmpCommonTdGen",
+        ":SideEffectTdFiles",
         "include/mlir/Dialect/LLVMIR/LLVMOpBase.td",
         "include/mlir/Dialect/OpenMP/OmpCommon.td",
         "include/mlir/Interfaces/ControlFlowInterfaces.td",
-        "include/mlir/Interfaces/SideEffectInterfaces.td",
     ],
 )
 
@@ -3865,8 +3881,8 @@ filegroup(
     srcs = [
         "include/mlir/Dialect/Quant/QuantOps.td",
         "include/mlir/Dialect/Quant/QuantOpsBase.td",
-        "include/mlir/Interfaces/SideEffectInterfaces.td",
         ":OpBaseTdFiles",
+        ":SideEffectTdFiles",
     ],
 )
 
@@ -4392,7 +4408,7 @@ gentbl(
         "include/mlir/Dialect/Tosa/IR/TosaOpBase.td",
         "include/mlir/Dialect/Tosa/IR/TosaInterfaces.td",
         "include/mlir/Dialect/Tosa/IR/TosaTypesBase.td",
-        "include/mlir/Interfaces/SideEffectInterfaces.td",
+        ":SideEffectTdFiles",
         "include/mlir/Interfaces/LoopLikeInterface.td",
     ],
 )
@@ -4475,6 +4491,7 @@ exports_files(
         "include/mlir/Interfaces/ControlFlowInterfaces.h",
         "include/mlir/Interfaces/ControlFlowInterfaces.td",
         "include/mlir/Interfaces/CopyOpInterface.td",
+        "include/mlir/Interfaces/SideEffectInterfaceBase.td",
         "include/mlir/Interfaces/SideEffectInterfaces.td",
         "include/mlir/Interfaces/VectorInterfaces.td",
         "include/mlir/Interfaces/ViewLikeInterface.td",
