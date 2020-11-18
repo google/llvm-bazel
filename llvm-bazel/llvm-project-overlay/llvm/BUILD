@@ -3619,6 +3619,12 @@ cc_library(
     deps = [":gtest"],
 )
 
+py_binary(
+    name = "lit",
+    testonly = True,
+    srcs = ["utils/lit/lit.py"] + glob(["utils/lit/lit/**/*.py"]),
+)
+
 cc_library(
     name = "TestingSupport",
     testonly = True,
