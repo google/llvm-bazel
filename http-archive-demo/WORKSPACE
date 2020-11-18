@@ -6,11 +6,11 @@
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
-LLVM_COMMIT = "0ece51c60c51f0d4c285dbda3b6cff794041bdd7"
+LLVM_COMMIT = "499bce3abab8a362b9b4197944bd40b826c736c4"
 
 LLVM_BAZEL_TAG = "llvm-project-%s" % (LLVM_COMMIT,)
 
-LLVM_BAZEL_SHA256 = "9fc25f8d101594db0b48dfd9496049a04e7cce203a9cf82942ad7d282bb7d2b0"
+LLVM_BAZEL_SHA256 = "a05a83300b6b4d8b45c9ba48296c06217f3ea27ed06b7e698896b5a3b2ed498d"
 
 http_archive(
     name = "llvm-bazel",
@@ -19,7 +19,7 @@ http_archive(
     url = "https://github.com/google/llvm-bazel/archive/{tag}.tar.gz".format(tag = LLVM_BAZEL_TAG),
 )
 
-LLVM_SHA256 = "720147842a645a922ff2b4fcf866101ddb7ef76844988ea78639fe8fed774b41"
+LLVM_SHA256 = "a154965dfeb2b5963acc2193bc334ce90b314acbe48430ba310d8a7c7a20de8b"
 
 LLVM_URLS = [
     "https://storage.googleapis.com/mirror.tensorflow.org/github.com/llvm/llvm-project/archive/{commit}.tar.gz".format(commit = LLVM_COMMIT),
@@ -32,6 +32,18 @@ http_archive(
     sha256 = LLVM_SHA256,
     strip_prefix = "llvm-project-" + LLVM_COMMIT,
     urls = LLVM_URLS,
+)
+
+load("@llvm-bazel//:terminfo.bzl", "llvm_terminfo_disable")
+
+llvm_terminfo_disable(
+    name = "llvm_terminfo",
+)
+
+load("@llvm-bazel//:zlib.bzl", "llvm_zlib_disable")
+
+llvm_zlib_disable(
+    name = "llvm_zlib",
 )
 
 load("@llvm-bazel//:configure.bzl", "llvm_configure")
