@@ -24,8 +24,10 @@ cc_library(
 filegroup(
     name = "TestOpTdFiles",
     srcs = [
+        "lib/Dialect/Test/TestInterfaces.td",
         "lib/Dialect/Test/TestOps.td",
         "//mlir:OpBaseTdFiles",
+        "//mlir:SideEffectTdFiles",
         "//mlir:include/mlir/IR/OpAsmInterface.td",
         "//mlir:include/mlir/IR/RegionKindInterface.td",
         "//mlir:include/mlir/IR/SymbolInterfaces.td",
@@ -33,7 +35,6 @@ filegroup(
         "//mlir:include/mlir/Interfaces/ControlFlowInterfaces.td",
         "//mlir:include/mlir/Interfaces/CopyOpInterface.td",
         "//mlir:include/mlir/Interfaces/InferTypeOpInterface.td",
-        "//mlir:include/mlir/Interfaces/SideEffectInterfaces.td",
     ],
 )
 
@@ -94,11 +95,20 @@ gentbl(
             "-gen-type-interface-defs",
             "lib/Dialect/Test/TestTypeInterfaces.cpp.inc",
         ),
+        (
+            "-gen-op-interface-decls",
+            "lib/Dialect/Test/TestOpInterfaces.h.inc",
+        ),
+        (
+            "-gen-op-interface-defs",
+            "lib/Dialect/Test/TestOpInterfaces.cpp.inc",
+        ),
     ],
     tblgen = "//mlir:mlir-tblgen",
     td_file = "lib/Dialect/Test/TestInterfaces.td",
     td_srcs = [
         "//mlir:OpBaseTdFiles",
+        "//mlir:SideEffectBaseTdFiles",
     ],
     test = True,
 )
@@ -128,12 +138,14 @@ cc_library(
     name = "TestDialect",
     srcs = [
         "lib/Dialect/Test/TestDialect.cpp",
+        "lib/Dialect/Test/TestInterfaces.cpp",
         "lib/Dialect/Test/TestPatterns.cpp",
         "lib/Dialect/Test/TestTraits.cpp",
         "lib/Dialect/Test/TestTypes.cpp",
     ],
     hdrs = [
         "lib/Dialect/Test/TestDialect.h",
+        "lib/Dialect/Test/TestInterfaces.h",
         "lib/Dialect/Test/TestTypes.h",
     ],
     includes = [
