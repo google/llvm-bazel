@@ -683,6 +683,7 @@ cc_library(
     hdrs = ["include/mlir/Dialect/Async/Passes.h"],
     includes = ["include"],
     deps = [
+        ":Analysis",
         ":Async",
         ":AsyncPassIncGen",
         ":IR",
