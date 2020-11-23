@@ -3461,6 +3461,7 @@ cc_library(
         "include/mlir/ExecutionEngine/AsyncRuntime.h",
     ],
     includes = ["include"],
+    deps = ["//llvm:Support"],
 )
 
 cc_library(
