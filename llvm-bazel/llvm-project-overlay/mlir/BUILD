@@ -3288,6 +3288,7 @@ cc_library(
         "//mlir/test:TestPass",
         "//mlir/test:TestReducer",
         "//mlir/test:TestSPIRV",
+        "//mlir/test:TestShapeDialect",
         "//mlir/test:TestTransforms",
         "//mlir/test:TestTypeDialect",
     ],
@@ -3508,7 +3509,9 @@ cc_binary(
         ":AllPassesAndDialectsNoRegistration",
         ":ExecutionEngineUtils",
         ":MlirJitRunner",
+        "//llvm:AsmParser",
         "//llvm:Support",
+        "//llvm:X86AsmParser",
     ],
 )
 
