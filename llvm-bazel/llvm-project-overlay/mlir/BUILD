@@ -686,6 +686,7 @@ cc_library(
     hdrs = ["include/mlir/Dialect/Async/Passes.h"],
     includes = ["include"],
     deps = [
+        ":Analysis",
         ":Async",
         ":AsyncPassIncGen",
         ":IR",
@@ -798,6 +799,7 @@ cc_library(
         ":OpenMPToLLVM",
         ":PDLToPDLInterp",
         ":SCFToGPUPass",
+        ":SCFToOpenMP",
         ":SCFToStandard",
         ":SPIRVToLLVM",
         ":ShapeToStandard",
@@ -2808,6 +2810,27 @@ cc_library(
 )
 
 cc_library(
+    name = "SCFToOpenMP",
+    srcs = [
+        "lib/Conversion/PassDetail.h",
+        "lib/Conversion/SCFToOpenMP/SCFToOpenMP.cpp",
+    ],
+    hdrs = [
+        "include/mlir/Conversion/SCFToOpenMP/SCFToOpenMP.h",
+    ],
+    includes = ["include"],
+    deps = [
+        ":ConversionPassIncGen",
+        ":IR",
+        ":OpenMPDialect",
+        ":Pass",
+        ":SCFDialect",
+        ":Support",
+        ":Transforms",
+    ],
+)
+
+cc_library(
     name = "SCFToStandard",
     srcs = [
         "lib/Conversion/PassDetail.h",
@@ -3269,6 +3292,7 @@ cc_library(
         "//mlir/test:TestPass",
         "//mlir/test:TestReducer",
         "//mlir/test:TestSPIRV",
+        "//mlir/test:TestShapeDialect",
         "//mlir/test:TestTransforms",
         "//mlir/test:TestTypeDialect",
     ],
@@ -3464,6 +3488,7 @@ cc_library(
         "include/mlir/ExecutionEngine/AsyncRuntime.h",
     ],
     includes = ["include"],
+    deps = ["//llvm:Support"],
 )
 
 cc_library(
@@ -3491,7 +3516,9 @@ cc_binary(
         ":AllPassesAndDialectsNoRegistration",
         ":ExecutionEngineUtils",
         ":MlirJitRunner",
+        "//llvm:AsmParser",
         "//llvm:Support",
+        "//llvm:X86AsmParser",
     ],
 )
 
@@ -4372,6 +4399,16 @@ cc_library(
     ],
 )
 
+filegroup(
+    name = "TosaDialectTdFiles",
+    srcs = glob(["include/mlir/Dialect/Tosa/IR/*.td"]) + [
+        "include/mlir/Interfaces/LoopLikeInterface.td",
+        ":OpBaseTdFiles",
+        ":QuantizationOpsTdFiles",
+        ":SideEffectTdFiles",
+    ],
+)
+
 gentbl(
     name = "TosaDialectIncGen",
     strip_include_prefix = "include",
@@ -4486,6 +4523,7 @@ filegroup(
 
 exports_files(
     [
+        "include/mlir/Bindings/Python/Attributes.td",
         "include/mlir/Interfaces/CallInterfaces.h",
         "include/mlir/Interfaces/CallInterfaces.td",
         "include/mlir/Interfaces/ControlFlowInterfaces.h",
