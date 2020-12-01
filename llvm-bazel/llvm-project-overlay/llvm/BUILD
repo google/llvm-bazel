@@ -1555,7 +1555,7 @@ llvm_target_list = [
             ("-gen-register-bank", "lib/Target/RISCV/RISCVGenRegisterBank.inc"),
             ("-gen-register-info", "lib/Target/RISCV/RISCVGenRegisterInfo.inc"),
             ("-gen-subtarget", "lib/Target/RISCV/RISCVGenSubtargetInfo.inc"),
-            ("-gen-searchable-tables", "lib/Target/RISCV/RISCVGenSystemOperands.inc"),
+            ("-gen-searchable-tables", "lib/Target/RISCV/RISCVGenSearchableTables.inc"),
         ],
     },
     {
