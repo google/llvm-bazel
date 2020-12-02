@@ -2521,9 +2521,13 @@ cc_library(
     hdrs = glob(["include/mlir/Rewrite/*.h"]),
     includes = ["include"],
     deps = [
+        ":Analysis",
         ":IR",
+        ":PDLDialect",
+        ":PDLInterpDialect",
+        ":PDLToPDLInterp",
         ":Pass",
-        ":Support",
+        ":SideEffectInterfaces",
         "//llvm:Support",
     ],
 )
@@ -3287,6 +3291,7 @@ cc_library(
         "//mlir/test:TestIR",
         "//mlir/test:TestPass",
         "//mlir/test:TestReducer",
+        "//mlir/test:TestRewrite",
         "//mlir/test:TestSPIRV",
         "//mlir/test:TestShapeDialect",
         "//mlir/test:TestTransforms",
