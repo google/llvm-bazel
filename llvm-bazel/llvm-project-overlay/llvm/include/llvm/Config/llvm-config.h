@@ -99,4 +99,7 @@
 /* Define to 1 if you have the <sysexits.h> header file. */
 /* HAVE_SYSEXITS_H defined in Bazel */
 
+/* Define to 1 to enable the experimental new pass manager by default */
+#define LLVM_ENABLE_NEW_PASS_MANAGER 0
+
 #endif
