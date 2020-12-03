@@ -2953,6 +2953,18 @@ cc_binary(
     ],
 )
 
+gentbl(
+    name = "MlTableGen",
+    strip_include_prefix = "tools/llvm-ml",
+    tbl_outs = [(
+        "-gen-opt-parser-defs",
+        "tools/llvm-ml/Opts.inc",
+    )],
+    tblgen = ":llvm-tblgen",
+    td_file = "tools/llvm-ml/Opts.td",
+    td_srcs = ["include/llvm/Option/OptParser.td"],
+)
+
 cc_binary(
     name = "llvm-ml",
     srcs = glob([
@@ -2967,6 +2979,8 @@ cc_binary(
         ":AllTargetsDisassemblers",
         ":MC",
         ":MCParser",
+        ":MlTableGen",
+        ":Option",
         ":Support",
     ],
 )
