@@ -955,10 +955,10 @@ cc_library(
 filegroup(
     name = "ShapeOpsTdFiles",
     srcs = [
-        ":StdOpsTdFiles",
         "include/mlir/Dialect/Shape/IR/ShapeBase.td",
         "include/mlir/Dialect/Shape/IR/ShapeOps.td",
         "include/mlir/Interfaces/InferTypeOpInterface.td",
+        ":StdOpsTdFiles",
     ],
 )
 
@@ -1544,6 +1544,7 @@ cc_library(
     ],
     includes = ["include"],
     deps = [
+        ":Async",
         ":EDSC",
         ":GPUDialect",
         ":GPUPassIncGen",
