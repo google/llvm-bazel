@@ -9,6 +9,10 @@ load(":binary_alias.bzl", "binary_alias")
 
 package(
     default_visibility = ["//visibility:public"],
+    features = [
+        "-layering_check",
+        "-parse_headers",
+    ],
     licenses = ["notice"],
 )
 
@@ -19,9 +23,7 @@ exports_files(["LICENSE.TXT"])
 # toolchain or the `.bazelrc` file. This is just a workaround until we have a
 # widely available feature to enable unlimited stack frame instead of using
 # this `Make` variable.
-llvm_copts = [
-    "$(STACK_FRAME_UNLIMITED)",
-]
+llvm_copts = ["$(STACK_FRAME_UNLIMITED)"]
 
 llvm_targets = [
     "AArch64",
@@ -234,6 +236,8 @@ cc_library(
     ],
 )
 
+# Note: although FileCheck (the binary) is a test utility, some non-test
+# targets depend on the FileCheck library target.
 cc_library(
     name = "FileCheckLib",
     srcs = glob([
@@ -547,16 +551,16 @@ llvm_target_intrinsics_list = [
         "intrinsic_prefix": "r600",
     },
     {
-        "name": "VE",
-        "intrinsic_prefix": "ve",
-    },
-    {
         "name": "RISCV",
         "intrinsic_prefix": "riscv",
     },
     {
         "name": "S390",
         "intrinsic_prefix": "s390",
+    },
+    {
+        "name": "VE",
+        "intrinsic_prefix": "ve",
     },
     {
         "name": "WebAssembly",
@@ -956,6 +960,7 @@ gentbl(
         "include/llvm/CodeGen/*.td",
         "include/llvm/IR/Intrinsics*.td",
     ]) + [
+        "lib/Target/AMDGPU/InstCombineTables.td",
         "include/llvm/TableGen/SearchableTable.td",
     ],
 )
@@ -2361,7 +2366,7 @@ cc_library(
 )
 
 cc_library(
-    name = "llvm-exegesis-lib",
+    name = "Exegesis",
     srcs = glob([
         "tools/llvm-exegesis/lib/*.cpp",
         "tools/llvm-exegesis/lib/X86/*.cpp",
@@ -2376,7 +2381,6 @@ cc_library(
     ]),
     hdrs = glob(["tools/llvm-exegesis/lib/*.h"]),
     copts = llvm_copts + ["-DHAVE_LIBPFM=1"],
-    defines = ["LLVM_EXEGESIS_INITIALIZE_NATIVE_TARGET=InitializeX86ExegesisTarget"],
     features = ["-header_modules"],
     strip_include_prefix = "tools/llvm-exegesis/lib",
     tags = [
@@ -2776,7 +2780,7 @@ cc_binary(
     srcs = [
         "tools/llvm-exegesis/llvm-exegesis.cpp",
     ],
-    copts = llvm_copts + ["-DHAVE_LIBPFM=0"],
+    copts = llvm_copts,
     linkopts = ["-lpfm"],
     stamp = 0,
     tags = [
@@ -2787,12 +2791,12 @@ cc_binary(
         ":AllTargetsAsmParsers",
         ":AllTargetsCodeGens",
         ":AllTargetsDisassemblers",
+        ":Exegesis",
         ":MC",
         ":MCParser",
         ":Object",
         ":Support",
         ":config",
-        ":llvm-exegesis-lib",
     ],
 )
 
@@ -3290,6 +3294,21 @@ cc_binary(
     ],
 )
 
+cc_binary(
+    name = "llvm-profgen",
+    srcs = glob([
+        "tools/llvm-profgen/*.cpp",
+        "tools/llvm-profgen/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":AllTargetsCodeGens",
+        ":AllTargetsDisassemblers",
+        ":Symbolize",
+    ],
+)
+
 gentbl(
     name = "RcTableGen",
     strip_include_prefix = "tools/llvm-rc",
@@ -3305,9 +3324,7 @@ gentbl(
 # Workaround inability to put `.def` files into `srcs` with a library.
 cc_library(
     name = "llvm-rc-defs-lib",
-    textual_hdrs = glob([
-        "tools/llvm-rc/*.def",
-    ]),
+    textual_hdrs = glob(["tools/llvm-rc/*.def"]),
 )
 
 cc_binary(
