@@ -1932,7 +1932,6 @@ cc_library(
         "include/llvm/LTO/*.h",
         "include/llvm/LTO/legacy/*.h",
     ]) + [
-        "include/llvm-c/LinkTimeOptimizer.h",
         "include/llvm-c/lto.h",
     ],
     copts = llvm_copts,
