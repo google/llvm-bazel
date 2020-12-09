@@ -51,6 +51,9 @@ jobs:
         run: |
           git config --local user.email "llvm-bazel-github-bot@google.com"
           git config --local user.name "Auto Integrate Action"
+      - name: Tagging new commits on main
+        if: ${{ github.event_name == 'push' }}
+        run: ./scripts/tag_since.sh "${{ github.event.before }}"
       - name: Merging in changes
         run: |
           if ! git merge-base --is-ancestor "${MERGING_BRANCH?}" "${INTEGRATION_BRANCH?}"; then
