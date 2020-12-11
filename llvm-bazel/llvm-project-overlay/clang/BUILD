@@ -4,6 +4,7 @@
 
 load("//llvm:tblgen.bzl", "gentbl")
 load("//llvm:binary_alias.bzl", "binary_alias")
+load("//llvm:cc_plugin_binary.bzl", "cc_plugin_binaries")
 
 package(
     default_visibility = ["//visibility:public"],
@@ -1675,16 +1676,8 @@ cc_library(
     alwayslink = 1,
 )
 
-cc_binary(
-    name = "libclang.so",
-    linkopts = [
-        "-nodefaultlibs",
-        "-lc_nonshared",
-        "-lgcc",
-        "-lgcc_eh",
-        "-Wno-unused-command-line-argument",
-    ],
-    linkshared = 1,
+cc_plugin_binaries(
+    name = "libclang",
     deps = [":c-bindings"],
 )
 
