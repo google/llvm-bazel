@@ -2638,22 +2638,58 @@ alias(
 )
 
 cc_library(
-    name = "SPIRVSerialization",
-    srcs = glob(
-        [
-            "lib/Dialect/SPIRV/Serialization/*.cpp",
-        ],
-        exclude = [
-            "lib/Dialect/SPIRV/Serialization/TranslateRegistration.cpp",
-        ],
-    ),
+    name = "SPIRVBinaryUtils",
+    srcs = [
+        "lib/Target/SPIRV/SPIRVBinaryUtils.cpp",
+    ],
     hdrs = [
-        "include/mlir/Dialect/SPIRV/SPIRVBinaryUtils.h",
-        "include/mlir/Dialect/SPIRV/Serialization.h",
+        "include/mlir/Target/SPIRV/SPIRVBinaryUtils.h",
     ],
     includes = ["include"],
     deps = [
         ":IR",
+        ":SPIRVDialect",
+        ":SPIRVOpUtilsIncGen",
+        ":SPIRVOpsIncGen",
+        ":Support",
+        "//llvm:Support",
+    ],
+)
+
+cc_library(
+    name = "SPIRVSerialization",
+    srcs = [
+        "lib/Target/SPIRV/Serialization.cpp",
+    ],
+    hdrs = [
+        "include/mlir/Target/SPIRV/Serialization.h",
+    ],
+    includes = ["include"],
+    deps = [
+        ":IR",
+        ":SPIRVBinaryUtils",
+        ":SPIRVDialect",
+        ":SPIRVOpUtilsIncGen",
+        ":SPIRVOpsIncGen",
+        ":SPIRVSerializationGen",
+        ":Support",
+        ":Transforms",
+        "//llvm:Support",
+    ],
+)
+
+cc_library(
+    name = "SPIRVDeserialization",
+    srcs = [
+        "lib/Target/SPIRV/Deserialization.cpp",
+    ],
+    hdrs = [
+        "include/mlir/Target/SPIRV/Deserialization.h",
+    ],
+    includes = ["include"],
+    deps = [
+        ":IR",
+        ":SPIRVBinaryUtils",
         ":SPIRVDialect",
         ":SPIRVOpUtilsIncGen",
         ":SPIRVOpsIncGen",
@@ -2686,12 +2722,13 @@ cc_library(
 cc_library(
     name = "SPIRVTranslateRegistration",
     srcs = [
-        "lib/Dialect/SPIRV/Serialization/TranslateRegistration.cpp",
+        "lib/Target/SPIRV/TranslateRegistration.cpp",
     ],
     includes = ["include"],
     deps = [
         ":IR",
         ":Parser",
+        ":SPIRVDeserialization",
         ":SPIRVDialect",
         ":SPIRVSerialization",
         ":Support",
