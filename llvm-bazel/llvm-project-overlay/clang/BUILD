@@ -4,7 +4,7 @@
 
 load("//llvm:tblgen.bzl", "gentbl")
 load("//llvm:binary_alias.bzl", "binary_alias")
-load("//llvm:cc_plugin_binary.bzl", "cc_plugin_binaries")
+load("//llvm:cc_plugin_binary.bzl", "cc_plugin_library")
 
 package(
     default_visibility = ["//visibility:public"],
@@ -1641,7 +1641,7 @@ cc_library(
 )
 
 cc_library(
-    name = "libclang",
+    name = "libclang_library",
     srcs = glob([
         "tools/libclang/*.cpp",
         "tools/libclang/*.h",
@@ -1671,12 +1671,12 @@ cc_library(
     name = "c-bindings",
     hdrs = glob(["include/clang-c/*.h"]),
     deps = [
-        ":libclang",
+        ":libclang_library",
     ],
     alwayslink = 1,
 )
 
-cc_plugin_binaries(
+cc_plugin_library(
     name = "libclang",
     deps = [":c-bindings"],
 )

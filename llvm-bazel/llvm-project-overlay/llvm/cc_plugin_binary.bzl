@@ -13,8 +13,8 @@ shared "plugin" library. It then creates binary aliases to `.dylib` and
 load("@rules_cc//cc:defs.bzl", "cc_binary")
 load(":binary_alias.bzl", "binary_alias")
 
-def cc_plugin_binaries(name, **kwargs):
-    # Neither then ame of the plugin binary nor tags on whether it is built are
+def cc_plugin_library(name, **kwargs):
+    # Neither the name of the plugin binary nor tags on whether it is built are
     # configurable. Instead, we always build the plugin using a `.so` suffix.
     # Bazel appears to always invoke platform-specific shared library linking
     # logic here regardless of which platform's suffix is used, so any will do.
@@ -29,16 +29,28 @@ def cc_plugin_binaries(name, **kwargs):
     # replicate that here, but for now this at least seems enough to build on
     # MacOS and simpler.
     cc_binary(
-        name = name + ".so",
+        name = name + "_impl",
         linkshared = True,
         linkstatic = True,
         **kwargs
     )
     binary_alias(
+        name = name + ".so",
+        binary = ":" + name + "_impl",
+    )
+    binary_alias(
         name = name + ".dll",
-        binary = ":" + name + ".so",
+        binary = ":" + name + "_impl",
     )
     binary_alias(
         name = name + ".dylib",
-        binary = ":" + name + ".so",
+        binary = ":" + name + "_impl",
+    )
+    native.filegroup(
+        name = name,
+        srcs = select({
+            "@bazel_tools//src/conditions:windows": [":" + name + ".dll"],
+            "@bazel_tools//src/conditions:darwin": [":" + name + ".dylib"],
+            "//conditions:default": [":" + name + ".so"],
+        }),
     )
