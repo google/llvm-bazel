@@ -1325,6 +1325,7 @@ cc_library(
         ":ShapeToStandardGen",
         ":StandardOps",
         ":Support",
+        ":TensorDialect",
         ":Transforms",
     ],
 )
@@ -1382,6 +1383,7 @@ cc_library(
         ":SideEffectInterfaces",
         ":StandardOpsIncGen",
         ":Support",
+        ":TensorDialect",
         ":VectorInterfaces",
         ":ViewLikeInterface",
         "//llvm:Support",
@@ -1417,6 +1419,7 @@ cc_library(
         ":StandardOps",
         ":StandardOpsTransformsPassIncGen",
         ":Support",
+        ":TensorDialect",
         ":Transforms",
         "//llvm:Support",
     ],
@@ -2697,6 +2700,120 @@ cc_library(
     ],
 )
 
+filegroup(
+    name = "TensorOpsTdFiles",
+    srcs = [
+        "include/mlir/Dialect/Tensor/IR/TensorBase.td",
+        "include/mlir/Dialect/Tensor/IR/TensorOps.td",
+        ":OpBaseTdFiles",
+        ":SideEffectTdFiles",
+    ],
+)
+
+gentbl(
+    name = "TensorBaseIncGen",
+    strip_include_prefix = "include",
+    tbl_outs = [
+        (
+            "-gen-dialect-decls -dialect=tensor",
+            "include/mlir/Dialect/Tensor/IR/TensorOpsDialect.h.inc",
+        ),
+    ],
+    tblgen = ":mlir-tblgen",
+    td_file = "include/mlir/Dialect/Tensor/IR/TensorBase.td",
+    td_srcs = [
+        ":TensorOpsTdFiles",
+    ],
+)
+
+gentbl(
+    name = "TensorOpsIncGen",
+    strip_include_prefix = "include",
+    tbl_outs = [
+        (
+            "-gen-op-decls",
+            "include/mlir/Dialect/Tensor/IR/TensorOps.h.inc",
+        ),
+        (
+            "-gen-op-defs",
+            "include/mlir/Dialect/Tensor/IR/TensorOps.cpp.inc",
+        ),
+    ],
+    tblgen = ":mlir-tblgen",
+    td_file = "include/mlir/Dialect/Tensor/IR/TensorOps.td",
+    td_srcs = [
+        ":TensorOpsTdFiles",
+    ],
+)
+
+cc_library(
+    name = "TensorDialect",
+    srcs = glob(
+        [
+            "lib/Dialect/Tensor/IR/*.cpp",
+            "lib/Dialect/Tensor/IR/*.h",
+        ],
+    ) + [
+        "include/mlir/Transforms/InliningUtils.h",
+    ],
+    hdrs = [
+        "include/mlir/Dialect/Tensor/IR/Tensor.h",
+    ],
+    includes = ["include"],
+    deps = [
+        ":IR",
+        ":SideEffectInterfaces",
+        ":Support",
+        ":TensorBaseIncGen",
+        ":TensorOpsIncGen",
+        "//llvm:Support",
+    ],
+)
+
+gentbl(
+    name = "TensorPassIncGen",
+    strip_include_prefix = "include",
+    tbl_outs = [
+        (
+            "-gen-pass-decls -name Tensor",
+            "include/mlir/Dialect/Tensor/Transforms/Passes.h.inc",
+        ),
+    ],
+    tblgen = ":mlir-tblgen",
+    td_file = "include/mlir/Dialect/Tensor/Transforms/Passes.td",
+    td_srcs = [
+        ":PassBaseTdFiles",
+    ],
+)
+
+cc_library(
+    name = "TensorTransforms",
+    srcs = glob(
+        [
+            "lib/Dialect/Tensor/Transforms/*.cpp",
+            "lib/Dialect/Tensor/Transforms/*.h",
+        ],
+    ),
+    hdrs = [
+        "include/mlir/Dialect/Tensor/Transforms/Passes.h",
+    ],
+    includes = ["include"],
+    deps = [
+        ":Async",
+        ":EDSC",
+        ":IR",
+        ":ParallelLoopMapperAttrGen",
+        ":Pass",
+        ":SCFDialect",
+        ":StandardOps",
+        ":Support",
+        ":TensorDialect",
+        ":TensorPassIncGen",
+        ":Transforms",
+        "//llvm:Support",
+    ],
+)
+
 cc_library(
     name = "Rewrite",
     srcs = glob([
@@ -3587,6 +3704,8 @@ cc_library(
         ":StandardOpsTransformsPassIncGen",
         ":StandardToLLVM",
         ":StandardToSPIRVTransforms",
+        ":TensorDialect",
+        ":TensorTransforms",
         ":TosaDialect",
         ":Transforms",
         ":TransformsPassIncGen",
@@ -4484,6 +4603,7 @@ cc_library(
         ":StandardOpsTransforms",
         ":StandardToLLVM",
         ":Support",
+        ":TensorDialect",
         ":TransformUtils",
         ":Transforms",
         ":TransformsPassIncGen",
