@@ -6,13 +6,13 @@
 
 # Walks commits in the llvm-project submodule at SUBMODULE_DIR (default
 # "third_party/llvm-project") between the current state (exclusive) and the tip
-# of the $BRANCH (inclusive, default "master") on the remote and calls the
+# of the $BRANCH (inclusive, default "main") on the remote and calls the
 # specified command.
 
 set -e
 set -o pipefail
 
-BRANCH="${BRANCH:-master}"
+BRANCH="${BRANCH:-main}"
 SUBMODULE_DIR="third_party/llvm-project"
 
 pushd "${SUBMODULE_DIR?}"
