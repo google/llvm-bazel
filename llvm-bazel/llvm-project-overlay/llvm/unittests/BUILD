@@ -289,6 +289,7 @@ cc_test(
     srcs = glob(["FrontEnd/*.cpp"]),
     deps = [
         "//llvm:Analysis",
+        "//llvm:FrontendOpenACC",
         "//llvm:FrontendOpenMP",
         "//llvm:Passes",
         "//llvm:Support",
