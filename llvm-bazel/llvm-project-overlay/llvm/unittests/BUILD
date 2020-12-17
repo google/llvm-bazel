@@ -286,7 +286,7 @@ cc_test(
 cc_test(
     name = "frontend_tests",
     size = "small",
-    srcs = glob(["FrontEnd/*.cpp"]),
+    srcs = glob(["Frontend/*.cpp"]),
     deps = [
         "//llvm:Analysis",
         "//llvm:FrontendOpenACC",
