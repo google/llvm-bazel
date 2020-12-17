@@ -312,9 +312,9 @@ cc_library(
         "//mlir:GPUDialect",
         "//mlir:IR",
         "//mlir:Pass",
+        "//mlir:SPIRVConversion",
         "//mlir:SPIRVDialect",
-        "//mlir:SPIRVLinking",
-        "//mlir:SPIRVLowering",
+        "//mlir:SPIRVModuleCombiner",
     ],
 )
 
