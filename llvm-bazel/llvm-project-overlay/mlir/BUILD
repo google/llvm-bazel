@@ -4078,15 +4078,18 @@ cc_library(
 )
 
 cc_library(
-    name = "mlir_async_runtime",
-    srcs = [
-        "lib/ExecutionEngine/AsyncRuntime.cpp",
-    ],
-    hdrs = [
-        "include/mlir/ExecutionEngine/AsyncRuntime.h",
-    ],
+    name = "mlir_async_runtime_api",
+    hdrs = ["include/mlir/ExecutionEngine/AsyncRuntime.h"],
     includes = ["include"],
-    deps = ["//llvm:Support"],
+)
+
+cc_library(
+    name = "mlir_async_runtime",
+    srcs = ["lib/ExecutionEngine/AsyncRuntime.cpp"],
+    deps = [
+        ":mlir_async_runtime_api",
+        "//llvm:Support",
+    ],
 )
 
 cc_library(
