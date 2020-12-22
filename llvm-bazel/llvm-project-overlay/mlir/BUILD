@@ -5127,12 +5127,6 @@ cc_library(
     ],
 )
 
-# To reference all tablegen files here when checking for updates to them.
-filegroup(
-    name = "TdFiles",
-    srcs = glob(["**/*.td"]),
-)
-
 exports_files(
     [
         "include/mlir/Bindings/Python/Attributes.td",
