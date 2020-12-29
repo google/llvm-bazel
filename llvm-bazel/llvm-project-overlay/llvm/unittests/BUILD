@@ -51,7 +51,10 @@ cc_test(
 cc_test(
     name = "asm_parser_tests",
     size = "small",
-    srcs = glob(["AsmParser/*.cpp"]),
+    srcs = glob(
+        ["AsmParser/*.cpp"],
+        allow_empty = False,
+    ),
     deps = [
         "//llvm:AsmParser",
         "//llvm:Core",
@@ -64,7 +67,10 @@ cc_test(
 cc_test(
     name = "bitcode_tests",
     size = "small",
-    srcs = glob(["Bitcode/*.cpp"]),
+    srcs = glob(
+        ["Bitcode/*.cpp"],
+        allow_empty = False,
+    ),
     deps = [
         "//llvm:AsmParser",
         "//llvm:BitReader",
@@ -79,7 +85,10 @@ cc_test(
 cc_test(
     name = "bitstream_tests",
     size = "small",
-    srcs = glob(["Bitstream/*.cpp"]),
+    srcs = glob(
+        ["Bitstream/*.cpp"],
+        allow_empty = False,
+    ),
     deps = [
         "//llvm:BitstreamReader",
         "//llvm:BitstreamWriter",
@@ -91,7 +100,10 @@ cc_test(
 
 cc_library(
     name = "codegen_tests_includes",
-    textual_hdrs = glob(["CodeGen/*.inc"]),
+    textual_hdrs = glob(
+        ["CodeGen/*.inc"],
+        allow_empty = False,
+    ),
 )
 
 cc_test(
@@ -176,7 +188,10 @@ cc_test(
 cc_test(
     name = "execution_engine_tests",
     size = "small",
-    srcs = glob(["ExecutionEngine/*.cpp"]),
+    srcs = glob(
+        ["ExecutionEngine/*.cpp"],
+        allow_empty = False,
+    ),
     deps = [
         "//llvm:AllTargetsCodeGens",
         "//llvm:AsmParser",
@@ -237,7 +252,10 @@ cc_test(
 cc_test(
     name = "filecheck_tests",
     size = "small",
-    srcs = glob(["FileCheck/*.cpp"]),
+    srcs = glob(
+        ["FileCheck/*.cpp"],
+        allow_empty = False,
+    ),
     deps = [
         "//llvm:FileCheckLib",
         "//llvm:Support",
@@ -274,7 +292,10 @@ cc_test(
 cc_test(
     name = "line_editor_tests",
     size = "small",
-    srcs = glob(["LineEditor/*.cpp"]),
+    srcs = glob(
+        ["LineEditor/*.cpp"],
+        allow_empty = False,
+    ),
     deps = [
         "//llvm:LineEditor",
         "//llvm:Support",
@@ -286,7 +307,10 @@ cc_test(
 cc_test(
     name = "frontend_tests",
     size = "small",
-    srcs = glob(["Frontend/*.cpp"]),
+    srcs = glob(
+        ["Frontend/*.cpp"],
+        allow_empty = False,
+    ),
     deps = [
         "//llvm:Analysis",
         "//llvm:FrontendOpenACC",
@@ -301,7 +325,10 @@ cc_test(
 cc_test(
     name = "linker_tests",
     size = "small",
-    srcs = glob(["Linker/*.cpp"]),
+    srcs = glob(
+        ["Linker/*.cpp"],
+        allow_empty = False,
+    ),
     deps = [
         "//llvm:AsmParser",
         "//llvm:Core",
@@ -315,7 +342,10 @@ cc_test(
 cc_test(
     name = "mc_tests",
     size = "small",
-    srcs = glob(["MC/*.cpp"]),
+    srcs = glob(
+        ["MC/*.cpp"],
+        allow_empty = False,
+    ),
     deps = [
         "//llvm:AllTargetsCodeGens",
         "//llvm:AllTargetsDisassemblers",
@@ -330,7 +360,10 @@ cc_test(
 cc_test(
     name = "mi_tests",
     size = "small",
-    srcs = glob(["MI/*.cpp"]),
+    srcs = glob(
+        ["MI/*.cpp"],
+        allow_empty = False,
+    ),
     deps = [
         "//llvm:AllTargetsAsmParsers",
         "//llvm:AllTargetsCodeGens",
@@ -346,7 +379,10 @@ cc_test(
 cc_test(
     name = "object_tests",
     size = "small",
-    srcs = glob(["Object/*.cpp"]),
+    srcs = glob(
+        ["Object/*.cpp"],
+        allow_empty = False,
+    ),
     deps = [
         "//llvm:Object",
         "//llvm:ObjectYAML",
@@ -359,7 +395,10 @@ cc_test(
 cc_test(
     name = "object_yaml_tests",
     size = "small",
-    srcs = glob(["ObjectYAML/*.cpp"]),
+    srcs = glob(
+        ["ObjectYAML/*.cpp"],
+        allow_empty = False,
+    ),
     deps = [
         "//llvm:DebugInfoCodeView",
         "//llvm:Object",
@@ -416,7 +455,10 @@ gentbl(
 cc_test(
     name = "option_tests",
     size = "small",
-    srcs = glob(["Option/*.cpp"]),
+    srcs = glob(
+        ["Option/*.cpp"],
+        allow_empty = False,
+    ),
     deps = [
         ":option_tests_gen",
         "//llvm:Option",
@@ -429,7 +471,10 @@ cc_test(
 cc_test(
     name = "remarks_tests",
     size = "small",
-    srcs = glob(["Remarks/*.cpp"]),
+    srcs = glob(
+        ["Remarks/*.cpp"],
+        allow_empty = False,
+    ),
     deps = [
         "//llvm:BitReader",
         "//llvm:Remarks",
@@ -443,7 +488,10 @@ cc_test(
 cc_test(
     name = "profile_data_tests",
     size = "small",
-    srcs = glob(["ProfileData/*.cpp"]),
+    srcs = glob(
+        ["ProfileData/*.cpp"],
+        allow_empty = False,
+    ),
     deps = [
         "//llvm:Core",
         "//llvm:Coverage",
@@ -525,7 +573,10 @@ cc_test(
 cc_test(
     name = "target_aarch64_tests",
     size = "small",
-    srcs = glob(["Target/AArch64/*.cpp"]),
+    srcs = glob(
+        ["Target/AArch64/*.cpp"],
+        allow_empty = False,
+    ),
     copts = [
         "$(STACK_FRAME_UNLIMITED)",
     ],
