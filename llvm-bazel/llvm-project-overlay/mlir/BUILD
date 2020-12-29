@@ -4237,7 +4237,7 @@ cc_binary(
         ":AllPassesAndDialectsNoRegistration",
         ":ExecutionEngineUtils",
         ":GPUDialect",
-        ":GPUToSPIRVTransforms",
+        ":GPUToSPIRV",
         ":GPUTransforms",
         ":IR",
         ":LLVMDialect",
