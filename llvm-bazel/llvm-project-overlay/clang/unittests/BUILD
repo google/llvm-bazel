@@ -35,7 +35,10 @@ cc_test(
 cc_library(
     name = "ast_matchers_tests_hdrs",
     testonly = 1,
-    hdrs = glob(["ASTMatchers/*.h"]),
+    hdrs = glob(
+        ["ASTMatchers/*.h"],
+        allow_empty = False,
+    ),
     deps = [
         "//clang:ast_matchers",
         "//clang:frontend",
@@ -48,7 +51,10 @@ cc_library(
 cc_test(
     name = "ast_matchers_tests",
     size = "medium",
-    srcs = glob(["ASTMatchers/*.cpp"]),
+    srcs = glob(
+        ["ASTMatchers/*.cpp"],
+        allow_empty = False,
+    ),
     shard_count = 20,
     deps = [
         ":ast_matchers_tests_hdrs",
@@ -66,7 +72,10 @@ cc_test(
 cc_test(
     name = "ast_matchers_dynamic_tests",
     size = "small",
-    srcs = glob(["ASTMatchers/Dynamic/*.cpp"]),
+    srcs = glob(
+        ["ASTMatchers/Dynamic/*.cpp"],
+        allow_empty = False,
+    ),
     deps = [
         ":ast_matchers_tests_hdrs",
         "//clang:ast_matchers",
@@ -101,7 +110,10 @@ cc_test(
 cc_test(
     name = "basic_tests",
     size = "small",
-    srcs = glob(["Basic/*.cpp"]),
+    srcs = glob(
+        ["Basic/*.cpp"],
+        allow_empty = False,
+    ),
     deps = [
         "//clang:basic",
         "//clang:frontend",
@@ -183,7 +195,10 @@ cc_test(
 cc_test(
     name = "lex_tests",
     size = "small",
-    srcs = glob(["Lex/*.cpp"]),
+    srcs = glob(
+        ["Lex/*.cpp"],
+        allow_empty = False,
+    ),
     copts = ["$(STACK_FRAME_UNLIMITED)"],
     deps = [
         "//clang:ast",
@@ -204,7 +219,10 @@ cc_test(
 cc_library(
     name = "rename_tests_tooling_hdrs",
     testonly = 1,
-    hdrs = glob(["Tooling/*.h"]),
+    hdrs = glob(
+        ["Tooling/*.h"],
+        allow_empty = False,
+    ),
     include_prefix = "unittests",
     deps = [
         "//clang:ast",
@@ -244,7 +262,10 @@ cc_test(
 cc_test(
     name = "rewrite_tests",
     size = "small",
-    srcs = glob(["Rewrite/*.cpp"]),
+    srcs = glob(
+        ["Rewrite/*.cpp"],
+        allow_empty = False,
+    ),
     deps = [
         "//clang:rewrite",
         "//clang:tooling",
@@ -256,7 +277,10 @@ cc_test(
 cc_test(
     name = "sema_tests",
     size = "small",
-    srcs = glob(["Sema/*.cpp"]),
+    srcs = glob(
+        ["Sema/*.cpp"],
+        allow_empty = False,
+    ),
     deps = [
         ":ast_matchers_tests_hdrs",
         "//clang:ast",
@@ -276,7 +300,10 @@ cc_test(
 cc_library(
     name = "static_analyzer_test_headers",
     testonly = 1,
-    hdrs = glob(["StaticAnalyzer/*.h"]),
+    hdrs = glob(
+        ["StaticAnalyzer/*.h"],
+        allow_empty = False,
+    ),
     deps = [
         "//clang:ast_matchers",
         "//clang:crosstu",
@@ -346,7 +373,10 @@ cc_test(
 cc_library(
     name = "tooling_recursive_ast_visitor_tests_tooling_hdrs",
     testonly = 1,
-    hdrs = glob(["Tooling/*.h"]),
+    hdrs = glob(
+        ["Tooling/*.h"],
+        allow_empty = False,
+    ),
     strip_include_prefix = "Tooling",
     deps = [
         "//clang:ast",
@@ -363,7 +393,10 @@ cc_library(
 cc_test(
     name = "tooling_recursive_ast_visitor_tests",
     size = "medium",
-    srcs = glob(["Tooling/RecursiveASTVisitorTests/*.cpp"]) + [
+    srcs = glob(
+        ["Tooling/RecursiveASTVisitorTests/*.cpp"],
+        allow_empty = False,
+    ) + [
         "Tooling/RecursiveASTVisitorTests/CallbacksCommon.h",
     ],
     deps = [
@@ -410,7 +443,10 @@ cc_test(
 cc_test(
     name = "libclang_tests",
     size = "small",
-    srcs = glob(["libclang/*.cpp"]) + [
+    srcs = glob(
+        ["libclang/*.cpp"],
+        allow_empty = False,
+    ) + [
         "libclang/TestUtils.h",
     ],
     deps = [
