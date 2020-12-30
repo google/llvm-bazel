@@ -10,10 +10,13 @@ package(
 cc_test(
     name = "ast_tests",
     size = "medium",
-    srcs = glob([
-        "AST/*.cpp",
-        "AST/*.h",
-    ]),
+    srcs = glob(
+        [
+            "AST/*.cpp",
+            "AST/*.h",
+        ],
+        allow_empty = False,
+    ),
     shard_count = 20,
     deps = [
         "//clang:ast",
@@ -91,10 +94,13 @@ cc_test(
 cc_test(
     name = "analysis_tests",
     size = "small",
-    srcs = glob([
-        "Analysis/*.cpp",
-        "Analysis/*.h",
-    ]),
+    srcs = glob(
+        [
+            "Analysis/*.cpp",
+            "Analysis/*.h",
+        ],
+        allow_empty = False,
+    ),
     deps = [
         "//clang:analysis",
         "//clang:ast",
@@ -129,10 +135,13 @@ cc_test(
 cc_test(
     name = "codegen_tests",
     size = "small",
-    srcs = glob([
-        "CodeGen/*.cpp",
-        "CodeGen/*.h",
-    ]),
+    srcs = glob(
+        [
+            "CodeGen/*.cpp",
+            "CodeGen/*.h",
+        ],
+        allow_empty = False,
+    ),
     deps = [
         "//clang:ast",
         "//clang:basic",
@@ -151,11 +160,14 @@ cc_test(
 cc_test(
     name = "format_tests",
     size = "medium",
-    srcs = glob([
-        "Format/*.cpp",
-        "Format/*.h",
-        "Tooling/*.h",
-    ]),
+    srcs = glob(
+        [
+            "Format/*.cpp",
+            "Format/*.h",
+            "Tooling/*.h",
+        ],
+        allow_empty = False,
+    ),
     copts = ["$(STACK_FRAME_UNLIMITED)"],
     shard_count = 20,
     deps = [
@@ -174,6 +186,7 @@ cc_test(
     size = "small",
     srcs = glob(
         ["Frontend/*.cpp"],
+        allow_empty = False,
     ),
     deps = [
         "//clang:ast",
@@ -240,10 +253,13 @@ cc_test(
     name = "rename_tests",
     size = "small",
     timeout = "moderate",
-    srcs = glob([
-        "Rename/*.cpp",
-        "Rename/*.h",
-    ]),
+    srcs = glob(
+        [
+            "Rename/*.cpp",
+            "Rename/*.h",
+        ],
+        allow_empty = False,
+    ),
     shard_count = 20,
     deps = [
         ":rename_tests_tooling_hdrs",
@@ -320,6 +336,7 @@ cc_test(
     size = "small",
     srcs = glob(
         ["StaticAnalyzer/*.cpp"],
+        allow_empty = False,
         exclude = [
             # New test has unused-variable warnings.
             "StaticAnalyzer/ParamRegionTest.cpp",
@@ -342,10 +359,13 @@ cc_test(
 cc_test(
     name = "tooling_tests",
     size = "medium",
-    srcs = glob([
-        "Tooling/*.cpp",
-        "Tooling/*.h",
-    ]),
+    srcs = glob(
+        [
+            "Tooling/*.cpp",
+            "Tooling/*.h",
+        ],
+        allow_empty = False,
+    ),
     shard_count = 20,
     deps = [
         "//clang:ast",
@@ -418,10 +438,13 @@ cc_test(
 cc_test(
     name = "tooling_syntax_tests",
     size = "medium",
-    srcs = glob([
-        "Tooling/Syntax/*.cpp",
-        "Tooling/Syntax/*.h",
-    ]),
+    srcs = glob(
+        [
+            "Tooling/Syntax/*.cpp",
+            "Tooling/Syntax/*.h",
+        ],
+        allow_empty = False,
+    ),
     shard_count = 20,
     deps = [
         "//clang:ast",
