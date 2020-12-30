@@ -1308,6 +1308,8 @@ cc_library(
         ":LLVMDialect",
         ":Pass",
         ":StandardOps",
+        ":StandardOpsTransforms",
+        ":StandardToLLVM",
         ":Support",
         ":Transforms",
         "//llvm:Support",
