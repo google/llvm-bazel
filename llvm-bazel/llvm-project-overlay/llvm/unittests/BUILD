@@ -12,10 +12,13 @@ package(
 cc_test(
     name = "adt_tests",
     size = "medium",
-    srcs = glob([
-        "ADT/*.cpp",
-        "ADT/*.h",
-    ]),
+    srcs = glob(
+        [
+            "ADT/*.cpp",
+            "ADT/*.h",
+        ],
+        allow_empty = False,
+    ),
     shard_count = 20,
     deps = [
         "//llvm:Core",
@@ -31,6 +34,7 @@ cc_test(
     size = "small",
     srcs = glob(
         ["Analysis/*.cpp"],
+        allow_empty = False,
         exclude = [
             # TODO: Add this file to the build.
             "Analysis/TFUtilsTest.cpp",
@@ -109,10 +113,13 @@ cc_library(
 cc_test(
     name = "codegen_tests",
     size = "small",
-    srcs = glob([
-        "CodeGen/*.cpp",
-        "CodeGen/*.h",
-    ]),
+    srcs = glob(
+        [
+            "CodeGen/*.cpp",
+            "CodeGen/*.h",
+        ],
+        allow_empty = False,
+    ),
     deps = [
         ":codegen_tests_includes",
         "//llvm:AllTargetsAsmParsers",
@@ -135,10 +142,13 @@ cc_test(
 cc_test(
     name = "codegen_globalisel_tests",
     size = "small",
-    srcs = glob([
-        "CodeGen/GlobalISel/*.cpp",
-        "CodeGen/GlobalISel/*.h",
-    ]),
+    srcs = glob(
+        [
+            "CodeGen/GlobalISel/*.cpp",
+            "CodeGen/GlobalISel/*.h",
+        ],
+        allow_empty = False,
+    ),
     copts = [
         "$(STACK_FRAME_UNLIMITED)",
     ],
@@ -158,13 +168,16 @@ cc_test(
 cc_test(
     name = "debuginfo_tests",
     size = "small",
-    srcs = glob([
-        "DebugInfo/DWARF/*.cpp",
-        "DebugInfo/DWARF/*.h",
-        # TODO: Re-enable these when they stop crashing.
-        #"DebugInfo/PDB/*.cpp",
-        #"DebugInfo/PDB/*.h",
-    ]),
+    srcs = glob(
+        [
+            "DebugInfo/DWARF/*.cpp",
+            "DebugInfo/DWARF/*.h",
+            # TODO: Re-enable these when they stop crashing.
+            #"DebugInfo/PDB/*.cpp",
+            #"DebugInfo/PDB/*.h",
+        ],
+        allow_empty = False,
+    ),
     args = [
         # Skip a test that relies on reading files in a way that doesn't easily
         # work with Bazel.
@@ -207,10 +220,13 @@ cc_test(
 cc_test(
     name = "execution_engine_mcjit_tests",
     size = "small",
-    srcs = glob([
-        "ExecutionEngine/MCJIT/*.cpp",
-        "ExecutionEngine/MCJIT/*.h",
-    ]),
+    srcs = glob(
+        [
+            "ExecutionEngine/MCJIT/*.cpp",
+            "ExecutionEngine/MCJIT/*.h",
+        ],
+        allow_empty = False,
+    ),
     copts = [
         "$(STACK_FRAME_UNLIMITED)",
     ],
@@ -230,10 +246,13 @@ cc_test(
 cc_test(
     name = "execution_engine_orc_tests",
     size = "small",
-    srcs = glob([
-        "ExecutionEngine/Orc/*.cpp",
-        "ExecutionEngine/Orc/*.h",
-    ]),
+    srcs = glob(
+        [
+            "ExecutionEngine/Orc/*.cpp",
+            "ExecutionEngine/Orc/*.h",
+        ],
+        allow_empty = False,
+    ),
     args = ["--gtest_filter=-ObjectLinkingLayerTest.TestSetProcessAllSections"],
     deps = [
         "//llvm:AllTargetsAsmParsers",
@@ -268,11 +287,14 @@ cc_test(
 cc_test(
     name = "ir_tests",
     size = "medium",  # ConstantRangeTest cases may take several seconds each.
-    srcs = glob([
-        "IR/*.cpp",
-        "IR/*.h",
-        "Support/KnownBitsTest.h",
-    ]),
+    srcs = glob(
+        [
+            "IR/*.cpp",
+            "IR/*.h",
+            "Support/KnownBitsTest.h",
+        ],
+        allow_empty = False,
+    ),
     shard_count = 20,
     deps = [
         "//llvm:Analysis",
@@ -511,6 +533,7 @@ cc_test(
             "Support/*.cpp",
             "Support/*.h",
         ],
+        allow_empty = False,
         exclude = [
             "Support/ParallelTest.cpp",
         ],
@@ -556,9 +579,12 @@ cc_test(
 cc_test(
     name = "tablegen_tests",
     size = "small",
-    srcs = glob([
-        "TableGen/*.cpp",
-    ]),
+    srcs = glob(
+        [
+            "TableGen/*.cpp",
+        ],
+        allow_empty = False,
+    ),
     deps = [
         ":automata_automata_gen",
         ":automata_tables_gen",
@@ -590,11 +616,14 @@ cc_test(
 cc_test(
     name = "transforms_tests",
     size = "small",
-    srcs = glob([
-        "Transforms/IPO/*.cpp",
-        "Transforms/IPO/*.h",
-        "Transforms/Utils/*.cpp",
-    ]),
+    srcs = glob(
+        [
+            "Transforms/IPO/*.cpp",
+            "Transforms/IPO/*.h",
+            "Transforms/Utils/*.cpp",
+        ],
+        allow_empty = False,
+    ),
     deps = [
         "//llvm:Analysis",
         "//llvm:AsmParser",
@@ -611,12 +640,14 @@ cc_test(
 cc_test(
     name = "llvm_exegesis_tests",
     size = "small",
-    srcs = glob([
-        "tools/llvm-exegesis/*.cpp",
-        "tools/llvm-exegesis/*.h",
-        "tools/llvm-exegesis/X86/*.cpp",
-        "tools/llvm-exegesis/X86/*.h",
-    ]) + [
+    srcs = glob(
+        [
+            "tools/llvm-exegesis/*.cpp",
+            "tools/llvm-exegesis/X86/*.cpp",
+            "tools/llvm-exegesis/X86/*.h",
+        ],
+        allow_empty = False,
+    ) + [
         "tools/llvm-exegesis/Common/AssemblerUtils.h",
     ],
     copts = ["-DHAVE_LIBPFM=1"],
