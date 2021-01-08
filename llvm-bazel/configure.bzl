@@ -10,4 +10,4 @@ load(":overlay_directories.bzl", "overlay_directories")
 OVERLAY_DIR = "llvm-project-overlay"
 
 def llvm_configure(name, overlay_path = OVERLAY_DIR, **kwargs):
-    overlay_directories(name=name, overlay_path=overlay_path, **kwargs)
+    overlay_directories(name = name, overlay_path = overlay_path, **kwargs)

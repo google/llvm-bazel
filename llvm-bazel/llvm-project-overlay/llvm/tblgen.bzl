@@ -12,7 +12,15 @@ TODO(chandlerc): Currently this expresses include-based dependencies as
 correctly understood by the build system.
 """
 
-def gentbl(name, tblgen, td_file, td_srcs, tbl_outs, library = True, **kwargs):
+def gentbl(
+        name,
+        tblgen,
+        td_file,
+        td_srcs,
+        tbl_outs,
+        library = True,
+        tblgen_args = "",
+        **kwargs):
     """gentbl() generates tabular code from a table definition file.
 
     Args:
@@ -24,15 +32,12 @@ def gentbl(name, tblgen, td_file, td_srcs, tbl_outs, library = True, **kwargs):
         options passed to tblgen, and the out is the corresponding output file
         produced.
       library: Whether to bundle the generated files into a library.
+      tblgen_args: Extra arguments string to pass to the tblgen binary.
       **kwargs: Keyword arguments to pass to subsidiary cc_library() rule.
     """
     if td_file not in td_srcs:
         td_srcs += [td_file]
-    includes = []
     for (opts, out) in tbl_outs:
-        outdir = out[:out.rindex("/")]
-        if outdir not in includes:
-            includes.append(outdir)
         rule_suffix = "_".join(opts.replace("-", "_").replace("=", "_").split(" "))
         native.genrule(
             name = "%s_%s_genrule" % (name, rule_suffix),
@@ -40,14 +45,15 @@ def gentbl(name, tblgen, td_file, td_srcs, tbl_outs, library = True, **kwargs):
             outs = [out],
             tools = [tblgen],
             message = "Generating code from table: %s" % td_file,
-            cmd = (("$(location %s) " + "-I external/llvm-project/llvm/include " +
+            cmd = (("$(location %s) -I external/llvm-project/llvm/include " +
                     "-I external/llvm-project/clang/include " +
-                    "-I $$(dirname $(location %s)) " + ("%s $(location %s) --long-string-literals=0 " +
-                                                        "-o $@")) % (
+                    "-I $$(dirname $(location %s)) " +
+                    "%s $(location %s) %s -o $@") % (
                 tblgen,
                 td_file,
                 opts,
                 td_file,
+                tblgen_args,
             )),
         )
 
@@ -57,7 +63,15 @@ def gentbl(name, tblgen, td_file, td_srcs, tbl_outs, library = True, **kwargs):
     if library:
         native.cc_library(
             name = name,
-            textual_hdrs = [f for (_, f) in tbl_outs],
-            includes = includes,
+            # FIXME: This should be `textual_hdrs` instead of `hdrs`, but
+            # unfortunately that doesn't work with `strip_include_prefix`:
+            # https://github.com/bazelbuild/bazel/issues/12424
+            #
+            # Once that issue is fixed and released, we can switch this to
+            # `textual_hdrs` and remove the feature disabling the various Bazel
+            # features (both current and under-development) that motivated the
+            # distinction between these two.
+            hdrs = [f for (_, f) in tbl_outs],
+            features = ["-parse_headers", "-header_modules"],
             **kwargs
         )

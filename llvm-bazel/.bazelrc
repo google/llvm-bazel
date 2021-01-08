@@ -34,8 +34,14 @@ build:generic_clang --repo_env=CC=clang
 # C++14 standard version is required.
 build:generic_clang --cxxopt=-std=c++14 --host_cxxopt=-std=c++14
 
+# The Clang available on MacOS has a warning that isn't clean on MLIR code. The
+# warning doesn't show up with more recent Clangs, so just disable for now.
+build:generic_clang --cxxopt=-Wno-range-loop-analysis --host_cxxopt=-Wno-range-loop-analysis
+
 # Use `-Wall` and `-Werror` for Clang.
 build:generic_clang --copt=-Wall --copt=-Werror --host_copt=-Wall --host_copt=-Werror
+# This doesn't appear to be enforced by any upstream bot.
+build:generic_clang --copt=-Wno-unused --host_copt=-Wno-unused
 
 ###############################################################################
 # Options for "generic_gcc" builds: these options should generally apply to
@@ -63,6 +69,30 @@ build:generic_gcc --copt=-Wno-misleading-indentation --host_copt=-Wno-misleading
 build:generic_gcc --copt=-Werror --host_copt=-Werror
 
 ###############################################################################
+# Windows specific flags for building with VC.
+###############################################################################
+
+build:msvc --copt=/WX --host_copt=/WX    # Treat warnings as errors...
+# ...but disable the ones that are violated
+build:msvc --copt=/wd4141 --host_copt=/wd4141 # inline used more than once
+build:msvc --copt=/wd4244 --host_copt=/wd4244 # conversion type -> type
+build:msvc --copt=/wd4267 --host_copt=/wd4267 # conversion size_t -> type
+build:msvc --copt=/wd4273 --host_copt=/wd4273 # multiple definitions with different dllimport
+build:msvc --copt=/wd4319 --host_copt=/wd4319 # zero-extending after complement
+build:msvc --copt=/wd4624 --host_copt=/wd4624 # destructor was implicitly defined as deleted
+build:msvc --copt=/wd4804 --host_copt=/wd4804 # comparisons between bool and int
+build:msvc --copt=/wd4805 --host_copt=/wd4805 # comparisons between bool and int
+
+build:msvc --linkopt=/WX --host_linkopt=/WX # Treat warnings as errors...
+# ...but disable the ones that are violated.
+build:msvc --linkopt=/IGNORE:4001 --host_linkopt=/IGNORE:4001 # no object files
+
+# Yay for security warnings. Boo for non-standard.
+build:msvc --copt=/D_CRT_SECURE_NO_WARNINGS --host_copt=/D_CRT_SECURE_NO_WARNINGS
+
+###############################################################################
+
+###############################################################################
 # Configuration for building remotely using Remote Build Execution (RBE)
 # https://cloud.google.com/remote-build-execution/
 # Based on https://github.com/bazelbuild/bazel-toolchains/blob/master/bazelrc/bazel-1.0.0.bazelrc
@@ -74,7 +104,7 @@ build:rbe --remote_instance_name=projects/llvm-bazel/instances/default_instance
 # this higher can make builds faster by allowing more jobs to run in parallel.
 # Setting it too high can result in jobs that timeout, however, while waiting
 # for a remote machine to execute them.
-build:rbe --jobs=50
+build:rbe --jobs=150
 
 # Set several flags related to specifying the platform, toolchain and java
 # properties.

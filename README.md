@@ -27,7 +27,7 @@ you can build the project like:
 
 ```shell
 cd llvm-bazel/
-bazel --config=generic_clang build @llvm-project//...
+bazel build --config=generic_clang @llvm-project//...
 ```
 
 Users are more likely going to want to fetch build files from this repository
@@ -47,7 +47,7 @@ You can build either of these demos after changing into the respective directory
 with a command like
 
 ```shell
-bazel --config=generic_clang build @llvm-project//...
+bazel build --config=generic_clang @llvm-project//...
 ```
 
 # License

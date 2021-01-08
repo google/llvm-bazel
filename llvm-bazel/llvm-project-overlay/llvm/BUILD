@@ -2,8 +2,10 @@
 # See https://llvm.org/LICENSE.txt for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-load("//llvm:template_rule.bzl", "template_rule")
-load("//llvm:tblgen.bzl", "gentbl")
+load(":template_rule.bzl", "template_rule")
+load(":tblgen.bzl", "gentbl")
+load(":config.bzl", "llvm_config_defines")
+load(":binary_alias.bzl", "binary_alias")
 
 package(
     default_visibility = ["//visibility:public"],
@@ -11,8 +13,6 @@ package(
 )
 
 exports_files(["LICENSE.TXT"])
-
-llvm_host_triple = "x86_64-unknown-linux_gnu"
 
 # It may be tempting to add compiler flags here, but that should be avoided.
 # The necessary warnings and other compile flags should be provided by the
@@ -110,99 +110,6 @@ genrule(
     cmd = "echo \"#define LLVM_VERSION_INFO \\\"git\\\"\" > $@",
 )
 
-# These rules substitute fairly generic Linux and x86 flavored configs
-# currently. We could extend it in-place with selects-style switching on
-# platforms, or by extracting parts of the dictionary to be computed in with
-# a separate starlark function where the config switching can be managed.
-#
-# TODO: Priority list of enhancements needed here:
-# - Reflect `opt`, `dbg`, etc. features.
-# - Basic port to Mac for convenience.
-# - Extract into something cleaner based on Starlark.
-
-template_rule(
-    name = "llvm_config_h_gen",
-    src = "include/llvm/Config/llvm-config.h.cmake",
-    out = "include/llvm/Config/llvm-config.h",
-    substitutions = {
-        # Define if LLVM_ENABLE_DUMP is enabled
-        "#cmakedefine LLVM_ENABLE_DUMP": "/* #undef LLVM_ENABLE_DUMP */",
-
-        # Target triple LLVM will generate code for by default
-        "#cmakedefine LLVM_DEFAULT_TARGET_TRIPLE \"${LLVM_DEFAULT_TARGET_TRIPLE}\"": "#define LLVM_DEFAULT_TARGET_TRIPLE \"x86_64-unknown-linux-gnu\"",
-
-        # Define if threads enabled
-        "#cmakedefine01 LLVM_ENABLE_THREADS": "#define LLVM_ENABLE_THREADS 1",
-
-        # Has gcc/MSVC atomic intrinsics
-        "#cmakedefine01 LLVM_HAS_ATOMICS": "#define LLVM_HAS_ATOMICS 1",
-
-        # Host triple LLVM will be executed on
-        "#cmakedefine LLVM_HOST_TRIPLE \"${LLVM_HOST_TRIPLE}\"": "#define LLVM_HOST_TRIPLE \"x86_64-unknown-linux-gnu\"",
-
-        # LLVM architecture name for the native architecture, if available
-        "#cmakedefine LLVM_NATIVE_ARCH ${LLVM_NATIVE_ARCH}": "#define LLVM_NATIVE_ARCH X86",
-
-        # LLVM name for the native AsmParser init function, if available
-        "#cmakedefine LLVM_NATIVE_ASMPARSER LLVMInitialize${LLVM_NATIVE_ARCH}AsmParser": "#define LLVM_NATIVE_ASMPARSER LLVMInitializeX86AsmParser",
-
-        # LLVM name for the native AsmPrinter init function, if available
-        "#cmakedefine LLVM_NATIVE_ASMPRINTER LLVMInitialize${LLVM_NATIVE_ARCH}AsmPrinter": "#define LLVM_NATIVE_ASMPRINTER LLVMInitializeX86AsmPrinter",
-
-        # LLVM name for the native Disassembler init function, if available
-        "#cmakedefine LLVM_NATIVE_DISASSEMBLER LLVMInitialize${LLVM_NATIVE_ARCH}Disassembler": "#define LLVM_NATIVE_DISASSEMBLER LLVMInitializeX86Disassembler",
-
-        # LLVM name for the native Target init function, if available
-        "#cmakedefine LLVM_NATIVE_TARGET LLVMInitialize${LLVM_NATIVE_ARCH}Target": "#define LLVM_NATIVE_TARGET LLVMInitializeX86Target",
-
-        # LLVM name for the native TargetInfo init function, if available
-        "#cmakedefine LLVM_NATIVE_TARGETINFO LLVMInitialize${LLVM_NATIVE_ARCH}TargetInfo": "#define LLVM_NATIVE_TARGETINFO LLVMInitializeX86TargetInfo",
-
-        # LLVM name for the native target MC init function, if available
-        "#cmakedefine LLVM_NATIVE_TARGETMC LLVMInitialize${LLVM_NATIVE_ARCH}TargetMC": "#define LLVM_NATIVE_TARGETMC LLVMInitializeX86TargetMC",
-
-        # Define if this is Unixish platform
-        "#cmakedefine LLVM_ON_UNIX ${LLVM_ON_UNIX}": "#define LLVM_ON_UNIX 1",
-
-        # Define if we have the Intel JIT API runtime support library
-        "#cmakedefine01 LLVM_USE_INTEL_JITEVENTS": "#define LLVM_USE_INTEL_JITEVENTS 0",
-
-        # Define if we have the oprofile JIT-support library
-        "#cmakedefine01 LLVM_USE_OPROFILE": "#define LLVM_USE_OPROFILE 0",
-
-        # Define if we have the perf JIT-support library
-        "#cmakedefine01 LLVM_USE_PERF": "#define LLVM_USE_PERF 0",
-
-        # Major version of the LLVM API
-        "#define LLVM_VERSION_MAJOR ${LLVM_VERSION_MAJOR}": "#define LLVM_VERSION_MAJOR 11",
-
-        # Minor version of the LLVM API
-        "#define LLVM_VERSION_MINOR ${LLVM_VERSION_MINOR}": "#define LLVM_VERSION_MINOR 0",
-
-        # Patch version of the LLVM API
-        "#define LLVM_VERSION_PATCH ${LLVM_VERSION_PATCH}": "#define LLVM_VERSION_PATCH 0",
-
-        # LLVM version string
-        "#define LLVM_VERSION_STRING \"${PACKAGE_VERSION}\"": "#define LLVM_VERSION_STRING \"11.0.0git\"",
-
-        # Whether LLVM records statistics for use with GetStatistics(),
-        # PrintStatistics() or PrintStatisticsJSON()
-        "#cmakedefine01 LLVM_FORCE_ENABLE_STATS": "#define LLVM_FORCE_ENABLE_STATS 0",
-
-        # Define if we have z3 and want to build it */
-        "#cmakedefine LLVM_WITH_Z3 ${LLVM_WITH_Z3}": "/* #undef LLVM_WITH_Z3 */",
-
-        # Define if LLVM was built with a dependency to the libtensorflow dynamic library
-        "#cmakedefine LLVM_HAVE_TF_API": "/* #undef LLVM_HAVE_TF_API */",
-
-        # Define if LLVM was built with a dependency to the tensorflow compiler
-        "#cmakedefine LLVM_HAVE_TF_AOT": "/* #undef LLVM_HAVE_TF_AOT */",
-
-        # Define to 1 if you have the <sysexits.h> header file.
-        "#cmakedefine HAVE_SYSEXITS_H ${HAVE_SYSEXITS_H}": "#define HAVE_SYSEXITS_H 1",
-    },
-)
-
 template_rule(
     name = "abi_breaking_h_gen",
     src = "include/llvm/Config/abi-breaking.h.cmake",
@@ -216,357 +123,12 @@ template_rule(
     },
 )
 
-template_rule(
-    name = "config_h_gen",
-    src = "include/llvm/Config/config.h.cmake",
-    out = "include/llvm/Config/config.h",
-    substitutions = {
-        # Bug report URL.
-        "#define BUG_REPORT_URL \"${BUG_REPORT_URL}\"": "#define BUG_REPORT_URL \"https://bugs.llvm.org/\"",
-
-        # Define to 1 to enable backtraces, and to 0 otherwise.
-        "#cmakedefine01 ENABLE_BACKTRACES": "#define ENABLE_BACKTRACES 1",
-
-        # Define to 1 to enable crash overrides, and to 0 otherwise.
-        "#cmakedefine01 ENABLE_CRASH_OVERRIDES": "#define ENABLE_CRASH_OVERRIDES 1",
-
-        # Define to 1 to enable crash memory dumps, and to 0 otherwise.
-        "#cmakedefine01 LLVM_ENABLE_CRASH_DUMPS": "#define LLVM_ENABLE_CRASH_DUMPS 0",
-
-        # Define to 1 if you have the `backtrace' function.
-        "#cmakedefine HAVE_BACKTRACE ${HAVE_BACKTRACE}": "#define HAVE_BACKTRACE TRUE",
-        "#define BACKTRACE_HEADER <${BACKTRACE_HEADER}>": "#define BACKTRACE_HEADER <execinfo.h>",
-
-        # Define to 1 if you have the <CrashReporterClient.h> header file.
-        "#cmakedefine HAVE_CRASHREPORTERCLIENT_H": "/* #undef HAVE_CRASHREPORTERCLIENT_H */",
-
-        # can use __crashreporter_info__
-        "#cmakedefine01 HAVE_CRASHREPORTER_INFO": "#define HAVE_CRASHREPORTER_INFO 0",
-
-        # Define to 1 if you have the declaration of `arc4random', and to 0 if you don't.
-        "#cmakedefine01 HAVE_DECL_ARC4RANDOM": "#define HAVE_DECL_ARC4RANDOM 0",
-
-        # Define to 1 if you have the declaration of `FE_ALL_EXCEPT', and to 0 if you don't.
-        "#cmakedefine01 HAVE_DECL_FE_ALL_EXCEPT": "#define HAVE_DECL_FE_ALL_EXCEPT 1",
-
-        # Define to 1 if you have the declaration of `FE_INEXACT', and to 0 if you don't.
-        "#cmakedefine01 HAVE_DECL_FE_INEXACT": "#define HAVE_DECL_FE_INEXACT 1",
-
-        # Define to 1 if you have the declaration of `strerror_s', and to 0 if you don't.
-        "#cmakedefine01 HAVE_DECL_STRERROR_S": "#define HAVE_DECL_STRERROR_S 0",
-
-        # Define to 1 if you have the DIA SDK installed, and to 0 if you don't.
-        "#cmakedefine01 LLVM_ENABLE_DIA_SDK": "#define LLVM_ENABLE_DIA_SDK 0",
-
-        # Define to 1 if you have the <dlfcn.h> header file.
-        "#cmakedefine HAVE_DLFCN_H ${HAVE_DLFCN_H}": "#define HAVE_DLFCN_H 1",
-
-        # Define if dlopen() is available on this platform.
-        "#cmakedefine HAVE_DLOPEN ${HAVE_DLOPEN}": "#define HAVE_DLOPEN 1",
-
-        # Define if dladdr() is available on this platform.
-        "#cmakedefine HAVE_DLADDR ${HAVE_DLADDR}": "/* #undef HAVE_DLADDR */",
-
-        # Define to 1 if you have the <errno.h> header file.
-        "#cmakedefine HAVE_ERRNO_H ${HAVE_ERRNO_H}": "#define HAVE_ERRNO_H 1",
-
-        # Define to 1 if you have the <fcntl.h> header file.
-        "#cmakedefine HAVE_FCNTL_H ${HAVE_FCNTL_H}": "#define HAVE_FCNTL_H 1",
-
-        # Define to 1 if you have the <fenv.h> header file.
-        "#cmakedefine HAVE_FENV_H ${HAVE_FENV_H}": "#define HAVE_FENV_H 1",
-
-        # Define if libffi is available on this platform.
-        "#cmakedefine HAVE_FFI_CALL ${HAVE_FFI_CALL}": "/* #undef HAVE_FFI_CALL */",
-
-        # Define to 1 if you have the <ffi/ffi.h> header file.
-        "#cmakedefine HAVE_FFI_FFI_H ${HAVE_FFI_FFI_H}": "/* #undef HAVE_FFI_FFI_H */",
-
-        # Define to 1 if you have the <ffi.h> header file.
-        "#cmakedefine HAVE_FFI_H ${HAVE_FFI_H}": "/* #undef HAVE_FFI_H */",
-
-        # Define to 1 if you have the `futimens' function.
-        "#cmakedefine HAVE_FUTIMENS ${HAVE_FUTIMENS}": "#define HAVE_FUTIMENS 1",
-
-        # Define to 1 if you have the `futimes' function.
-        "#cmakedefine HAVE_FUTIMES ${HAVE_FUTIMES}": "#define HAVE_FUTIMES 1",
-
-        # Define to 1 if you have the `getpagesize' function.
-        "#cmakedefine HAVE_GETPAGESIZE ${HAVE_GETPAGESIZE}": "#define HAVE_GETPAGESIZE 1",
-
-        # Define to 1 if you have the `getrlimit' function.
-        "#cmakedefine HAVE_GETRLIMIT ${HAVE_GETRLIMIT}": "#define HAVE_GETRLIMIT 1",
-
-        # Define to 1 if you have the `getrusage' function.
-        "#cmakedefine HAVE_GETRUSAGE ${HAVE_GETRUSAGE}": "#define HAVE_GETRUSAGE 1",
-
-        # Define to 1 if you have the `isatty' function.
-        "#cmakedefine HAVE_ISATTY 1": "#define HAVE_ISATTY 1",
-
-        # Define to 1 if you have the `edit' library (-ledit).
-        "#cmakedefine HAVE_LIBEDIT ${HAVE_LIBEDIT}": "/* #undef HAVE_LIBEDIT */",
-
-        # Define to 1 if you have the `pfm' library (-lpfm).
-        "#cmakedefine HAVE_LIBPFM ${HAVE_LIBPFM}": "/* #undef HAVE_LIBPFM */",
-
-        # Define to 1 if the `perf_branch_entry' struct has field cycles.
-        "#cmakedefine LIBPFM_HAS_FIELD_CYCLES ${LIBPFM_HAS_FIELD_CYCLES}": "/* #undef LIBPFM_HAS_FIELD_CYCLES */",
-
-        # Define to 1 if you have the `psapi' library (-lpsapi).
-        "#cmakedefine HAVE_LIBPSAPI ${HAVE_LIBPSAPI}": "/* #undef HAVE_LIBPSAPI */",
-
-        # Define to 1 if you have the `pthread' library (-lpthread).
-        "#cmakedefine HAVE_LIBPTHREAD ${HAVE_LIBPTHREAD}": "#define HAVE_LIBPTHREAD 1",
-
-        # Define to 1 if you have the `pthread_getname_np' function.
-        "#cmakedefine HAVE_PTHREAD_GETNAME_NP ${HAVE_PTHREAD_GETNAME_NP}": "#define HAVE_PTHREAD_GETNAME_NP 1",
-
-        # Define to 1 if you have the `pthread_setname_np' function.
-        "#cmakedefine HAVE_PTHREAD_SETNAME_NP ${HAVE_PTHREAD_SETNAME_NP}": "#define HAVE_PTHREAD_SETNAME_NP 1",
-
-        # Define to 1 if you have the `z' library (-lz).
-        # FIXME: Enable this by detecting the system library.
-        "#cmakedefine HAVE_LIBZ ${HAVE_LIBZ}": "/* #undef HAVE_LIBZ */",
-
-        # Define to 1 if you have the <link.h> header file.
-        "#cmakedefine HAVE_LINK_H ${HAVE_LINK_H}": "#define HAVE_LINK_H 1",
-
-        # Define to 1 if you have the `lseek64' function.
-        "#cmakedefine HAVE_LSEEK64 ${HAVE_LSEEK64}": "#define HAVE_LSEEK64 1",
-
-        # Define to 1 if you have the <mach/mach.h> header file.
-        "#cmakedefine HAVE_MACH_MACH_H ${HAVE_MACH_MACH_H}": "/* #undef HAVE_MACH_MACH_H */",
-
-        # Define to 1 if you have the `mallctl' function.
-        "#cmakedefine HAVE_MALLCTL ${HAVE_MALLCTL}": "/* #undef HAVE_MALLCTL */",
-
-        # Define to 1 if you have the `mallinfo' function.
-        "#cmakedefine HAVE_MALLINFO ${HAVE_MALLINFO}": "#define HAVE_MALLINFO 1",
-
-        # Define to 1 if you have the <malloc/malloc.h> header file.
-        "#cmakedefine HAVE_MALLOC_MALLOC_H ${HAVE_MALLOC_MALLOC_H}": "/* #undef HAVE_MALLOC_MALLOC_H */",
-
-        # Define to 1 if you have the `malloc_zone_statistics' function.
-        "#cmakedefine HAVE_MALLOC_ZONE_STATISTICS ${HAVE_MALLOC_ZONE_STATISTICS}": "/* #undef HAVE_MALLOC_ZONE_STATISTICS */",
-
-        # Define to 1 if you have the `posix_fallocate' function.
-        "#cmakedefine HAVE_POSIX_FALLOCATE ${HAVE_POSIX_FALLOCATE}": "#define HAVE_POSIX_FALLOCATE 1",
-
-        # Define to 1 if you have the `posix_spawn' function.
-        "#cmakedefine HAVE_POSIX_SPAWN ${HAVE_POSIX_SPAWN}": "#define HAVE_POSIX_SPAWN 1",
-
-        # Define to 1 if you have the `pread' function.
-        "#cmakedefine HAVE_PREAD ${HAVE_PREAD}": "#define HAVE_PREAD 1",
-
-        # Have pthread_getspecific
-        "#cmakedefine HAVE_PTHREAD_GETSPECIFIC ${HAVE_PTHREAD_GETSPECIFIC}": "#define HAVE_PTHREAD_GETSPECIFIC 1",
-
-        # Define to 1 if you have the <pthread.h> header file.
-        "#cmakedefine HAVE_PTHREAD_H ${HAVE_PTHREAD_H}": "#define HAVE_PTHREAD_H 1",
-
-        # Have pthread_mutex_lock
-        "#cmakedefine HAVE_PTHREAD_MUTEX_LOCK ${HAVE_PTHREAD_MUTEX_LOCK}": "#define HAVE_PTHREAD_MUTEX_LOCK 1",
-
-        # Have pthread_rwlock_init
-        "#cmakedefine HAVE_PTHREAD_RWLOCK_INIT ${HAVE_PTHREAD_RWLOCK_INIT}": "#define HAVE_PTHREAD_RWLOCK_INIT 1",
-
-        # Define to 1 if you have the `sbrk' function.
-        "#cmakedefine HAVE_SBRK ${HAVE_SBRK}": "#define HAVE_SBRK 1",
-
-        # Define to 1 if you have the `setenv' function.
-        "#cmakedefine HAVE_SETENV ${HAVE_SETENV}": "#define HAVE_SETENV 1",
-
-        # Define to 1 if you have the `setrlimit' function.
-        "#cmakedefine HAVE_SETRLIMIT ${HAVE_SETRLIMIT}": "#define HAVE_SETRLIMIT 1",
-
-        # Define to 1 if you have the `sigaltstack' function.
-        "#cmakedefine HAVE_SIGALTSTACK ${HAVE_SIGALTSTACK}": "#define HAVE_SIGALTSTACK 1",
-
-        # Define to 1 if you have the <signal.h> header file.
-        "#cmakedefine HAVE_SIGNAL_H ${HAVE_SIGNAL_H}": "#define HAVE_SIGNAL_H 1",
-
-        # Define to 1 if you have the `strerror' function.
-        "#cmakedefine HAVE_STRERROR ${HAVE_STRERROR}": "#define HAVE_STRERROR 1",
-
-        # Define to 1 if you have the `strerror_r' function.
-        "#cmakedefine HAVE_STRERROR_R ${HAVE_STRERROR_R}": "#define HAVE_STRERROR_R 1",
-
-        # Define to 1 if you have the `sysconf' function.
-        "#cmakedefine HAVE_SYSCONF ${HAVE_SYSCONF}": "#define HAVE_SYSCONF 1",
-
-        # Define to 1 if you have the <sys/ioctl.h> header file.
-        "#cmakedefine HAVE_SYS_IOCTL_H ${HAVE_SYS_IOCTL_H}": "#define HAVE_SYS_IOCTL_H 1",
-
-        # Define to 1 if you have the <sys/mman.h> header file.
-        "#cmakedefine HAVE_SYS_MMAN_H ${HAVE_SYS_MMAN_H}": "#define HAVE_SYS_MMAN_H 1",
-
-        # Define to 1 if you have the <sys/param.h> header file.
-        "#cmakedefine HAVE_SYS_PARAM_H ${HAVE_SYS_PARAM_H}": "#define HAVE_SYS_PARAM_H 1",
-
-        # Define to 1 if you have the <sys/resource.h> header file.
-        "#cmakedefine HAVE_SYS_RESOURCE_H ${HAVE_SYS_RESOURCE_H}": "#define HAVE_SYS_RESOURCE_H 1",
-
-        # Define to 1 if you have the <sys/stat.h> header file.
-        "#cmakedefine HAVE_SYS_STAT_H ${HAVE_SYS_STAT_H}": "#define HAVE_SYS_STAT_H 1",
-
-        # Define to 1 if you have the <sys/time.h> header file.
-        "#cmakedefine HAVE_SYS_TIME_H ${HAVE_SYS_TIME_H}": "#define HAVE_SYS_TIME_H 1",
-
-        # Define to 1 if stat struct has st_mtimespec member .
-        "#cmakedefine HAVE_STRUCT_STAT_ST_MTIMESPEC_TV_NSEC ${HAVE_STRUCT_STAT_ST_MTIMESPEC_TV_NSEC}": "/* #undef HAVE_STRUCT_STAT_ST_MTIMESPEC_TV_NSEC */",
-
-        # Define to 1 if stat struct has st_mtim member.
-        "#cmakedefine HAVE_STRUCT_STAT_ST_MTIM_TV_NSEC ${HAVE_STRUCT_STAT_ST_MTIM_TV_NSEC}": "#define HAVE_STRUCT_STAT_ST_MTIM_TV_NSEC 1",
-
-        # Define to 1 if you have the <sys/types.h> header file.
-        "#cmakedefine HAVE_SYS_TYPES_H ${HAVE_SYS_TYPES_H}": "#define HAVE_SYS_TYPES_H 1",
-
-        # Define if the setupterm() function is supported this platform.
-        # FIXME: Enable this correctly by detecting the system library if possible.
-        "#cmakedefine LLVM_ENABLE_TERMINFO ${LLVM_ENABLE_TERMINFO}": "/* #undef LLVM_ENABLE_TERMINFO */",
-
-        # Define if the xar_open() function is supported this platform.
-        "#cmakedefine HAVE_LIBXAR ${HAVE_LIBXAR}": "/* #undef HAVE_LIBXAR */",
-
-        # Define to 1 if you have the <termios.h> header file.
-        "#cmakedefine HAVE_TERMIOS_H ${HAVE_TERMIOS_H}": "#define HAVE_TERMIOS_H 1",
-
-        # Define to 1 if you have the <unistd.h> header file.
-        "#cmakedefine HAVE_UNISTD_H ${HAVE_UNISTD_H}": "#define HAVE_UNISTD_H 1",
-
-        # Define to 1 if you have the <valgrind/valgrind.h> header file.
-        "#cmakedefine HAVE_VALGRIND_VALGRIND_H ${HAVE_VALGRIND_VALGRIND_H}": "/* #undef HAVE_VALGRIND_VALGRIND_H */",
-
-        # Define to 1 if you have the <zlib.h> header file.
-        # FIXME: Enable this by detecting the system library.
-        "#cmakedefine HAVE_ZLIB_H ${HAVE_ZLIB_H}": "/* #undef HAVE_ZLIB_H */",
-
-        # Have host's _alloca
-        "#cmakedefine HAVE__ALLOCA ${HAVE__ALLOCA}": "/* #undef HAVE__ALLOCA */",
-
-        # Define to 1 if you have the `_chsize_s' function.
-        "#cmakedefine HAVE__CHSIZE_S ${HAVE__CHSIZE_S}": "/* #undef HAVE__CHSIZE_S */",
-
-        # Define to 1 if you have the `_Unwind_Backtrace' function.
-        "#cmakedefine HAVE__UNWIND_BACKTRACE ${HAVE__UNWIND_BACKTRACE}": "#define HAVE__UNWIND_BACKTRACE 1",
-
-        # Have host's __alloca
-        "#cmakedefine HAVE___ALLOCA ${HAVE___ALLOCA}": "/* #undef HAVE___ALLOCA */",
-
-        # Have host's __ashldi3
-        "#cmakedefine HAVE___ASHLDI3 ${HAVE___ASHLDI3}": "/* #undef HAVE___ASHLDI3 */",
-
-        # Have host's __ashrdi3
-        "#cmakedefine HAVE___ASHRDI3 ${HAVE___ASHRDI3}": "/* #undef HAVE___ASHRDI3 */",
-
-        # Have host's __chkstk
-        "#cmakedefine HAVE___CHKSTK ${HAVE___CHKSTK}": "/* #undef HAVE___CHKSTK */",
-
-        # Have host's __chkstk_ms
-        "#cmakedefine HAVE___CHKSTK_MS ${HAVE___CHKSTK_MS}": "/* #undef HAVE___CHKSTK_MS */",
-
-        # Have host's __cmpdi2
-        "#cmakedefine HAVE___CMPDI2 ${HAVE___CMPDI2}": "/* #undef HAVE___CMPDI2 */",
-
-        # Have host's __divdi3
-        "#cmakedefine HAVE___DIVDI3 ${HAVE___DIVDI3}": "/* #undef HAVE___DIVDI3 */",
-
-        # Have host's __fixdfdi
-        "#cmakedefine HAVE___FIXDFDI ${HAVE___FIXDFDI}": "/* #undef HAVE___FIXDFDI */",
-
-        # Have host's __fixsfdi
-        "#cmakedefine HAVE___FIXSFDI ${HAVE___FIXSFDI}": "/* #undef HAVE___FIXSFDI */",
-
-        # Have host's __floatdidf
-        "#cmakedefine HAVE___FLOATDIDF ${HAVE___FLOATDIDF}": "/* #undef HAVE___FLOATDIDF */",
-
-        # Have host's __lshrdi3
-        "#cmakedefine HAVE___LSHRDI3 ${HAVE___LSHRDI3}": "/* #undef HAVE___LSHRDI3 */",
-
-        # Have host's __main
-        "#cmakedefine HAVE___MAIN ${HAVE___MAIN}": "/* #undef HAVE___MAIN */",
-
-        # Have host's __moddi3
-        "#cmakedefine HAVE___MODDI3 ${HAVE___MODDI3}": "/* #undef HAVE___MODDI3 */",
-
-        # Have host's __udivdi3
-        "#cmakedefine HAVE___UDIVDI3 ${HAVE___UDIVDI3}": "/* #undef HAVE___UDIVDI3 */",
-
-        # Have host's __umoddi3
-        "#cmakedefine HAVE___UMODDI3 ${HAVE___UMODDI3}": "/* #undef HAVE___UMODDI3 */",
-
-        # Have host's ___chkstk
-        "#cmakedefine HAVE____CHKSTK ${HAVE____CHKSTK}": "/* #undef HAVE____CHKSTK */",
-
-        # Have host's ___chkstk_ms
-        "#cmakedefine HAVE____CHKSTK_MS ${HAVE____CHKSTK_MS}": "/* #undef HAVE____CHKSTK_MS */",
-
-        # Linker version detected at compile time.
-        "#cmakedefine HOST_LINK_VERSION \"${HOST_LINK_VERSION}\"": "/* #undef HOST_LINK_VERSION */",
-
-        # Target triple LLVM will generate code for by default
-        # Doesn't use `cmakedefine` because it is allowed to be empty.
-        "#define LLVM_DEFAULT_TARGET_TRIPLE \"${LLVM_DEFAULT_TARGET_TRIPLE}\"": "#define LLVM_DEFAULT_TARGET_TRIPLE \"x86_64-unknown-linux-gnu\"",
-
-        # Define if zlib compression is available
-        # FIXME: Enable this by detecting the system library.
-        "#cmakedefine01 LLVM_ENABLE_ZLIB": "/* #undef LLVM_ENABLE_ZLIB */",
-
-        # Define if overriding target triple is enabled
-        "#cmakedefine LLVM_TARGET_TRIPLE_ENV \"${LLVM_TARGET_TRIPLE_ENV}\"": "/* #undef LLVM_TARGET_TRIPLE_ENV */",
-
-        # LLVM version information
-        "#cmakedefine LLVM_VERSION_INFO \"${LLVM_VERSION_INFO}\"": "/* #undef LLVM_VERSION_INFO */",
-
-        # Whether tools show host and target info when invoked with --version
-        "#cmakedefine01 LLVM_VERSION_PRINTER_SHOW_HOST_TARGET_INFO": "#define LLVM_VERSION_PRINTER_SHOW_HOST_TARGET_INFO 1",
-
-        # Define if libxml2 is supported on this platform.
-        "#cmakedefine LLVM_ENABLE_LIBXML2 ${LLVM_ENABLE_LIBXML2}": "/* #undef LLVM_ENABLE_LIBXML2 */",
-
-        # Define to the extension used for shared libraries, say, \".so\".
-        "#cmakedefine LTDL_SHLIB_EXT \"${LTDL_SHLIB_EXT}\"": "#define LTDL_SHLIB_EXT \".so\"",
-
-        # Define to the address where bug reports for this package should be sent.
-        "#cmakedefine PACKAGE_BUGREPORT \"${PACKAGE_BUGREPORT}\"": "#define PACKAGE_BUGREPORT \"https://bugs.llvm.org/\"",
-
-        # Define to the full name of this package.
-        "#cmakedefine PACKAGE_NAME \"${PACKAGE_NAME}\"": "#define PACKAGE_NAME \"LLVM\"",
-
-        # Define to the full name and version of this package.
-        "#cmakedefine PACKAGE_STRING \"${PACKAGE_STRING}\"": "#define PACKAGE_STRING \"LLVM 11.0.0git\"",
-
-        # Define to the version of this package.
-        "#cmakedefine PACKAGE_VERSION \"${PACKAGE_VERSION}\"": "#define PACKAGE_VERSION \"11.0.0git\"",
-
-        # Define to the vendor of this package.
-        "#cmakedefine PACKAGE_VENDOR \"${PACKAGE_VENDOR}\"": "/* #undef PACKAGE_VENDOR */",
-
-        # Define as the return type of signal handlers (`int' or `void').
-        "#cmakedefine RETSIGTYPE ${RETSIGTYPE}": "#define RETSIGTYPE void",
-
-        # Define if std::is_trivially_copyable is supported
-        "#cmakedefine HAVE_STD_IS_TRIVIALLY_COPYABLE ${HAVE_STD_IS_TRIVIALLY_COPYABLE}": "#define HAVE_STD_IS_TRIVIALLY_COPYABLE 1",
-
-        # Define to a function implementing stricmp
-        "#cmakedefine stricmp ${stricmp}": "/* #undef stricmp */",
-
-        # Define to a function implementing strdup
-        "#cmakedefine strdup ${strdup}": "/* #undef strdup */",
-
-        # Whether GlobalISel rule coverage is being collected
-        "#cmakedefine01 LLVM_GISEL_COV_ENABLED": "#define LLVM_GISEL_COV_ENABLED 0",
-
-        # Define if we have z3 and want to build it
-        "#cmakedefine LLVM_WITH_Z3 ${LLVM_WITH_Z3}": "/* #undef LLVM_WITH_Z3 */",
-
-        # Define to the default GlobalISel coverage file prefix
-        "#cmakedefine LLVM_GISEL_COV_PREFIX \"${LLVM_GISEL_COV_PREFIX}\"": "/* #undef LLVM_GISEL_COV_PREFIX */",
-
-        # Whether Timers signpost passes in Xcode Instruments
-        "#cmakedefine01 LLVM_SUPPORT_XCODE_SIGNPOSTS": "#define LLVM_SUPPORT_XCODE_SIGNPOSTS 0",
-    },
-)
+# To enable diff testing out of tree
+exports_files([
+    "include/llvm/Config/config.h.cmake",
+    "include/llvm/Config/llvm-config.h.cmake",
+    "include/llvm/Config/abi-breaking.h.cmake",
+])
 
 cc_library(
     name = "config",
@@ -576,6 +138,7 @@ cc_library(
         "include/llvm/Config/llvm-config.h",
     ],
     copts = llvm_copts,
+    defines = llvm_config_defines,
     includes = ["include"],
     textual_hdrs = [
         "include/llvm/Config/AsmParsers.def",
@@ -619,11 +182,18 @@ cc_library(
         "lib/Support/*.cpp",
         "lib/Support/*.h",
         "lib/Support/*.inc",
-        "lib/Support/Unix/*.h",
-        "lib/Support/Unix/*.inc",
-    ]),
+    ]) + select({
+        "@bazel_tools//src/conditions:windows": glob([
+            "lib/Support/Windows/*.h",
+            "lib/Support/Windows/*.inc",
+        ]),
+        "//conditions:default": glob([
+            "lib/Support/Unix/*.h",
+            "lib/Support/Unix/*.inc",
+        ]),
+    }),
     hdrs = glob([
-        "include/llvm/Support/*.h",
+        "include/llvm/Support/**/*.h",
         "include/llvm/ADT/*.h",
     ]) + [
         "include/llvm/Support/VCSRevision.h",
@@ -639,10 +209,13 @@ cc_library(
     ],
     copts = llvm_copts,
     includes = ["include"],
-    linkopts = [
-        "-pthread",
-        "-ldl",
-    ],
+    linkopts = select({
+        "@bazel_tools//src/conditions:windows": [],
+        "//conditions:default": [
+            "-pthread",
+            "-ldl",
+        ],
+    }),
     textual_hdrs = glob([
         "include/llvm/Support/*.def",
     ]),
@@ -880,13 +453,23 @@ cc_library(
     name = "tblgen",
     srcs = glob([
         "utils/TableGen/*.cpp",
-        "utils/TableGen/*.h",
         "utils/TableGen/GlobalISel/*.cpp",
+
+        # We have to include these headers here as well as in the `hdrs` below
+        # to allow the `.cpp` files to use file-relative-inclusion to find
+        # them, even though consumers of this library use inclusion relative to
+        # `utils/TableGen` with the `strip_includes_prefix` of this library.
+        # This mixture appears to be incompatible with header modules.
+        "utils/TableGen/*.h",
+        "utils/TableGen/GlobalISel/*.h",
     ]),
     hdrs = glob([
+        "utils/TableGen/*.h",
         "utils/TableGen/GlobalISel/*.h",
     ]),
     copts = llvm_copts,
+    features = ["-header_modules"],
+    strip_include_prefix = "utils/TableGen",
     deps = [
         ":MC",
         ":Support",
@@ -962,6 +545,10 @@ llvm_target_intrinsics_list = [
     {
         "name": "R600",
         "intrinsic_prefix": "r600",
+    },
+    {
+        "name": "VE",
+        "intrinsic_prefix": "ve",
     },
     {
         "name": "RISCV",
@@ -1358,6 +945,7 @@ cc_library(
 
 gentbl(
     name = "InstCombineTableGen",
+    strip_include_prefix = "lib/Target/AMDGPU",
     tbl_outs = [(
         "-gen-searchable-tables",
         "lib/Target/AMDGPU/InstCombineTables.inc",
@@ -1523,7 +1111,7 @@ gentbl(
     name = "omp_gen_impl",
     library = False,
     tbl_outs = [
-        ("--gen-directive-gen", "include/llvm/Frontend/OpenMP/OMP.cpp.inc"),
+        ("--gen-directive-gen", "include/llvm/Frontend/OpenMP/OMP.inc"),
         ("--gen-directive-impl", "lib/Frontend/OpenMP/OMP.cpp"),
     ],
     tblgen = ":llvm-tblgen",
@@ -1536,7 +1124,7 @@ cc_library(
     srcs = glob([
         "lib/Frontend/OpenMP/*.cpp",
     ]) + [
-        "include/llvm/Frontend/OpenMP/OMP.cpp.inc",
+        "include/llvm/Frontend/OpenMP/OMP.inc",
         "lib/Frontend/OpenMP/OMP.cpp",
     ],
     hdrs = glob([
@@ -1548,6 +1136,57 @@ cc_library(
     textual_hdrs = glob([
         "include/llvm/Frontend/OpenMP/*.def",
     ]),
+    deps = [
+        ":Analysis",
+        ":Core",
+        ":Support",
+        ":TransformUtils",
+    ],
+)
+
+filegroup(
+    name = "acc_td_files",
+    srcs = glob([
+        "include/llvm/Frontend/OpenACC/*.td",
+        "include/llvm/Frontend/Directive/*.td",
+    ]),
+)
+
+gentbl(
+    name = "acc_gen",
+    library = False,
+    tbl_outs = [
+        ("--gen-directive-decl", "include/llvm/Frontend/OpenACC/ACC.h.inc"),
+    ],
+    tblgen = ":llvm-tblgen",
+    td_file = "include/llvm/Frontend/OpenACC/ACC.td",
+    td_srcs = [":acc_td_files"],
+)
+
+gentbl(
+    name = "acc_gen_impl",
+    library = False,
+    tbl_outs = [
+        ("--gen-directive-gen", "include/llvm/Frontend/OpenACC/ACC.cpp.inc"),
+        ("--gen-directive-impl", "lib/Frontend/OpenACC/ACC.cpp"),
+    ],
+    tblgen = ":llvm-tblgen",
+    td_file = "include/llvm/Frontend/OpenACC/ACC.td",
+    td_srcs = [":acc_td_files"],
+)
+
+cc_library(
+    name = "FrontendOpenACC",
+    srcs = glob([
+        "lib/Frontend/OpenACC/*.cpp",
+    ]) + [
+        "include/llvm/Frontend/OpenACC/ACC.cpp.inc",
+        "lib/Frontend/OpenACC/ACC.cpp",
+    ],
+    hdrs = glob([
+        "include/llvm/Frontend/OpenACC/*.h",
+    ]) + ["include/llvm/Frontend/OpenACC/ACC.h.inc"],
+    copts = llvm_copts,
     deps = [
         ":Analysis",
         ":Core",
@@ -1812,6 +1451,7 @@ llvm_target_list = [
             ("-gen-global-isel", "lib/Target/AArch64/AArch64GenGlobalISel.inc"),
             ("-gen-global-isel-combiner -combiners=AArch64PreLegalizerCombinerHelper", "lib/Target/AArch64/AArch64GenPreLegalizeGICombiner.inc"),
             ("-gen-global-isel-combiner -combiners=AArch64PostLegalizerCombinerHelper", "lib/Target/AArch64/AArch64GenPostLegalizeGICombiner.inc"),
+            ("-gen-global-isel-combiner -combiners=AArch64PostLegalizerLoweringHelper", "lib/Target/AArch64/AArch64GenPostLegalizeGILowering.inc"),
             ("-gen-callingconv", "lib/Target/AArch64/AArch64GenCallingConv.inc"),
             ("-gen-subtarget", "lib/Target/AArch64/AArch64GenSubtargetInfo.inc"),
             ("-gen-disassembler", "lib/Target/AArch64/AArch64GenDisassemblerTables.inc"),
@@ -1966,7 +1606,7 @@ llvm_target_list = [
             ("-gen-register-bank", "lib/Target/RISCV/RISCVGenRegisterBank.inc"),
             ("-gen-register-info", "lib/Target/RISCV/RISCVGenRegisterInfo.inc"),
             ("-gen-subtarget", "lib/Target/RISCV/RISCVGenSubtargetInfo.inc"),
-            ("-gen-searchable-tables", "lib/Target/RISCV/RISCVGenSystemOperands.inc"),
+            ("-gen-searchable-tables", "lib/Target/RISCV/RISCVGenSearchableTables.inc"),
         ],
     },
     {
@@ -2025,6 +1665,7 @@ filegroup(
 
 gentbl(
     name = "amdgpu_isel_target_gen",
+    strip_include_prefix = "lib/Target/AMDGPU",
     tbl_outs = [
         ("-gen-global-isel", "lib/Target/AMDGPU/AMDGPUGenGlobalISel.inc"),
         ("-gen-global-isel-combiner -combiners=AMDGPUPreLegalizerCombinerHelper", "lib/Target/AMDGPU/AMDGPUGenPreLegalizeGICombiner.inc"),
@@ -2042,6 +1683,7 @@ gentbl(
 
 gentbl(
     name = "r600_target_gen",
+    strip_include_prefix = "lib/Target/AMDGPU",
     tbl_outs = [
         ("-gen-asm-writer", "lib/Target/AMDGPU/R600GenAsmWriter.inc"),
         ("-gen-callingconv", "lib/Target/AMDGPU/R600GenCallingConv.inc"),
@@ -2064,8 +1706,16 @@ gentbl(
 [[
     [gentbl(
         name = target["name"] + "CommonTableGen",
+        strip_include_prefix = "lib/Target/" + target["name"],
         tbl_outs = target["tbl_outs"],
         tblgen = ":llvm-tblgen",
+        # MSVC isn't happy with long string literals, while other compilers
+        # which support them get significant compile time improvements with
+        # them enabled. Ideally this flag would only be enabled on Windows via
+        # a select() on `@bazel_tools//src/conditions:windows,`, but that would
+        # require refactoring gentbl from a macro into a rule.
+        # TODO(#92): Refactor gentbl to support this use
+        tblgen_args = "--long-string-literals=0",
         td_file = "lib/Target/" + target["name"] + "/" + target["short_name"] + ".td",
         td_srcs = [
             ":common_target_td_sources",
@@ -2080,6 +1730,7 @@ gentbl(
         srcs = ["lib/Target/" + target["name"] + "/TargetInfo/" + target["name"] + "TargetInfo.cpp"],
         hdrs = glob(["lib/Target/" + target["name"] + "/TargetInfo/*.h"]),
         copts = llvm_copts,
+        strip_include_prefix = "lib/Target/" + target["name"],
         deps = [
             ":" + target["name"] + "CommonTableGen",
             ":Support",
@@ -2093,17 +1744,45 @@ gentbl(
         srcs = glob([
             "lib/Target/" + target["name"] + "/MCTargetDesc/*.cpp",
             "lib/Target/" + target["name"] + "/Utils/*.cpp",
-            "lib/Target/" + target["name"] + "/*.h",
+
+            # We have to include these headers here as well as in the `hdrs`
+            # below to allow the `.cpp` files to use file-relative-inclusion to
+            # find them, even though consumers of this library use inclusion
+            # relative to the target with the `strip_includes_prefix` of this
+            # library. This mixture is likely incompatible with header modules.
+            "lib/Target/" + target["name"] + "/MCTargetDesc/*.h",
+            "lib/Target/" + target["name"] + "/Utils/*.h",
         ]),
         hdrs = glob([
             "lib/Target/" + target["name"] + "/MCTargetDesc/*.h",
             "lib/Target/" + target["name"] + "/Utils/*.h",
-        ]),
-        copts = llvm_copts,
-        textual_hdrs = glob([
+
+            # This a bit of a hack to allow us to expose common, internal
+            # target header files to other libraries within the target via
+            # target-relative includes. This usage of headers is inherently
+            # non-modular as there is a mixture of target-relative inclusion
+            # using this rule and file-relative inclusion using the repeated
+            # listing of these headers in the `srcs` of subsequent rules.
+            "lib/Target/" + target["name"] + "/*.h",
+
+            # FIXME: The entries below should be `textual_hdrs` instead of
+            # `hdrs`, but unfortunately that doesn't work with
+            # `strip_include_prefix`:
+            # https://github.com/bazelbuild/bazel/issues/12424
+            #
+            # Once that issue is fixed and released, we can switch this to
+            # `textual_hdrs` and remove the feature disabling the various Bazel
+            # features (both current and under-development) that motivated the
+            # distinction between these two.
             "lib/Target/" + target["name"] + "/*.def",
             "lib/Target/" + target["name"] + "/*.inc",
         ]),
+        copts = llvm_copts,
+        features = [
+            "-parse_headers",
+            "-header_modules",
+        ],
+        strip_include_prefix = "lib/Target/" + target["name"],
         deps = [
             ":BinaryFormat",
             # Depending on `:CodeGen` headers in this library is almost
@@ -2129,6 +1808,7 @@ gentbl(
         ]),
         hdrs = ["lib/Target/" + target["name"] + "/" + target["short_name"] + ".h"],
         copts = llvm_copts,
+        strip_include_prefix = "lib/Target/" + target["name"],
         textual_hdrs = glob([
             "lib/Target/" + target["name"] + "/*.def",
             "lib/Target/" + target["name"] + "/*.inc",
@@ -2172,6 +1852,30 @@ gentbl(
             ":" + target["name"] + "UtilsAndDesc",
         ],
     )],
+    # This target is a bit of a hack to allow us to expose internal
+    # disassembler header files via internal target-relative include paths.
+    # This usage of headers is inherently non-modular as there is a mixture of
+    # target-relative inclusion using this rule and same-directory inclusion
+    # using the repeated listing of these headers in the `srcs` below.
+    [cc_library(
+        name = target["name"] + "DisassemblerInternalHeaders",
+        # FIXME: This should be `textual_hdrs` instead of `hdrs`, but
+        # unfortunately that doesn't work with `strip_include_prefix`:
+        # https://github.com/bazelbuild/bazel/issues/12424
+        #
+        # Once that issue is fixed and released, we can switch this to
+        # `textual_hdrs` and remove the feature disabling the various Bazel
+        # features (both current and under-development) that motivated the
+        # distinction between these two.
+        hdrs = glob([
+            "lib/Target/" + target["name"] + "/Disassembler/*.h",
+        ]),
+        features = [
+            "-parse_headers",
+            "-header_modules",
+        ],
+        strip_include_prefix = "lib/Target/" + target["name"],
+    )],
     [cc_library(
         name = target["name"] + "Disassembler",
         srcs = glob([
@@ -2188,6 +1892,7 @@ gentbl(
             ":Support",
             ":Target",
             ":" + target["name"] + "CodeGen",
+            ":" + target["name"] + "DisassemblerInternalHeaders",
             ":" + target["name"] + "CommonTableGen",
             ":" + target["name"] + "UtilsAndDesc",
         ],
@@ -2278,7 +1983,6 @@ cc_library(
         "include/llvm/LTO/*.h",
         "include/llvm/LTO/legacy/*.h",
     ]) + [
-        "include/llvm-c/LinkTimeOptimizer.h",
         "include/llvm-c/lto.h",
     ],
     copts = llvm_copts,
@@ -2370,6 +2074,7 @@ cc_library(
     deps = [
         ":ExecutionEngine",
         ":Object",
+        ":OrcTargetProcess",
         ":Support",
         ":config",
     ],
@@ -2395,20 +2100,30 @@ cc_library(
     ],
 )
 
+# There is some deep layering violation between these libraries and JITLink.
+# To workaround this, the same headers are included in multiple rules.
+cc_library(
+    name = "Orc_layering_violation_headers",
+    hdrs = glob([
+        "include/llvm/ExecutionEngine/Orc/*.h",
+        "include/llvm/ExecutionEngine/Orc/RPC/*.h",
+        "include/llvm/ExecutionEngine/JITLink/*.h",
+    ]),
+)
+
 cc_library(
     name = "OrcJIT",
     srcs = glob([
         "lib/ExecutionEngine/Orc/*.cpp",
         "lib/ExecutionEngine/Orc/*.h",
-        "lib/ExecutionEngine/Orc/RPC/*.cpp",
-        "lib/ExecutionEngine/OrcError/*.cpp",
     ]),
     hdrs = glob([
         "include/llvm/ExecutionEngine/Orc/*.h",
         "include/llvm/ExecutionEngine/Orc/RPC/*.h",
     ]) + [
+        "include/llvm-c/LLJIT.h",
         "include/llvm-c/Orc.h",
-        "include/llvm-c/OrcBindings.h",
+        "include/llvm-c/OrcEE.h",
     ],
     copts = llvm_copts,
     deps = [
@@ -2419,9 +2134,64 @@ cc_library(
         ":JITLink",
         ":MC",
         ":Object",
+        ":OrcShared",
+        ":OrcTargetProcess",
         ":Support",
         ":Target",
         ":TransformUtils",
+        ":config",
+    ],
+)
+
+cc_library(
+    name = "OrcShared",
+    srcs = glob([
+        "lib/ExecutionEngine/Orc/Shared/*.cpp",
+    ]),
+    hdrs = glob([
+        "include/llvm/ExecutionEngine/Orc/Shared/*.h",
+    ]),
+    copts = llvm_copts,
+    deps = [
+        ":BinaryFormat",
+        ":CodeGen",
+        ":Core",
+        ":DebugInfo",
+        ":ExecutionEngine",
+        ":MC",
+        ":MCDisassembler",
+        ":Object",
+        ":Orc_layering_violation_headers",
+        ":Passes",
+        ":Support",
+        ":Target",
+        ":config",
+    ],
+)
+
+cc_library(
+    name = "OrcTargetProcess",
+    srcs = glob([
+        "lib/ExecutionEngine/Orc/TargetProcess/*.cpp",
+    ]),
+    hdrs = glob([
+        "include/llvm/ExecutionEngine/Orc/TargetProcess/*.h",
+    ]),
+    copts = llvm_copts,
+    deps = [
+        ":BinaryFormat",
+        ":CodeGen",
+        ":Core",
+        ":DebugInfo",
+        ":ExecutionEngine",
+        ":MC",
+        ":MCDisassembler",
+        ":Object",
+        ":OrcShared",
+        ":Orc_layering_violation_headers",
+        ":Passes",
+        ":Support",
+        ":Target",
         ":config",
     ],
 )
@@ -2443,6 +2213,7 @@ cc_library(
 
 gentbl(
     name = "DllOptionsTableGen",
+    strip_include_prefix = "lib/ToolDrivers/llvm-dlltool",
     tbl_outs = [(
         "-gen-opt-parser-defs",
         "lib/ToolDrivers/llvm-dlltool/Options.inc",
@@ -2467,6 +2238,7 @@ cc_library(
 
 gentbl(
     name = "LibOptionsTableGen",
+    strip_include_prefix = "lib/ToolDrivers/llvm-lib",
     tbl_outs = [(
         "-gen-opt-parser-defs",
         "lib/ToolDrivers/llvm-lib/Options.inc",
@@ -2522,12 +2294,29 @@ cc_library(
         "-lxml2",
     ],
     tags = [
-        "manual",  # TODO(gcmn): Fix remote execution and re-enable
+        "manual",  # External dependency (libxml)
+        "nobuildkite",  # TODO(gcmn): Fix remote execution and re-enable
     ],
     deps = [
         ":Support",
         ":config",
     ],
+)
+
+# FIXME: This library should use `textual_hdrs` instead of `hdrs` as we don't
+# want to parse or build modules for them (and haven't duplicated the necessary
+# dependencies), but unfortunately that doesn't work with
+# `strip_include_prefix`: https://github.com/bazelbuild/bazel/issues/12424
+#
+# For now, we simply disable features that might rely on the headers parsing.
+cc_library(
+    name = "llvm-objcopy-headers",
+    hdrs = glob(["tools/llvm-objcopy/**/*.h"]),
+    features = [
+        "-parse_headers",
+        "-header_modules",
+    ],
+    strip_include_prefix = "tools/llvm-objcopy",
 )
 
 cc_library(
@@ -2546,6 +2335,15 @@ cc_library(
         ":Object",
         ":Support",
     ],
+)
+
+cc_library(
+    name = "llvm-mca-headers",
+    hdrs = glob([
+        "tools/llvm-mca/*.h",
+        "tools/llvm-mca/Views/*.h",
+    ]),
+    strip_include_prefix = "tools/llvm-mca",
 )
 
 cc_library(
@@ -2568,12 +2366,22 @@ cc_library(
         "tools/llvm-exegesis/lib/*.cpp",
         "tools/llvm-exegesis/lib/X86/*.cpp",
         "tools/llvm-exegesis/lib/X86/*.h",
+
+        # We have to include these headers here as well as in the `hdrs` below
+        # to allow the `.cpp` files to use file-relative-inclusion to find
+        # them, even though consumers of this library use inclusion relative to
+        # `tools/llvm-exegesis/lib` with the `strip_includes_prefix` of this
+        # library. This mixture appears to be incompatible with header modules.
+        "tools/llvm-exegesis/lib/*.h",
     ]),
     hdrs = glob(["tools/llvm-exegesis/lib/*.h"]),
     copts = llvm_copts + ["-DHAVE_LIBPFM=1"],
     defines = ["LLVM_EXEGESIS_INITIALIZE_NATIVE_TARGET=InitializeX86ExegesisTarget"],
+    features = ["-header_modules"],
+    strip_include_prefix = "tools/llvm-exegesis/lib",
     tags = [
-        "manual",  # TODO(chandlerc): Add support for fetching and building libpfm4 and enable this.
+        "manual",  # External dependency (libpfm4)
+        "nobuildkite",  # TODO(chandlerc): Add support for fetching and building libpfm4 and enable this.
     ],
     deps = [
         ":AllTargetsAsmParsers",
@@ -2597,6 +2405,7 @@ cc_library(
 
 gentbl(
     name = "DsymutilTableGen",
+    strip_include_prefix = "tools/dsymutil",
     tbl_outs = [(
         "-gen-opt-parser-defs",
         "tools/dsymutil/Options.inc",
@@ -2665,15 +2474,19 @@ cc_binary(
     copts = llvm_copts,
     # ll scripts rely on symbols from dependent
     # libraries being resolvable.
-    linkopts = [
-        "-Wl,--undefined=_ZTIi",
-        "-Wl,--export-dynamic-symbol=_ZTIi",
-        "-Wl,--export-dynamic-symbol=__cxa_begin_catch",
-        "-Wl,--export-dynamic-symbol=__cxa_end_catch",
-        "-Wl,--export-dynamic-symbol=__gxx_personality_v0",
-        "-Wl,--export-dynamic-symbol=__cxa_allocate_exception",
-        "-Wl,--export-dynamic-symbol=__cxa_throw",
-    ],
+    linkopts = select({
+        "@bazel_tools//src/conditions:windows": [],
+        "@bazel_tools//src/conditions:darwin": [],
+        "//conditions:default": [
+            "-Wl,--undefined=_ZTIi",
+            "-Wl,--export-dynamic-symbol=_ZTIi",
+            "-Wl,--export-dynamic-symbol=__cxa_begin_catch",
+            "-Wl,--export-dynamic-symbol=__cxa_end_catch",
+            "-Wl,--export-dynamic-symbol=__gxx_personality_v0",
+            "-Wl,--export-dynamic-symbol=__cxa_allocate_exception",
+            "-Wl,--export-dynamic-symbol=__cxa_throw",
+        ],
+    }),
     stamp = 0,
     deps = [
         ":AllTargetsAsmParsers",
@@ -2715,19 +2528,19 @@ cc_binary(
 
 # We need to run llvm-ar with different basenames to make it run with
 # different behavior.
-sh_binary(
+binary_alias(
     name = "llvm-dlltool",
-    srcs = [":llvm-ar"],
+    binary = ":llvm-ar",
 )
 
-sh_binary(
+binary_alias(
     name = "llvm-lib",
-    srcs = [":llvm-ar"],
+    binary = ":llvm-ar",
 )
 
-sh_binary(
+binary_alias(
     name = "llvm-ranlib",
-    srcs = [":llvm-ar"],
+    binary = ":llvm-ar",
 )
 
 cc_binary(
@@ -2820,6 +2633,7 @@ cc_binary(
 
 gentbl(
     name = "CvtResTableGen",
+    strip_include_prefix = "tools/llvm-cvtres",
     tbl_outs = [(
         "-gen-opt-parser-defs",
         "tools/llvm-cvtres/Opts.inc",
@@ -2963,9 +2777,11 @@ cc_binary(
         "tools/llvm-exegesis/llvm-exegesis.cpp",
     ],
     copts = llvm_copts + ["-DHAVE_LIBPFM=0"],
+    linkopts = ["-lpfm"],
     stamp = 0,
     tags = [
-        "manual",  # TODO(chandlerc): Remove when the library builds.
+        "manual",  # TODO(chandlerc): Enable when the library builds.
+        "nobuildkite",  # TODO(chandlerc): Enable when the library builds.
     ],
     deps = [
         ":AllTargetsAsmParsers",
@@ -3022,15 +2838,19 @@ cc_binary(
     ]),
     copts = llvm_copts,
     # Make symbols from the standard library dynamically resolvable.
-    linkopts = [
-        "-Wl,--undefined=_ZTIi",
-        "-Wl,--export-dynamic-symbol=_ZTIi",
-        "-Wl,--export-dynamic-symbol=__cxa_begin_catch",
-        "-Wl,--export-dynamic-symbol=__cxa_end_catch",
-        "-Wl,--export-dynamic-symbol=__gxx_personality_v0",
-        "-Wl,--export-dynamic-symbol=__cxa_allocate_exception",
-        "-Wl,--export-dynamic-symbol=__cxa_throw",
-    ],
+    linkopts = select({
+        "@bazel_tools//src/conditions:windows": [],
+        "@bazel_tools//src/conditions:darwin": [],
+        "//conditions:default": [
+            "-Wl,--undefined=_ZTIi",
+            "-Wl,--export-dynamic-symbol=_ZTIi",
+            "-Wl,--export-dynamic-symbol=__cxa_begin_catch",
+            "-Wl,--export-dynamic-symbol=__cxa_end_catch",
+            "-Wl,--export-dynamic-symbol=__gxx_personality_v0",
+            "-Wl,--export-dynamic-symbol=__cxa_allocate_exception",
+            "-Wl,--export-dynamic-symbol=__cxa_throw",
+        ],
+    }),
     stamp = 0,
     deps = [
         ":AllTargetsAsmParsers",
@@ -3087,6 +2907,7 @@ cc_binary(
 
 gentbl(
     name = "LipoOptsTableGen",
+    strip_include_prefix = "tools/llvm-lipo",
     tbl_outs = [(
         "-gen-opt-parser-defs",
         "tools/llvm-lipo/LipoOpts.inc",
@@ -3176,11 +2997,9 @@ cc_binary(
     name = "llvm-mca",
     srcs = glob([
         "tools/llvm-mca/*.cpp",
-        "tools/llvm-mca/*.h",
         "tools/llvm-mca/Views/*.cpp",
-        "tools/llvm-mca/Views/*.h",
     ]),
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/tools/llvm-mca"],
+    copts = llvm_copts,
     stamp = 0,
     deps = [
         ":AllTargetsAsmParsers",
@@ -3190,7 +3009,20 @@ cc_binary(
         ":MCA",
         ":MCParser",
         ":Support",
+        ":llvm-mca-headers",
     ],
+)
+
+gentbl(
+    name = "MlTableGen",
+    strip_include_prefix = "tools/llvm-ml",
+    tbl_outs = [(
+        "-gen-opt-parser-defs",
+        "tools/llvm-ml/Opts.inc",
+    )],
+    tblgen = ":llvm-tblgen",
+    td_file = "tools/llvm-ml/Opts.td",
+    td_srcs = ["include/llvm/Option/OptParser.td"],
 )
 
 cc_binary(
@@ -3207,6 +3039,8 @@ cc_binary(
         ":AllTargetsDisassemblers",
         ":MC",
         ":MCParser",
+        ":MlTableGen",
+        ":Option",
         ":Support",
     ],
 )
@@ -3228,6 +3062,7 @@ cc_binary(
 
 gentbl(
     name = "MtTableGen",
+    strip_include_prefix = "tools/llvm-mt",
     tbl_outs = [(
         "-gen-opt-parser-defs",
         "tools/llvm-mt/Opts.inc",
@@ -3246,7 +3081,8 @@ cc_binary(
     copts = llvm_copts,
     stamp = 0,
     tags = [
-        "manual" # TODO(gcmn): Fix remote execution and re-enable
+        "manual",  # TODO(gcmn): External dependency (through WindowsManifest)
+        "nobuildkite",  # TODO(gcmn): Re-enable when WindowsManifest builds
     ],
     deps = [
         ":MtTableGen",
@@ -3278,6 +3114,7 @@ cc_binary(
 
 gentbl(
     name = "llvm-objcopy-opts",
+    strip_include_prefix = "tools/llvm-objcopy",
     tbl_outs = [(
         "-gen-opt-parser-defs",
         "tools/llvm-objcopy/ObjcopyOpts.inc",
@@ -3292,6 +3129,7 @@ gentbl(
 
 gentbl(
     name = "llvm-installnametool-opts",
+    strip_include_prefix = "tools/llvm-objcopy",
     tbl_outs = [(
         "-gen-opt-parser-defs",
         "tools/llvm-objcopy/InstallNameToolOpts.inc",
@@ -3306,6 +3144,7 @@ gentbl(
 
 gentbl(
     name = "llvm-strip-opts",
+    strip_include_prefix = "tools/llvm-objcopy",
     tbl_outs = [(
         "-gen-opt-parser-defs",
         "tools/llvm-objcopy/StripOpts.inc",
@@ -3320,6 +3159,7 @@ gentbl(
 
 gentbl(
     name = "llvm-bitcode-strip-opts",
+    strip_include_prefix = "tools/llvm-objcopy",
     tbl_outs = [(
         "-gen-opt-parser-defs",
         "tools/llvm-objcopy/BitcodeStripOpts.inc",
@@ -3336,6 +3176,9 @@ cc_binary(
     name = "llvm-objcopy",
     srcs = glob([
         "tools/llvm-objcopy/**/*.cpp",
+        # Note that we redundantly include the headers here to allow files to
+        # include same-directory headers in addition to including headers via
+        # the `llvm-objcopy-headers` rule's stripped include prefix.
         "tools/llvm-objcopy/**/*.h",
     ]),
     copts = llvm_copts,
@@ -3350,24 +3193,25 @@ cc_binary(
         ":Target",
         ":llvm-bitcode-strip-opts",
         ":llvm-installnametool-opts",
+        ":llvm-objcopy-headers",
         ":llvm-objcopy-opts",
         ":llvm-strip-opts",
     ],
 )
 
-sh_binary(
+binary_alias(
     name = "llvm-strip",
-    srcs = [":llvm-objcopy"],
+    binary = ":llvm-objcopy",
 )
 
-sh_binary(
+binary_alias(
     name = "llvm-bitcode-strip",
-    srcs = [":llvm-objcopy"],
+    binary = ":llvm-objcopy",
 )
 
-sh_binary(
+binary_alias(
     name = "llvm-install-name-tool",
-    srcs = [":llvm-objcopy"],
+    binary = ":llvm-objcopy",
 )
 
 cc_binary(
@@ -3448,6 +3292,7 @@ cc_binary(
 
 gentbl(
     name = "RcTableGen",
+    strip_include_prefix = "tools/llvm-rc",
     tbl_outs = [(
         "-gen-opt-parser-defs",
         "tools/llvm-rc/Opts.inc",
@@ -3503,9 +3348,9 @@ cc_binary(
 )
 
 # Create an 'llvm-readelf' named binary from the 'llvm-readobj' tool.
-sh_binary(
+binary_alias(
     name = "llvm-readelf",
-    srcs = [":llvm-readobj"],
+    binary = ":llvm-readobj",
 )
 
 cc_binary(
@@ -3592,6 +3437,7 @@ cc_binary(
 
 gentbl(
     name = "SymbolizerOptsTableGen",
+    strip_include_prefix = "tools/llvm-symbolizer",
     tbl_outs = [(
         "-gen-opt-parser-defs",
         "tools/llvm-symbolizer/Opts.inc",
@@ -3620,9 +3466,9 @@ cc_binary(
     ],
 )
 
-sh_binary(
+binary_alias(
     name = "llvm-addr2line",
-    srcs = [":llvm-symbolizer"],
+    binary = ":llvm-symbolizer",
 )
 
 cc_binary(
@@ -3664,7 +3510,11 @@ cc_binary(
         "tools/opt/*.h",
     ]),
     copts = llvm_copts,
-    linkopts = ["-Wl,--export-dynamic"],
+    linkopts = select({
+        "@bazel_tools//src/conditions:windows": [],
+        "@bazel_tools//src/conditions:darwin": [],
+        "//conditions:default": ["-Wl,--export-dynamic"],
+    }),
     stamp = 0,
     deps = [
         ":AllTargetsAsmParsers",
@@ -3755,6 +3605,26 @@ cc_library(
     ],
 )
 
+# A hacky library to expose some internal headers of gtest to its own
+# implementation source files using a stripped include prefix rather than
+# file-relative-inclusion.
+#
+# FIXME: This file should be in `textual_hdrs` instead of `hdrs`, but
+# unfortunately that doesn't work with `strip_include_prefix`:
+# https://github.com/bazelbuild/bazel/issues/12424
+#
+# For now, simply disable parsing and header modules.
+cc_library(
+    name = "gtest_internal_headers",
+    testonly = True,
+    hdrs = ["utils/unittest/googletest/src/gtest-internal-inl.h"],
+    features = [
+        "-parse_headers",
+        "-header_modules",
+    ],
+    strip_include_prefix = "utils/unittest/googletest",
+)
+
 cc_library(
     name = "gtest",
     testonly = True,
@@ -3770,26 +3640,26 @@ cc_library(
     ) + [
     ],
     hdrs = ["utils/unittest/googletest/include/gtest/gtest.h"],
-    # TODO: the hard-coding of `external/llvm-project` path components here is
-    # really unfortunate. It is essentially baking in an implementation detail
-    # of how Bazel runs the compiler when compiling LLVM in the exact
-    # configuration we use.
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/utils/unittest/googletest"],
+    copts = llvm_copts,
     defines = [
         "GTEST_HAS_RTTI=0",
-        "GTEST_USE_OWN_TR1_TUPLE",
         "__STDC_LIMIT_MACROS",
         "__STDC_CONSTANT_MACROS",
-    ],
+    ] + select({
+        "@bazel_tools//src/conditions:windows": ["GTEST_USE_OWN_TR1_TUPLE=0"],
+        "//conditions:default": ["GTEST_USE_OWN_TR1_TUPLE=1"],
+    }),
     includes = [
         "include",
         "utils/unittest/googletest/include",
     ],
     textual_hdrs = [
         "utils/unittest/googletest/include/gtest/gtest_pred_impl.h",
-        "utils/unittest/googletest/src/gtest-internal-inl.h",
     ],
-    deps = [":Support"],
+    deps = [
+        ":Support",
+        ":gtest_internal_headers",
+    ],
 )
 
 cc_library(
@@ -3815,16 +3685,18 @@ cc_library(
         exclude = ["utils/unittest/googlemock/src/gmock-all.cc"],
     ),
     hdrs = ["utils/unittest/googlemock/include/gmock/gmock.h"],
-    # TODO: the hard-coding of `external/llvm-project` path components here is
-    # really unfortunate. It is essentially baking in an implementation detail
-    # of how Bazel runs the compiler when compiling LLVM in the exact
-    # configuration we use.
-    copts = llvm_copts + ["-Iexternal/llvm-project/llvm/utils/unittest/googlemock"],
+    copts = llvm_copts,
     includes = [
         "include",
         "utils/unittest/googlemock/include",
     ],
     deps = [":gtest"],
+)
+
+py_binary(
+    name = "lit",
+    testonly = True,
+    srcs = ["utils/lit/lit.py"] + glob(["utils/lit/lit/**/*.py"]),
 )
 
 cc_library(
@@ -3912,10 +3784,14 @@ cc_binary(
     # from libstdc++ such as __cxa_begin_catch and _ZTIi. The latter
     # isn't even used in the main binary, so we also need to force it
     # to be included.
-    linkopts = [
-        "-rdynamic",
-        "-u_ZTIi",
-    ],
+    linkopts = select({
+        "@bazel_tools//src/conditions:windows": [],
+        "@bazel_tools//src/conditions:darwin": [],
+        "//conditions:default": [
+            "-rdynamic",
+            "-u_ZTIi",
+        ],
+    }),
     stamp = 0,
     deps = [
         ":OrcJIT",

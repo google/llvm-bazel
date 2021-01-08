@@ -6,13 +6,13 @@
 
 # Walks commits in the llvm-project submodule at SUBMODULE_DIR (default
 # "third_party/llvm-project") between the current state (exclusive) and the tip
-# of the $BRANCH (inclusive, default "master") on the remote and calls the
+# of the $BRANCH (inclusive, default "main") on the remote and calls the
 # specified command.
 
 set -e
 set -o pipefail
 
-BRANCH="${BRANCH:-master}"
+BRANCH="${BRANCH:-main}"
 SUBMODULE_DIR="third_party/llvm-project"
 
 pushd "${SUBMODULE_DIR?}"
@@ -22,13 +22,13 @@ git remote -v
 git checkout "${BRANCH?}"
 git pull --ff-only origin "${BRANCH?}"
 
-if [[ "$(git rev-parse ${BRANCH?})" == "${START?}" ]]; then
+if [[ "$(git rev-parse "${BRANCH?}")" == "${START?}" ]]; then
   echo "Current HEAD is already up to date with ${BRANCH?}"
   popd
   exit 0
 fi
 
-readarray -t commits < <(git rev-list --reverse --ancestry-path ${START?}..${BRANCH?})
+readarray -t commits < <(git rev-list --reverse --ancestry-path "${START?}..${BRANCH?}")
 if [[ ${#commits[@]} == 0 ]]; then
   echo "Failed to find path between current HEAD and ${BRANCH?}"
   popd

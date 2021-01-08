@@ -10,4 +10,4 @@ set -e
 set -o pipefail
 
 SUBMODULE_DIR="third_party/llvm-project"
-git submodule status -- ${SUBMODULE_DIR?} | awk '{print $1}' | tr -d '+'
+git submodule status -- ${SUBMODULE_DIR?} | awk '{print $1}' | tr -d '+-'
