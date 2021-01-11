@@ -2239,6 +2239,7 @@ cc_library(
         ":Support",
         ":Transforms",
         ":VectorToSPIRV",
+        "//llvm:Support",
     ],
 )
 
@@ -2507,6 +2508,7 @@ cc_library(
         ":IR",
         ":InferTypeOpInterface",
         ":PDLOpsIncGen",
+        ":PDLTypesIncGen",
         ":SideEffects",
         ":Support",
         "//llvm:Support",
@@ -2516,8 +2518,9 @@ cc_library(
 filegroup(
     name = "PDLOpsTdFiles",
     srcs = [
-        "include/mlir/Dialect/PDL/IR/PDLBase.td",
+        "include/mlir/Dialect/PDL/IR/PDLDialect.td",
         "include/mlir/Dialect/PDL/IR/PDLOps.td",
+        "include/mlir/Dialect/PDL/IR/PDLTypes.td",
         "include/mlir/IR/SymbolInterfaces.td",
         ":OpBaseTdFiles",
         ":SideEffectTdFiles",
@@ -2548,6 +2551,28 @@ gentbl(
     ],
 )
 
+gentbl(
+    name = "PDLTypesIncGen",
+    strip_include_prefix = "include",
+    tbl_outs = [
+        (
+            "-gen-typedef-decls",
+            "include/mlir/Dialect/PDL/IR/PDLOpsTypes.h.inc",
+        ),
+        (
+            "-gen-typedef-defs",
+            "include/mlir/Dialect/PDL/IR/PDLOpsTypes.cpp.inc",
+        ),
+    ],
+    tblgen = ":mlir-tblgen",
+    td_file = "include/mlir/Dialect/PDL/IR/PDLTypes.td",
+    td_srcs = [
+        ":OpBaseTdFiles",
+        "include/mlir/Dialect/PDL/IR/PDLDialect.td",
+        "include/mlir/Dialect/PDL/IR/PDLTypes.td",
+    ],
+)
+
 cc_library(
     name = "PDLInterpDialect",
     srcs = glob([
@@ -2572,7 +2597,8 @@ cc_library(
 filegroup(
     name = "PDLInterpOpsTdFiles",
     srcs = [
-        "include/mlir/Dialect/PDL/IR/PDLBase.td",
+        "include/mlir/Dialect/PDL/IR/PDLDialect.td",
+        "include/mlir/Dialect/PDL/IR/PDLTypes.td",
         "include/mlir/Dialect/PDLInterp/IR/PDLInterpOps.td",
         ":OpBaseTdFiles",
         ":SideEffectTdFiles",
@@ -4807,6 +4833,7 @@ cc_library(
         ":SPIRVConversion",
         ":SPIRVDialect",
         ":StandardOps",
+        ":TransformUtils",
     ],
 )
 
