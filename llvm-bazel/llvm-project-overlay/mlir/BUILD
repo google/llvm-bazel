@@ -407,6 +407,22 @@ gentbl(
     ],
 )
 
+gentbl(
+    name = "AsyncPassIncGen",
+    strip_include_prefix = "include",
+    tbl_outs = [
+        (
+            "-gen-pass-decls -name Async",
+            "include/mlir/Dialect/Async/Passes.h.inc",
+        ),
+    ],
+    tblgen = ":mlir-tblgen",
+    td_file = "include/mlir/Dialect/Async/Passes.td",
+    td_srcs = [
+        ":PassBaseTdFiles",
+    ],
+)
+
 ##---------------------------------------------------------------------------##
 # ArmNeon dialect.
 ##---------------------------------------------------------------------------##
@@ -1140,22 +1156,6 @@ cc_library(
     ],
 )
 
-gentbl(
-    name = "AsyncPassIncGen",
-    strip_include_prefix = "include",
-    tbl_outs = [
-        (
-            "-gen-pass-decls -name Async",
-            "include/mlir/Dialect/Async/Passes.h.inc",
-        ),
-    ],
-    tblgen = ":mlir-tblgen",
-    td_file = "include/mlir/Dialect/Async/Passes.td",
-    td_srcs = [
-        ":PassBaseTdFiles",
-    ],
-)
-
 cc_library(
     name = "AsyncTransforms",
     srcs = glob([
@@ -1731,6 +1731,26 @@ cc_library(
     ],
 )
 
+gentbl(
+    name = "LLVMDialectInterfaceIncGen",
+    strip_include_prefix = "include",
+    tbl_outs = [
+        (
+            "-gen-op-interface-decls",
+            "include/mlir/Dialect/LLVMIR/LLVMOpsInterfaces.h.inc",
+        ),
+        (
+            "-gen-op-interface-defs",
+            "include/mlir/Dialect/LLVMIR/LLVMOpsInterfaces.cpp.inc",
+        ),
+    ],
+    tblgen = ":mlir-tblgen",
+    td_file = "include/mlir/Dialect/LLVMIR/LLVMOpsInterfaces.td",
+    td_srcs = [
+        ":LLVMOpsTdFiles",
+    ],
+)
+
 cc_library(
     name = "LLVMDialect",
     srcs = glob(
@@ -1767,6 +1787,7 @@ cc_library(
     deps = [
         ":ControlFlowInterfaces",
         ":IR",
+        ":LLVMDialectInterfaceIncGen",
         ":LLVMOpsIncGen",
         ":SideEffectInterfaces",
         ":Support",
@@ -1971,6 +1992,7 @@ filegroup(
     srcs = [
         "include/mlir/Dialect/LLVMIR/LLVMOpBase.td",
         "include/mlir/Dialect/LLVMIR/LLVMOps.td",
+        "include/mlir/Dialect/LLVMIR/LLVMOpsInterfaces.td",
         "include/mlir/IR/SymbolInterfaces.td",
         "include/mlir/Interfaces/ControlFlowInterfaces.td",
         ":OpBaseTdFiles",
@@ -2166,7 +2188,6 @@ cc_library(
         ":IR",
         ":LLVMDialect",
         ":Pass",
-        ":SPIRVToLLVM",
         ":StandardToLLVM",
         ":Support",
         ":TargetNVVMIR",
@@ -4068,15 +4089,18 @@ cc_library(
 )
 
 cc_library(
-    name = "mlir_async_runtime",
-    srcs = [
-        "lib/ExecutionEngine/AsyncRuntime.cpp",
-    ],
-    hdrs = [
-        "include/mlir/ExecutionEngine/AsyncRuntime.h",
-    ],
+    name = "mlir_async_runtime_api",
+    hdrs = ["include/mlir/ExecutionEngine/AsyncRuntime.h"],
     includes = ["include"],
-    deps = ["//llvm:Support"],
+)
+
+cc_library(
+    name = "mlir_async_runtime",
+    srcs = ["lib/ExecutionEngine/AsyncRuntime.cpp"],
+    deps = [
+        ":mlir_async_runtime_api",
+        "//llvm:Support",
+    ],
 )
 
 cc_library(
@@ -4165,7 +4189,7 @@ cc_binary(
     srcs = ["tools/mlir-vulkan-runner/vulkan-runtime-wrappers.cpp"],
     linkshared = True,
     tags = [
-        "manual",  # External dependency (through VulkanRuntime)
+        "manual",  # External dependency
     ],
     deps = [
         ":VulkanRuntime",
@@ -4245,8 +4269,10 @@ cc_binary(
         ":LLVMDialect",
         ":MlirJitRunner",
         ":Pass",
+        ":SPIRVConversion",
         ":SPIRVDialect",
         ":SPIRVToLLVM",
+        ":SPIRVTransforms",
         ":StandardToLLVM",
         ":TargetLLVMIR",
         "//llvm:Core",
@@ -4458,9 +4484,11 @@ cc_library(
     ]),
     includes = ["include"],
     deps = [
+        ":ControlFlowInterfaces",
         ":IR",
         ":LLVMDialect",
         ":OpenMPOpsIncGen",
+        ":SideEffectInterfaces",
         ":StandardOps",
         "//llvm:Support",
     ],
