@@ -2959,7 +2959,7 @@ cc_library(
 cc_library(
     name = "SPIRVSerialization",
     srcs = [
-        "lib/Target/SPIRV/Serialization.cpp",
+        "lib/Target/SPIRV/Serialization/Serialization.cpp",
     ],
     hdrs = [
         "include/mlir/Target/SPIRV/Serialization.h",
@@ -2980,9 +2980,10 @@ cc_library(
 
 cc_library(
     name = "SPIRVDeserialization",
-    srcs = [
-        "lib/Target/SPIRV/Deserialization.cpp",
-    ],
+    srcs = glob([
+        "lib/Target/SPIRV/Deserialization/*.cpp",
+        "lib/Target/SPIRV/Deserialization/*.h",
+    ]),
     hdrs = [
         "include/mlir/Target/SPIRV/Deserialization.h",
     ],
@@ -4385,6 +4386,23 @@ cc_binary(
 ## OpenACC dialect
 
 gentbl(
+    name = "AccCommonGen",
+    strip_include_prefix = "include",
+    tbl_outs = [
+        (
+            "-gen-directive-decl",
+            "include/mlir/Dialect/OpenACC/AccCommon.td",
+        ),
+    ],
+    tblgen = ":mlir-tblgen",
+    td_file = "//llvm:include/llvm/Frontend/OpenACC/ACC.td",
+    td_includes = ["external/llvm-project/llvm/include"],
+    td_srcs = [
+        "//llvm:acc_td_files",
+    ],
+)
+
+gentbl(
     name = "OpenACCOpsIncGen",
     strip_include_prefix = "include",
     tbl_outs = [
@@ -4418,6 +4436,7 @@ gentbl(
     td_srcs = [
         ":OpBaseTdFiles",
         ":OmpCommonTdGen",
+        "include/mlir/Dialect/OpenACC/AccCommon.td",
     ],
 )
 
