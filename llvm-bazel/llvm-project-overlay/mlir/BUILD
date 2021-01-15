@@ -1288,6 +1288,7 @@ cc_library(
         ":ShapeToStandard",
         ":StandardToLLVM",
         ":StandardToSPIRV",
+        ":TosaToLinalg",
         ":VectorToLLVM",
         ":VectorToROCDL",
         ":VectorToSCF",
@@ -4036,6 +4037,7 @@ cc_library(
         ":TensorDialect",
         ":TensorTransforms",
         ":TosaDialect",
+        ":TosaToLinalg",
         ":Transforms",
         ":TransformsPassIncGen",
         ":VectorOps",
@@ -5187,6 +5189,30 @@ cc_library(
         ":TosaInterfacesIncGen",
         ":TosaPassIncGen",
         ":TransformUtils",
+    ],
+)
+
+cc_library(
+    name = "TosaToLinalg",
+    srcs = glob([
+        "lib/Conversion/TosaToLinalg/*.cpp",
+        "lib/Conversion/TosaToLinalg/*.h",
+    ]) + ["lib/Conversion/PassDetail.h"],
+    hdrs = glob([
+        "include/mlir/Conversion/TosaToLinalg/*.h",
+    ]),
+    includes = [
+        "include",
+        "lib/Conversions/TosaToLinalg",
+    ],
+    deps = [
+        ":IR",
+        ":LinalgOps",
+        ":Pass",
+        ":Support",
+        ":TosaDialect",
+        ":Transforms",
+        "//llvm:Support",
     ],
 )
 
