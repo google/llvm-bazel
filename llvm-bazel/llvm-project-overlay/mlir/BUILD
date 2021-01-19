@@ -4945,6 +4945,7 @@ cc_library(
     deps = [
         ":Affine",
         ":AffineToStandard",
+        ":AffineUtils",
         ":Analysis",
         ":DialectUtils",
         ":EDSC",
