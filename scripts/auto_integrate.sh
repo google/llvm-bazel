@@ -6,4 +6,6 @@
 
 # Walks commits in the LLVM submodule creating new commits for each update.
 
-./scripts/traverse_llvm_revs.sh ./scripts/commit_and_tag.sh
+ROOT_DIR="$(git rev-parse --show-toplevel)"
+
+"${ROOT_DIR?}/scripts/traverse_llvm_revs.sh" "${ROOT_DIR?}/scripts/commit_and_tag.sh"
