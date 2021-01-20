@@ -9,5 +9,6 @@
 set -e
 set -o pipefail
 
-SUBMODULE_DIR="third_party/llvm-project"
+ROOT_DIR="$(git rev-parse --show-toplevel)"
+SUBMODULE_DIR="${ROOT_DIR?}/third_party/llvm-project"
 git submodule status -- ${SUBMODULE_DIR?} | awk '{print $1}' | tr -d '+-'
