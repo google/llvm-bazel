@@ -2100,17 +2100,6 @@ cc_library(
     ],
 )
 
-# There is some deep layering violation between these libraries and JITLink.
-# To workaround this, the same headers are included in multiple rules.
-cc_library(
-    name = "Orc_layering_violation_headers",
-    hdrs = glob([
-        "include/llvm/ExecutionEngine/Orc/*.h",
-        "include/llvm/ExecutionEngine/Orc/RPC/*.h",
-        "include/llvm/ExecutionEngine/JITLink/*.h",
-    ]),
-)
-
 cc_library(
     name = "OrcJIT",
     srcs = glob([
@@ -2161,7 +2150,6 @@ cc_library(
         ":MC",
         ":MCDisassembler",
         ":Object",
-        ":Orc_layering_violation_headers",
         ":Passes",
         ":Support",
         ":Target",
@@ -2188,7 +2176,6 @@ cc_library(
         ":MCDisassembler",
         ":Object",
         ":OrcShared",
-        ":Orc_layering_violation_headers",
         ":Passes",
         ":Support",
         ":Target",
