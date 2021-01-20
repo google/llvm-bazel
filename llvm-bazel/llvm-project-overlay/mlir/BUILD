@@ -3049,6 +3049,7 @@ filegroup(
     srcs = [
         "include/mlir/Dialect/Tensor/IR/TensorBase.td",
         "include/mlir/Dialect/Tensor/IR/TensorOps.td",
+        "include/mlir/Interfaces/ControlFlowInterfaces.td",
         ":OpBaseTdFiles",
         ":SideEffectTdFiles",
     ],
@@ -3105,6 +3106,7 @@ cc_library(
     ],
     includes = ["include"],
     deps = [
+        ":ControlFlowInterfaces",
         ":IR",
         ":SideEffectInterfaces",
         ":Support",
