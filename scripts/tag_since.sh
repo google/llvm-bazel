@@ -15,6 +15,8 @@ set -o pipefail
 
 START="${1?}"
 
+ROOT_DIR="$(git rev-parse --show-toplevel)"
+
 readarray -t commits < <(git rev-list --reverse --ancestry-path "${START?}..HEAD")
 if [[ ${#commits[@]} == 0 ]]; then
   echo "Failed to find path between current HEAD and ${START?}"
@@ -24,5 +26,5 @@ fi
 for commit in "${commits[@]?}"; do
   git checkout "${commit?}"
   git submodule update
-  ./scripts/tag_rev.sh
+  "${ROOT_DIR?}/scripts/tag_rev.sh"
 done

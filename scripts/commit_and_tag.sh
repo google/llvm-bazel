@@ -11,9 +11,11 @@
 set -e
 set -o pipefail
 
-LLVM_COMMIT="$(./scripts/get_llvm_commit.sh)"
+ROOT_DIR="$(git rev-parse --show-toplevel)"
+
+LLVM_COMMIT="$(${ROOT_DIR?}/scripts/get_llvm_commit.sh)"
 SHORT_COMMIT="$(echo ${LLVM_COMMIT?} | cut -c -12)"
 
 git commit -am "Integrate LLVM at llvm/llvm-project@${SHORT_COMMIT?}"
 
-./scripts/tag_rev.sh
+"${ROOT_DIR?}/scripts/tag_rev.sh"
