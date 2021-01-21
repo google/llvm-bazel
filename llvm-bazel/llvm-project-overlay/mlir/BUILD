@@ -3423,6 +3423,7 @@ cc_library(
     includes = ["include"],
     deps = [
         ":Affine",
+        ":ComplexDialect",
         ":ConversionPassIncGen",
         ":GPUDialect",
         ":Pass",
@@ -4195,7 +4196,10 @@ cc_binary(
         "manual",  # External dependency
         "nobuildkite",  # TODO(gcmn): Add support for this target
     ],
-    deps = [":tools/libcuda-runtime-wrappers"],
+    deps = [
+        ":mlir_runner_utils",
+        ":tools/libcuda-runtime-wrappers",
+    ],
 )
 
 cc_library(
