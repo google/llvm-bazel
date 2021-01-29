@@ -230,6 +230,7 @@ cc_library(
     includes = ["include"],
     deps = [
         ":IR",
+        ":InferTypeOpInterface",
         ":Parser",
         ":Pass",
         ":StandardOps",
@@ -389,8 +390,9 @@ gentbl(
 filegroup(
     name = "AsyncOpsTdFiles",
     srcs = [
-        "include/mlir/Dialect/Async/IR/AsyncBase.td",
+        "include/mlir/Dialect/Async/IR/AsyncDialect.td",
         "include/mlir/Dialect/Async/IR/AsyncOps.td",
+        "include/mlir/Dialect/Async/IR/AsyncTypes.td",
         "include/mlir/Interfaces/ControlFlowInterfaces.td",
         ":OpBaseTdFiles",
         ":SideEffectTdFiles",
@@ -412,6 +414,14 @@ gentbl(
         (
             "-gen-dialect-decls",
             "include/mlir/Dialect/Async/IR/AsyncOpsDialect.h.inc",
+        ),
+        (
+            "-gen-typedef-decls",
+            "include/mlir/Dialect/Async/IR/AsyncOpsTypes.h.inc",
+        ),
+        (
+            "-gen-typedef-defs",
+            "include/mlir/Dialect/Async/IR/AsyncOpsTypes.cpp.inc",
         ),
     ],
     tblgen = ":mlir-tblgen",
