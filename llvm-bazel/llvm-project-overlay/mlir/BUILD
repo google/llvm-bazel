@@ -3932,32 +3932,21 @@ cc_binary(
     ],
 )
 
-cc_library(
-    name = "tools/libcuda-runtime-wrappers",
-    srcs = ["tools/mlir-cuda-runner/cuda-runtime-wrappers.cpp"],
-    tags = [
-        "manual",  # External dependency
-        "nobuildkite",  # TODO(gcmn): Add support for this target
-    ],
-    deps = [
-        ":mlir_c_runner_utils",
-        "//llvm:Support",
-        "@cuda//:cuda_headers",
-        "@cuda//:cuda_runtime",
-        "@cuda//:libcuda",
-    ],
-)
-
 cc_binary(
     name = "tools/libcuda-runtime-wrappers.so",
+    srcs = ["tools/mlir-cuda-runner/cuda-runtime-wrappers.cpp"],
     linkshared = True,
     tags = [
         "manual",  # External dependency
         "nobuildkite",  # TODO(gcmn): Add support for this target
     ],
     deps = [
-        ":mlir_runner_utils",
-        ":tools/libcuda-runtime-wrappers",
+        ":mlir_c_runner_utils",
+        "@cuda//:cuda_headers",
+        "@cuda//:libcuda",
+        # Note: for headers only, the archive itself should not be linked.
+        # See https://reviews.llvm.org/D95613 for details.
+        "//llvm:Support",
     ],
 )
 
@@ -3997,7 +3986,6 @@ cc_binary(
 cc_binary(
     name = "mlir-cuda-runner",
     srcs = ["tools/mlir-cuda-runner/mlir-cuda-runner.cpp"],
-    data = [":tools/libcuda-runtime-wrappers.so"],
     tags = [
         "manual",  # External dependency
         "nobuildkite",  # TODO(gcmn): Add support for this target
@@ -4029,10 +4017,6 @@ cc_binary(
 cc_binary(
     name = "mlir-vulkan-runner",
     srcs = ["tools/mlir-vulkan-runner/mlir-vulkan-runner.cpp"],
-    data = [
-        ":tools/libvulkan-runtime-wrappers.so",
-        "//mlir/test/mlir-cpu-runner:libmlir_runner_utils.so",
-    ],
     tags = [
         "manual",  # External dependency
         "nobuildkite",  # TODO(gcmn): Add support for this target
