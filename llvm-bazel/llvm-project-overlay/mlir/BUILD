@@ -2089,6 +2089,7 @@ cc_library(
     hdrs = ["include/mlir/Conversion/GPUCommon/GPUCommonPass.h"],
     includes = ["include"],
     deps = [
+        ":AsyncToLLVM",
         ":ConversionPassIncGen",
         ":GPUDialect",
         ":IR",
@@ -3992,6 +3993,9 @@ cc_binary(
     ],
     deps = [
         ":AllPassesAndDialectsNoRegistration",
+        ":Async",
+        ":AsyncToLLVM",
+        ":AsyncTransforms",
         ":ExecutionEngineUtils",
         ":GPUDialect",
         ":GPUToGPURuntimeTransforms",
