@@ -7,6 +7,7 @@
 
 load(":tblgen.bzl", "gentbl")
 load(":linalggen.bzl", "genlinalg")
+load(":build_defs.bzl", "cc_headers_only")
 
 package(
     default_visibility = [":friends"],
@@ -3934,21 +3935,37 @@ cc_binary(
     ],
 )
 
+# This target provides the headers from LLVM's Support target without any of
+# the symbols. In particular, it does not contain the static registration code
+# which may be executed by at most one shared library loaded by ORCJit. Direct
+# dependencies need to avoid requiring symbols from LLVMSupport by adding
+# copts = ["-DLLVM_DISABLE_ABI_BREAKING_CHECKS_ENFORCING=1"].
+#
+# Bazel links the dependencies' object files instead of the archives, which
+# means that symbols are linked in even if none are used. The LLVM cmake build
+# on the other hand links archives (or shared libraries, depending on
+# BUILD_SHARED_LIBS), skipping them if none of the symbols are used.
+# See also https://reviews.llvm.org/D95613.
+cc_headers_only(
+    name = "LLVMSupportHeaders",
+    src = "//llvm:Support",
+)
+
 cc_binary(
     name = "tools/libcuda-runtime-wrappers.so",
     srcs = ["tools/mlir-cuda-runner/cuda-runtime-wrappers.cpp"],
+    # Prevent needing EnableABIBreakingChecks symbol from LLVMSupport.
+    copts = ["-DLLVM_DISABLE_ABI_BREAKING_CHECKS_ENFORCING=1"],
     linkshared = True,
     tags = [
         "manual",  # External dependency
         "nobuildkite",  # TODO(gcmn): Add support for this target
     ],
     deps = [
+        ":LLVMSupportHeaders",
         ":mlir_c_runner_utils",
         "@cuda//:cuda_headers",
         "@cuda//:libcuda",
-        # Note: for headers only, the archive itself should not be linked.
-        # See https://reviews.llvm.org/D95613 for details.
-        "//llvm:Support",
     ],
 )
 
