@@ -1332,21 +1332,6 @@ cc_library(
     ],
 )
 
-cc_library(
-    name = "HelloNew",
-    srcs = glob([
-        "lib/Transforms/HelloNew/*.cpp",
-        "lib/Transforms/HelloNew/*.h",
-    ]),
-    hdrs = ["include/llvm/Transforms/HelloNew/HelloWorld.h"],
-    copts = llvm_copts,
-    includes = ["include"],
-    deps = [
-        ":Core",
-        ":Support",
-    ],
-)
-
 # Meta-target for clients which depend on all of the transforms libraries.
 cc_library(
     name = "common_transforms",
@@ -1962,7 +1947,6 @@ cc_library(
         ":CodeGen",
         ":Core",
         ":Coroutines",
-        ":HelloNew",
         ":MLPolicies",
         ":Support",
         ":Target",
