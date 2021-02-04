@@ -1874,6 +1874,7 @@ cc_binary(
         ":serialization",
         ":static_analyzer_frontend",
         ":tooling",
+        ":tooling_syntax",
         "//llvm:Option",
         "//llvm:Support",
     ],
