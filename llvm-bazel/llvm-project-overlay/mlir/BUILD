@@ -2817,8 +2817,15 @@ cc_library(
 
 cc_library(
     name = "SPIRVSerialization",
-    srcs = ["lib/Target/SPIRV/Serialization/Serialization.cpp"],
-    hdrs = ["include/mlir/Target/SPIRV/Serialization.h"],
+    srcs = [
+      "lib/Target/SPIRV/Serialization/Serialization.cpp",
+      "lib/Target/SPIRV/Serialization/Serializer.cpp",
+      "lib/Target/SPIRV/Serialization/SerializeOps.cpp",
+    ],
+    hdrs = [
+      "include/mlir/Target/SPIRV/Serialization.h",
+      "lib/Target/SPIRV/Serialization/Serializer.h",
+    ],
     includes = ["include"],
     deps = [
         ":IR",
