@@ -2817,8 +2817,15 @@ cc_library(
 
 cc_library(
     name = "SPIRVSerialization",
-    srcs = ["lib/Target/SPIRV/Serialization/Serialization.cpp"],
-    hdrs = ["include/mlir/Target/SPIRV/Serialization.h"],
+    srcs = [
+        "lib/Target/SPIRV/Serialization/Serialization.cpp",
+        "lib/Target/SPIRV/Serialization/SerializeOps.cpp",
+        "lib/Target/SPIRV/Serialization/Serializer.cpp",
+    ],
+    hdrs = [
+        "include/mlir/Target/SPIRV/Serialization.h",
+        "lib/Target/SPIRV/Serialization/Serializer.h",
+    ],
     includes = ["include"],
     deps = [
         ":IR",
@@ -3957,11 +3964,11 @@ cc_binary(
 cc_binary(
     name = "tools/libcuda-runtime-wrappers.so",
     srcs = ["tools/mlir-cuda-runner/cuda-runtime-wrappers.cpp"],
+    linkshared = True,
     tags = [
         "manual",  # External dependency
         "nobuildkite",  # TODO(gcmn): Add support for this target
     ],
-    linkshared = True,
     deps = [
         ":mlir_c_runner_utils",
         "//llvm:Support",
