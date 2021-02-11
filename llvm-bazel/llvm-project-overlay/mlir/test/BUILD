@@ -290,6 +290,21 @@ cc_library(
 )
 
 cc_library(
+    name = "TestAnalysis",
+    srcs = glob([
+        "lib/Analysis/*.cpp",
+    ]),
+    deps = [
+        ":TestDialect",
+        "//llvm:Support",
+        "//mlir:Analysis",
+        "//mlir:IR",
+        "//mlir:Pass",
+        "//mlir:Support",
+    ],
+)
+
+cc_library(
     name = "TestShapeDialect",
     srcs = [
         "lib/Dialect/Shape/TestShapeFunctions.cpp",
