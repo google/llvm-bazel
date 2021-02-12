@@ -1208,6 +1208,7 @@ cc_library(
         ":LinalgToLLVM",
         ":LinalgToSPIRV",
         ":LinalgToStandard",
+        ":MathToLLVM",
         ":OpenMPToLLVM",
         ":PDLToPDLInterp",
         ":SCFToGPUPass",
@@ -1983,6 +1984,7 @@ cc_library(
         ":GPUToNVVMGen",
         ":GPUTransforms",
         ":IR",
+        ":MathDialect",
         ":NVVMDialect",
         ":Pass",
         ":StandardToLLVM",
@@ -2063,6 +2065,7 @@ cc_library(
         ":GPUDialect",
         ":GPUToROCDLTGen",
         ":GPUTransforms",
+        ":MathDialect",
         ":Pass",
         ":ROCDLDialect",
         ":StandardToLLVM",
@@ -2791,6 +2794,7 @@ cc_library(
     deps = [
         ":ConversionPassIncGen",
         ":IR",
+        ":MathDialect",
         ":Pass",
         ":SPIRVConversion",
         ":SPIRVDialect",
@@ -3342,6 +3346,7 @@ cc_library(
         ":ConversionPassIncGen",
         ":IR",
         ":LLVMDialect",
+        ":MathDialect",
         ":Parser",
         ":Pass",
         ":StandardOps",
@@ -3818,6 +3823,9 @@ cc_library(
         ":LinalgToSPIRV",
         ":LinalgToStandard",
         ":LinalgTransforms",
+        ":MathDialect",
+        ":MathToLLVM",
+        ":MathTransforms",
         ":NVVMDialect",
         ":OpenACCDialect",
         ":OpenMPDialect",
@@ -4770,6 +4778,7 @@ cc_library(
         ":LinalgPassIncGen",
         ":LinalgSparseOpsIncGen",
         ":LinalgStructuredOpsIncGen",
+        ":MathDialect",
         ":Pass",
         ":SCFDialect",
         ":SCFToStandard",
@@ -5020,6 +5029,7 @@ cc_library(
         ":ConversionPassIncGen",
         ":IR",
         ":LinalgOps",
+        ":MathDialect",
         ":Pass",
         ":StandardOps",
         ":TosaDialect",
@@ -5142,4 +5152,121 @@ exports_files(
         "include/mlir/Transforms/InliningUtils.h",
     ],
     visibility = [":friends"],
+)
+
+filegroup(
+    name = "MathOpsTdFiles",
+    srcs = [
+        "include/mlir/Dialect/Math/IR/MathBase.td",
+        "include/mlir/Dialect/Math/IR/MathOps.td",
+        ":OpBaseTdFiles",
+        ":SideEffectTdFiles",
+        ":VectorInterfacesTdFiles",
+    ],
+)
+
+gentbl(
+    name = "MathBaseIncGen",
+    strip_include_prefix = "include",
+    tbl_outs = [
+        (
+            "-gen-dialect-decls -dialect=math",
+            "include/mlir/Dialect/Math/IR/MathOpsDialect.h.inc",
+        ),
+    ],
+    tblgen = ":mlir-tblgen",
+    td_file = "include/mlir/Dialect/Math/IR/MathBase.td",
+    td_srcs = [
+        ":MathOpsTdFiles",
+    ],
+)
+
+gentbl(
+    name = "MathOpsIncGen",
+    strip_include_prefix = "include",
+    tbl_outs = [
+        (
+            "-gen-op-decls",
+            "include/mlir/Dialect/Math/IR/MathOps.h.inc",
+        ),
+        (
+            "-gen-op-defs",
+            "include/mlir/Dialect/Math/IR/MathOps.cpp.inc",
+        ),
+    ],
+    tblgen = ":mlir-tblgen",
+    td_file = "include/mlir/Dialect/Math/IR/MathOps.td",
+    td_srcs = [
+        ":MathOpsTdFiles",
+    ],
+)
+
+cc_library(
+    name = "MathDialect",
+    srcs = glob(
+        [
+            "lib/Dialect/Math/IR/*.cpp",
+            "lib/Dialect/Math/IR/*.h",
+        ],
+    ),
+    hdrs = [
+        "include/mlir/Dialect/Math/EDSC/Intrinsics.h",
+        "include/mlir/Dialect/Math/IR/Math.h",
+        "include/mlir/Transforms/InliningUtils.h",
+    ],
+    includes = ["include"],
+    deps = [
+        ":EDSC",
+        ":IR",
+        ":MathBaseIncGen",
+        ":MathOpsIncGen",
+        ":SideEffectInterfaces",
+        ":Support",
+        ":VectorInterfaces",
+        "//llvm:Support",
+    ],
+)
+
+cc_library(
+    name = "MathTransforms",
+    srcs = glob([
+        "lib/Dialect/Math/Transforms/*.cpp",
+        "lib/Dialect/Math/Transforms/*.h",
+    ]),
+    hdrs = glob(["include/mlir/Dialect/Math/Transforms/*.h"]),
+    includes = ["include"],
+    deps = [
+        ":IR",
+        ":MathDialect",
+        ":Pass",
+        ":SCFDialect",
+        ":StandardOps",
+        ":Support",
+        ":Transforms",
+        "//llvm:Support",
+    ],
+)
+
+cc_library(
+    name = "MathToLLVM",
+    srcs = glob([
+        "lib/Conversion/MathToLLVM/*.cpp",
+        "lib/Conversion/MathToLLVM/*.h",
+    ]) + ["lib/Conversion/PassDetail.h"],
+    hdrs = glob([
+        "include/mlir/Conversion/MathToLLVM/*.h",
+    ]),
+    includes = ["include"],
+    deps = [
+        ":ConversionPassIncGen",
+        ":IR",
+        ":LLVMDialect",
+        ":MathDialect",
+        ":Pass",
+        ":StandardToLLVM",
+        ":Support",
+        ":Transforms",
+        "//llvm:Core",
+        "//llvm:Support",
+    ],
 )
