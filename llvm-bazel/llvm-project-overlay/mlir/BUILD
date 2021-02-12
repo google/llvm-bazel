@@ -3951,9 +3951,11 @@ cc_binary(
     srcs = ["tools/mlir-cpu-runner/mlir-cpu-runner.cpp"],
     linkopts = ["-ldl"],
     deps = [
-        ":AllPassesAndDialectsNoRegistration",
         ":ExecutionEngineUtils",
+        ":IR",
+        ":LLVMDialect",
         ":MlirJitRunner",
+        ":OpenMPDialect",
         "//llvm:AsmParser",
         "//llvm:Support",
         "//llvm:X86AsmParser",
@@ -4035,7 +4037,6 @@ cc_binary(
         "nobuildkite",  # TODO(gcmn): Add support for this target
     ],
     deps = [
-        ":AllPassesAndDialectsNoRegistration",
         ":Async",
         ":AsyncToLLVM",
         ":AsyncTransforms",
@@ -4050,6 +4051,7 @@ cc_binary(
         ":MlirJitRunner",
         ":NVVMDialect",
         ":Pass",
+        ":StandardOps",
         ":StandardToLLVM",
         ":TargetNVVMIR",
         ":Transforms",
@@ -4069,15 +4071,17 @@ cc_binary(
         "nobuildkite",  # TODO(gcmn): Add support for this target
     ],
     deps = [
-        ":AllPassesAndDialectsNoRegistration",
         ":ExecutionEngineUtils",
+        ":GPUDialect",
         ":GPUToSPIRV",
         ":GPUToVulkanTransforms",
         ":GPUTransforms",
+        ":LLVMDialect",
         ":MlirJitRunner",
         ":Pass",
         ":SPIRVDialect",
         ":SPIRVTransforms",
+        ":StandardOps",
         ":StandardToLLVM",
         ":StandardToSPIRV",
         "//llvm:Support",
@@ -4088,7 +4092,6 @@ cc_binary(
     name = "mlir-spirv-cpu-runner",
     srcs = ["tools/mlir-spirv-cpu-runner/mlir-spirv-cpu-runner.cpp"],
     deps = [
-        ":AllPassesAndDialectsNoRegistration",
         ":ExecutionEngineUtils",
         ":GPUDialect",
         ":GPUToSPIRV",
@@ -4101,6 +4104,7 @@ cc_binary(
         ":SPIRVDialect",
         ":SPIRVToLLVM",
         ":SPIRVTransforms",
+        ":StandardOps",
         ":StandardToLLVM",
         ":TargetLLVMIR",
         "//llvm:Core",
