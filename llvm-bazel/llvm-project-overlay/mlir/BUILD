@@ -570,6 +570,7 @@ cc_library(
         ":LLVMArmNeon",
         ":LLVMArmNeonConversionIncGen",
         ":LLVMIRModuleTranslation",
+        ":TargetLLVMIR",
         ":Translation",
         "//llvm:Core",
         "//llvm:Support",
@@ -733,6 +734,7 @@ cc_library(
         ":LLVMArmSVE",
         ":LLVMArmSVEConversionIncGen",
         ":LLVMIRModuleTranslation",
+        ":TargetLLVMIR",
         ":Translation",
         "//llvm:Core",
         "//llvm:Support",
@@ -889,6 +891,7 @@ cc_library(
         ":LLVMAVX512",
         ":LLVMAVX512ConversionIncGen",
         ":LLVMIRModuleTranslation",
+        ":TargetLLVMIR",
         ":Translation",
         "//llvm:Core",
         "//llvm:Support",
@@ -1934,12 +1937,14 @@ filegroup(
 
 cc_library(
     name = "GPUCommonTransforms",
+    srcs = [
+        "lib/Conversion/GPUCommon/GPUOpsLowering.cpp",
+    ],
     hdrs = [
+        "lib/Conversion/GPUCommon/GPUOpsLowering.h",
         "lib/Conversion/GPUCommon/IndexIntrinsicsOpLowering.h",
         "lib/Conversion/GPUCommon/OpToFuncCallLowering.h",
     ],
-    # TODO(b/155492113): Move back to hdrs once fixed.
-    textual_hdrs = ["lib/Conversion/GPUCommon/GPUOpsLowering.h"],
     deps = [
         ":GPUDialect",
         ":IR",
@@ -3590,6 +3595,7 @@ cc_library(
         "lib/Target/LLVMIR/TypeTranslation.cpp",
     ],
     hdrs = [
+        "include/mlir/Target/LLVMIR/LLVMTranslationInterface.h",
         "include/mlir/Target/LLVMIR/ModuleTranslation.h",
         "include/mlir/Target/LLVMIR/TypeTranslation.h",
     ],
@@ -3609,6 +3615,38 @@ cc_library(
 )
 
 cc_library(
+    name = "LLVMToLLVMIRTranslation",
+    srcs = glob(["lib/Target/LLVMIR/Dialect/LLVMIR/*.cpp"]),
+    hdrs = glob(["include/mlir/Target/LLVMIR/Dialect/LLVMIR/*.h"]),
+    includes = ["include"],
+    deps = [
+        ":IR",
+        ":LLVMConversionIncGen",
+        ":LLVMDialect",
+        ":LLVMIRModuleTranslation",
+        ":Support",
+        "//llvm:Core",
+        "//llvm:Support",
+    ],
+)
+
+cc_library(
+    name = "OpenMPToLLVMIRTranslation",
+    srcs = glob(["lib/Target/LLVMIR/Dialect/OpenMP/*.cpp"]),
+    hdrs = glob(["include/mlir/Target/LLVMIR/Dialect/OpenMP/*.h"]),
+    includes = ["include"],
+    deps = [
+        ":IR",
+        ":LLVMIRModuleTranslation",
+        ":OpenMPDialect",
+        ":Support",
+        "//llvm:Core",
+        "//llvm:FrontendOpenMP",
+        "//llvm:Support",
+    ],
+)
+
+cc_library(
     name = "TargetLLVMIR",
     srcs = [
         "lib/Target/LLVMIR/ConvertFromLLVMIR.cpp",
@@ -3621,11 +3659,10 @@ cc_library(
         ":LLVMConversionIncGen",
         ":LLVMDialect",
         ":LLVMIRModuleTranslation",
+        ":LLVMToLLVMIRTranslation",
         ":OpenMPDialect",
+        ":OpenMPToLLVMIRTranslation",
         ":Support",
-        ":TargetLLVMAVX512Intr",
-        ":TargetLLVMArmNeonIntr",
-        ":TargetLLVMArmSVEIntr",
         ":Translation",
         "//llvm:Core",
         "//llvm:IRReader",
@@ -3646,6 +3683,7 @@ cc_library(
         ":NVVMConversionIncGen",
         ":NVVMDialect",
         ":Support",
+        ":TargetLLVMIR",
         ":Translation",
         "//llvm:Core",
         "//llvm:Support",
@@ -3665,6 +3703,7 @@ cc_library(
         ":ROCDLConversionIncGen",
         ":ROCDLDialect",
         ":Support",
+        ":TargetLLVMIR",
         ":Translation",
         "//llvm:Core",
         "//llvm:Support",
@@ -3752,6 +3791,9 @@ cc_library(
     hdrs = ["include/mlir/InitAllTranslations.h"],
     deps = [
         ":SPIRVTranslateRegistration",
+        ":TargetLLVMAVX512Intr",
+        ":TargetLLVMArmNeonIntr",
+        ":TargetLLVMArmSVEIntr",
         ":TargetLLVMIR",
         ":TargetNVVMIR",
         ":TargetROCDLIR",
@@ -3918,6 +3960,8 @@ cc_library(
         ":ExecutionEngineUtils",
         ":IR",
         ":LLVMDialect",
+        ":LLVMToLLVMIRTranslation",
+        ":OpenMPToLLVMIRTranslation",
         ":Parser",
         ":Pass",
         ":SCFToStandard",
@@ -3972,6 +4016,8 @@ cc_binary(
         ":LLVMDialect",
         ":MlirJitRunner",
         ":OpenMPDialect",
+        ":OpenMPToLLVMIRTranslation",
+        ":TargetLLVMIR",
         "//llvm:AsmParser",
         "//llvm:Support",
         "//llvm:X86AsmParser",
@@ -4069,6 +4115,7 @@ cc_binary(
         ":Pass",
         ":StandardOps",
         ":StandardToLLVM",
+        ":TargetLLVMIR",
         ":TargetNVVMIR",
         ":Transforms",
         "//devtools/build/runtime:get_runfiles_dir",
@@ -4100,6 +4147,7 @@ cc_binary(
         ":StandardOps",
         ":StandardToLLVM",
         ":StandardToSPIRV",
+        ":TargetLLVMIR",
         "//llvm:Support",
     ],
 )
