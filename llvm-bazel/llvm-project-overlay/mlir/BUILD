@@ -3547,6 +3547,7 @@ cc_library(
         "lib/Target/LLVMIR/TypeTranslation.cpp",
     ],
     hdrs = [
+        "include/mlir/Target/LLVMIR/Export.h",
         "include/mlir/Target/LLVMIR/LLVMTranslationInterface.h",
         "include/mlir/Target/LLVMIR/ModuleTranslation.h",
         "include/mlir/Target/LLVMIR/TypeTranslation.h",
@@ -3713,7 +3714,6 @@ cc_library(
     ],
 )
 
-# TODO(zinenko): Update these so that we can simplify mapping to cmake.
 cc_library(
     name = "ExecutionEngine",
     srcs = [
@@ -3728,6 +3728,7 @@ cc_library(
     deps = [
         ":IR",
         ":LLVMDialect",
+        ":LLVMIRModuleTranslation",
         ":Support",
         ":TargetLLVMIR",
         ":Translation",
@@ -4114,6 +4115,7 @@ cc_binary(
         ":GPUTransforms",
         ":IR",
         ":LLVMDialect",
+        ":LLVMIRModuleTranslation",
         ":MlirJitRunner",
         ":NVVMDialect",
         ":NVVMToLLVMIRTranslation",
@@ -4144,6 +4146,7 @@ cc_binary(
         ":GPUToVulkanTransforms",
         ":GPUTransforms",
         ":LLVMDialect",
+        ":LLVMIRModuleTranslation",
         ":MlirJitRunner",
         ":Pass",
         ":SPIRVDialect",
@@ -4166,6 +4169,7 @@ cc_binary(
         ":GPUTransforms",
         ":IR",
         ":LLVMDialect",
+        ":LLVMIRModuleTranslation",
         ":MlirJitRunner",
         ":Pass",
         ":SPIRVConversion",
