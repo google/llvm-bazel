@@ -251,7 +251,7 @@ cc_library(
         "//mlir:GPUTransforms",
         "//mlir:IR",
         "//mlir:LLVMDialect",
-        "//mlir:LLVMIRModuleTranslation",
+        "//mlir:TargetLLVMIRModuleTranslation",
         "//mlir:LLVMTransforms",
         "//mlir:LinalgOps",
         "//mlir:LinalgTransforms",
