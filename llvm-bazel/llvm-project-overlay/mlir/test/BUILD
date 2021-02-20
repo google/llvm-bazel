@@ -255,6 +255,7 @@ cc_library(
         "//mlir:LLVMTransforms",
         "//mlir:LinalgOps",
         "//mlir:LinalgTransforms",
+        "//mlir:MathDialect",
         "//mlir:MathTransforms",
         "//mlir:NVVMDialect",
         "//mlir:NVVMToLLVMIRTranslation",
