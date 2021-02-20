@@ -5308,6 +5308,7 @@ cc_library(
         ":StandardOps",
         ":Support",
         ":Transforms",
+        ":VectorOps",
         "//llvm:Support",
     ],
 )
