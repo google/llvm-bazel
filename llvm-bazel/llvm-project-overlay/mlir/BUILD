@@ -4211,6 +4211,13 @@ cc_binary(
     srcs = [
         "tools/mlir-linalg-ods-gen/mlir-linalg-ods-gen.cpp",
     ],
+    linkopts = select({
+        "@bazel_tools//src/conditions:windows": [],
+        "//conditions:default": [
+            "-lm",
+            "-lpthread",
+        ],
+    }),
     deps = [
         ":IR",
         ":Support",
