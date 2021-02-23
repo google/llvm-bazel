@@ -2,7 +2,7 @@
 # See https://llvm.org/LICENSE.txt for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-load("//mlir:tblgen.bzl", "gentbl")
+load("//mlir:tblgen.bzl", "gentbl", "td_library")
 
 package(
     default_visibility = [":test_friends"],
@@ -20,14 +20,11 @@ cc_library(
     hdrs = ["APITest.h"],
     includes = ["."],
 )
-
-filegroup(
-    name = "TestOpTdFiles",
+td_library(
+    name = "TestOpTdLibrary",
     srcs = [
         "lib/Dialect/Test/TestInterfaces.td",
         "lib/Dialect/Test/TestOps.td",
-        "//mlir:OpBaseTdFiles",
-        "//mlir:SideEffectTdFiles",
         "//mlir:include/mlir/IR/OpAsmInterface.td",
         "//mlir:include/mlir/IR/RegionKindInterface.td",
         "//mlir:include/mlir/IR/SymbolInterfaces.td",
@@ -35,6 +32,10 @@ filegroup(
         "//mlir:include/mlir/Interfaces/ControlFlowInterfaces.td",
         "//mlir:include/mlir/Interfaces/CopyOpInterface.td",
         "//mlir:include/mlir/Interfaces/InferTypeOpInterface.td",
+    ],
+    deps = [
+        "//mlir:OpBaseTdLibrary",
+        "//mlir:SideEffectTdLibrary",
     ],
 )
 
@@ -77,8 +78,8 @@ gentbl(
     ],
     tblgen = "//mlir:mlir-tblgen",
     td_file = "lib/Dialect/Test/TestOps.td",
-    td_srcs = [
-        ":TestOpTdFiles",
+    deps = [
+        ":TestOpTdLibrary",
     ],
     test = True,
 )
@@ -106,9 +107,9 @@ gentbl(
     ],
     tblgen = "//mlir:mlir-tblgen",
     td_file = "lib/Dialect/Test/TestInterfaces.td",
-    td_srcs = [
-        "//mlir:OpBaseTdFiles",
-        "//mlir:SideEffectBaseTdFiles",
+    deps = [
+        "//mlir:OpBaseTdLibrary",
+        "//mlir:SideEffectBaseTdLibrary",
     ],
     test = True,
 )
@@ -128,8 +129,8 @@ gentbl(
     ],
     tblgen = "//mlir:mlir-tblgen",
     td_file = "lib/Dialect/Test/TestTypeDefs.td",
-    td_srcs = [
-        ":TestOpTdFiles",
+    deps = [
+        ":TestOpTdLibrary",
     ],
     test = True,
 )
@@ -251,7 +252,6 @@ cc_library(
         "//mlir:GPUTransforms",
         "//mlir:IR",
         "//mlir:LLVMDialect",
-        "//mlir:TargetLLVMIRModuleTranslation",
         "//mlir:LLVMTransforms",
         "//mlir:LinalgOps",
         "//mlir:LinalgTransforms",
@@ -268,6 +268,7 @@ cc_library(
         "//mlir:StandardOpsTransforms",
         "//mlir:Support",
         "//mlir:TargetLLVMIR",
+        "//mlir:TargetLLVMIRModuleTranslation",
         "//mlir:TransformUtils",
         "//mlir:Transforms",
         "//mlir:VectorOps",
