@@ -276,22 +276,26 @@ td_library(
         "include/mlir/Dialect/StandardOps/IR/StandardOpsBase.td",
         "include/mlir/IR/OpBase.td",
     ],
+    includes = ["include"],
 )
 
 td_library(
     name = "SideEffectBaseTdLibrary",
     srcs = ["include/mlir/Interfaces/SideEffectInterfaceBase.td"],
+    includes = ["include"],
 )
 
 td_library(
     name = "SideEffectTdLibrary",
     srcs = ["include/mlir/Interfaces/SideEffectInterfaces.td"],
+    includes = ["include"],
     deps = [":SideEffectBaseTdLibrary"],
 )
 
 td_library(
     name = "VectorInterfacesTdLibrary",
     srcs = ["include/mlir/Interfaces/VectorInterfaces.td"],
+    includes = ["include"],
 )
 
 ##---------------------------------------------------------------------------##
@@ -301,6 +305,7 @@ td_library(
 td_library(
     name = "PassBaseTdLibrary",
     srcs = ["include/mlir/Pass/PassBase.td"],
+    includes = ["include"],
 )
 
 td_library(
@@ -311,6 +316,7 @@ td_library(
         "include/mlir/Interfaces/ControlFlowInterfaces.td",
         "include/mlir/Interfaces/LoopLikeInterface.td",
     ],
+    includes = ["include"],
     deps = [
         ":OpBaseTdLibrary",
         ":SideEffectTdLibrary",
@@ -369,6 +375,7 @@ td_library(
         "include/mlir/Dialect/Async/IR/AsyncTypes.td",
         "include/mlir/Interfaces/ControlFlowInterfaces.td",
     ],
+    includes = ["include"],
     deps = [
         ":OpBaseTdLibrary",
         ":SideEffectTdLibrary",
@@ -430,6 +437,7 @@ td_library(
         "include/mlir/Dialect/LLVMIR/LLVMOpBase.td",
         "include/mlir/IR/OpBase.td",
     ],
+    includes = ["include"],
     deps = [
         ":SideEffectTdLibrary",
     ],
@@ -509,6 +517,7 @@ td_library(
     srcs = [
         "include/mlir/Dialect/LLVMIR/LLVMArmNeon.td",
     ],
+    includes = ["include"],
     deps = [
         ":LLVMOpsTdLibrary",
     ],
@@ -579,6 +588,7 @@ td_library(
         "include/mlir/Dialect/LLVMIR/LLVMOpBase.td",
         "include/mlir/IR/OpBase.td",
     ],
+    includes = ["include"],
     deps = [
         ":SideEffectTdLibrary",
     ],
@@ -661,6 +671,7 @@ td_library(
     srcs = [
         "include/mlir/Dialect/LLVMIR/LLVMArmSVE.td",
     ],
+    includes = ["include"],
     deps = [
         ":LLVMOpsTdLibrary",
     ],
@@ -731,6 +742,7 @@ td_library(
         "include/mlir/Dialect/LLVMIR/LLVMOpBase.td",
         "include/mlir/IR/OpBase.td",
     ],
+    includes = ["include"],
     deps = [
         ":SideEffectTdLibrary",
     ],
@@ -806,6 +818,7 @@ td_library(
     srcs = [
         "include/mlir/Dialect/LLVMIR/LLVMAVX512.td",
     ],
+    includes = ["include"],
     deps = [
         ":LLVMOpsTdLibrary",
     ],
@@ -876,6 +889,7 @@ td_library(
         "include/mlir/Interfaces/ControlFlowInterfaces.td",
         "include/mlir/Interfaces/LoopLikeInterface.td",
     ],
+    includes = ["include"],
     deps = [
         ":OpBaseTdLibrary",
         ":SideEffectTdLibrary",
@@ -949,6 +963,7 @@ td_library(
         "include/mlir/Interfaces/ControlFlowInterfaces.td",
         "include/mlir/Interfaces/ViewLikeInterface.td",
     ],
+    includes = ["include"],
     deps = [
         ":OpBaseTdLibrary",
         ":SideEffectTdLibrary",
@@ -1366,6 +1381,7 @@ td_library(
         "include/mlir/Dialect/Shape/IR/ShapeOps.td",
         "include/mlir/Interfaces/InferTypeOpInterface.td",
     ],
+    includes = ["include"],
     deps = [
         ":StdOpsTdLibrary",
     ],
@@ -1755,6 +1771,7 @@ td_library(
         "include/mlir/Dialect/LLVMIR/LLVMOpBase.td",
         "include/mlir/IR/SymbolInterfaces.td",
     ],
+    includes = ["include"],
     deps = [
         ":OpBaseTdLibrary",
         ":SideEffectTdLibrary",
@@ -1910,6 +1927,7 @@ td_library(
         "include/mlir/IR/SymbolInterfaces.td",
         "include/mlir/Interfaces/ControlFlowInterfaces.td",
     ],
+    includes = ["include"],
     deps = [
         ":OpBaseTdLibrary",
         ":SideEffectTdLibrary",
@@ -2288,6 +2306,7 @@ td_library(
         "include/mlir/Dialect/LLVMIR/LLVMOpBase.td",
         "include/mlir/Dialect/LLVMIR/NVVMOps.td",
     ],
+    includes = ["include"],
     deps = [
         ":OpBaseTdLibrary",
         ":SideEffectTdLibrary",
@@ -2354,6 +2373,7 @@ td_library(
         "include/mlir/Dialect/LLVMIR/LLVMOpBase.td",
         "include/mlir/Dialect/LLVMIR/ROCDLOps.td",
     ],
+    includes = ["include"],
     deps = [
         ":OpBaseTdLibrary",
         ":SideEffectTdLibrary",
@@ -2425,6 +2445,7 @@ td_library(
         "include/mlir/Dialect/PDL/IR/PDLTypes.td",
         "include/mlir/IR/SymbolInterfaces.td",
     ],
+    includes = ["include"],
     deps = [
         ":OpBaseTdLibrary",
         ":SideEffectTdLibrary",
@@ -2503,6 +2524,7 @@ td_library(
         "include/mlir/Dialect/PDL/IR/PDLTypes.td",
         "include/mlir/Dialect/PDLInterp/IR/PDLInterpOps.td",
     ],
+    includes = ["include"],
     deps = [
         ":OpBaseTdLibrary",
         ":SideEffectTdLibrary",
@@ -2538,6 +2560,7 @@ td_library(
         "include/mlir/Interfaces/CallInterfaces.td",
         "include/mlir/Interfaces/ControlFlowInterfaces.td",
     ] + glob(["include/mlir/Dialect/SPIRV/IR/*.td"]),
+    includes = ["include"],
     deps = [
         ":OpBaseTdLibrary",
         ":SideEffectTdLibrary",
@@ -2910,6 +2933,7 @@ td_library(
         "include/mlir/Interfaces/CastInterfaces.td",
         "include/mlir/Interfaces/ControlFlowInterfaces.td",
     ],
+    includes = ["include"],
     deps = [
         ":OpBaseTdLibrary",
         ":SideEffectTdLibrary",
@@ -4468,6 +4492,7 @@ td_library(
         "include/mlir/Dialect/Quant/QuantOps.td",
         "include/mlir/Dialect/Quant/QuantOpsBase.td",
     ],
+    includes = ["include"],
     deps = [
         ":OpBaseTdLibrary",
         ":SideEffectTdLibrary",
@@ -4557,6 +4582,7 @@ td_library(
         "include/mlir/Interfaces/CopyOpInterface.td",
         "include/mlir/Interfaces/ViewLikeInterface.td",
     ],
+    includes = ["include"],
     deps = [
         ":AffineOpsTdLibrary",
         ":OpBaseTdLibrary",
@@ -4610,6 +4636,7 @@ td_library(
         "include/mlir/Interfaces/CopyOpInterface.td",
         "include/mlir/Interfaces/ViewLikeInterface.td",
     ],
+    includes = ["include"],
     deps = [
         ":AffineOpsTdLibrary",
         ":LinalgOpsTdLibrary",
@@ -4645,6 +4672,7 @@ td_library(
         "include/mlir/Dialect/Linalg/IR/LinalgSparseOps.td",
         "include/mlir/Interfaces/ViewLikeInterface.td",
     ],
+    includes = ["include"],
     deps = [
         ":OpBaseTdLibrary",
     ],
@@ -4691,6 +4719,7 @@ td_library(
     srcs = [
         "include/mlir/Dialect/Linalg/IR/LinalgDoc.td",
     ],
+    includes = ["include"],
     deps = [
         ":LinalgOpsTdLibrary",
         ":LinalgStructuredOpsTdLibrary",
@@ -4901,6 +4930,7 @@ td_library(
         "include/mlir/Dialect/Vector/VectorOps.td",
         "include/mlir/Interfaces/ViewLikeInterface.td",
     ],
+    includes = ["include"],
     deps = [
         ":AffineOpsTdLibrary",
         ":OpBaseTdLibrary",
@@ -5142,6 +5172,7 @@ td_library(
         "include/mlir/Dialect/Complex/IR/ComplexBase.td",
         "include/mlir/Dialect/Complex/IR/ComplexOps.td",
     ],
+    includes = ["include"],
     deps = [
         ":OpBaseTdLibrary",
         ":SideEffectTdLibrary",
@@ -5261,6 +5292,7 @@ td_library(
         "include/mlir/Dialect/Math/IR/MathBase.td",
         "include/mlir/Dialect/Math/IR/MathOps.td",
     ],
+    includes = ["include"],
     deps = [
         ":OpBaseTdLibrary",
         ":SideEffectTdLibrary",

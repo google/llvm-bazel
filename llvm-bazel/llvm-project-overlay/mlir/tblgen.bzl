@@ -4,8 +4,10 @@
 
 """BUILD extensions for MLIR table generation."""
 
-# A provider with one field, transitive_sources.
-TdFiles = provider(fields = ["transitive_sources", "transitive_includes"])
+TdFiles = provider(fields = {
+    "transitive_sources": "td files transitively used by this rule.",
+    "transitive_includes": "include arguments to add to the final tablegen invocation.",
+})
 
 def _get_dep_transitive_srcs(dep):
     if TdFiles in dep:
@@ -27,19 +29,33 @@ def _get_transitive_srcs(srcs, deps):
       a collection of the transitive sources
     """
     return depset(
-        srcs,
+        direct = srcs,
         transitive = [_get_dep_transitive_srcs(dep) for dep in deps],
     )
 
 def _get_transitive_includes(includes, deps):
     return depset(
-        includes,
+        direct = includes,
         transitive = [_get_dep_transitive_includes(dep) for dep in deps],
     )
 
+def _process_includes(ctx, raw_includes):
+    includes = []
+    package_path = ctx.build_file_path[:-len("BUILD")]
+    for include in raw_includes:
+        if include.startswith("/"):
+            includes.append(include)
+        else:
+            includes.append(package_path + include)
+            includes.append(ctx.genfiles_dir.path + "/" + package_path + include)
+    return includes
+
 def _td_library_impl(ctx):
     trans_srcs = _get_transitive_srcs(ctx.files.srcs, ctx.attr.deps)
-    trans_includes = _get_transitive_includes(ctx.attr.includes, ctx.attr.deps)
+    trans_includes = _get_transitive_includes(
+        _process_includes(ctx, ctx.attr.includes),
+        ctx.attr.deps,
+    )
     return [TdFiles(
         transitive_sources = trans_srcs,
         transitive_includes = trans_includes,
@@ -56,45 +72,30 @@ td_library = rule(
 
 def _gentbl_rule_impl(ctx):
     td_file = ctx.file.td_file
-    srcs = []
-    srcs.extend(ctx.files.td_srcs)
-    if td_file not in srcs:
-        srcs.append(td_file)
 
-    trans_srcs = _get_transitive_srcs(srcs, ctx.attr.deps)
+    trans_srcs = _get_transitive_srcs(ctx.files.td_srcs + [td_file], ctx.attr.deps)
     trans_includes = _get_transitive_includes(ctx.attr.td_includes, ctx.attr.deps)
 
-    td_includes_cmd = ["-I%s" % (include,) for include in trans_includes.to_list()]
-
-    td_includes_cmd += [
-        "-I=external/llvm-project/mlir/include",
-        "-I=%s/external/llvm-project/mlir/include" % (ctx.genfiles_dir.path,),
-    ]
-    for td_include in ctx.attr.td_includes:
-        td_includes_cmd += [
-            "-I=%s" % td_include,
-            "-I=%s/%s" % (ctx.genfiles_dir.path, td_include),
-        ]
-    for td_relative_include in ctx.attr.td_relative_includes:
-        td_includes_cmd += [
-            "-I=%s/%s" % (native.package_name(), td_relative_include),
-            "-I=%s/%s/%s" % (ctx.genfiles_dir.path, native.package_name(), td_relative_include),
-        ]
-
-    td_includes_cmd.append("-I=%s" % td_file.dirname)
-
-    output = "-o=%s" % (ctx.outputs.output.path,)
-
-    args = ctx.attr.opts + [
-        td_file.path,
-        "-I=%s" % (ctx.genfiles_dir.path,),
-    ] + td_includes_cmd + [output]
+    args = ctx.actions.args()
+    args.add_all(ctx.attr.opts)
+    args.add(td_file)
+    args.add("-I", ctx.genfiles_dir.path)
+    args.add("-I", td_file.dirname)
+    args.add_all(trans_includes, before_each = "-I")
+    args.add_all(ctx.attr.td_includes, before_each = "-I")
+    args.add_all(
+        ctx.attr.td_includes,
+        before_each = "-I",
+        format_each = ctx.genfiles_dir.path + "/%s",
+    )
+    args.add_all(_process_includes(ctx, ctx.attr.td_relative_includes))
+    args.add("-o", ctx.outputs.output.path)
 
     ctx.actions.run(
         outputs = [ctx.outputs.output],
-        inputs = trans_srcs.to_list(),
+        inputs = trans_srcs,
         executable = ctx.executable.tblgen,
-        arguments = args,
+        arguments = [args],
     )
     return [DefaultInfo()]
 
@@ -107,7 +108,7 @@ gentbl_rule = rule(
         ),
         "td_file": attr.label(allow_single_file = True, mandatory = True),
         "td_srcs": attr.label_list(allow_files = True),
-        "deps": attr.label_list(),
+        "deps": attr.label_list(providers = [TdFiles]),
         "output": attr.output(mandatory = True),
         "opts": attr.string_list(),
         "td_includes": attr.string_list(),
@@ -136,8 +137,11 @@ def gentbl(
         options passed to tblgen, and the out is the corresponding output file
         produced.
       td_srcs: A list of table definition files included transitively.
-      td_includes: A list of include paths for relative includes, provided as build targets.
-      td_relative_includes: A list of include paths for relative includes, provided as relative path.
+      td_includes: A list of absolute include paths to add to the tablegen
+        invocation.
+      td_relative_includes: A list of include paths for relative includes,
+        provided as relative path.
+      deps: td_library dependencies used by td_file.
       strip_include_prefix: attribute to pass through to cc_library.
       test: whether to create a test to invoke the tool too.
     """

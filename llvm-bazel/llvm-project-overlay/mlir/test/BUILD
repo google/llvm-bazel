@@ -20,6 +20,7 @@ cc_library(
     hdrs = ["APITest.h"],
     includes = ["."],
 )
+
 td_library(
     name = "TestOpTdLibrary",
     srcs = [
@@ -78,10 +79,10 @@ gentbl(
     ],
     tblgen = "//mlir:mlir-tblgen",
     td_file = "lib/Dialect/Test/TestOps.td",
+    test = True,
     deps = [
         ":TestOpTdLibrary",
     ],
-    test = True,
 )
 
 gentbl(
@@ -107,11 +108,11 @@ gentbl(
     ],
     tblgen = "//mlir:mlir-tblgen",
     td_file = "lib/Dialect/Test/TestInterfaces.td",
+    test = True,
     deps = [
         "//mlir:OpBaseTdLibrary",
         "//mlir:SideEffectBaseTdLibrary",
     ],
-    test = True,
 )
 
 gentbl(
@@ -129,10 +130,10 @@ gentbl(
     ],
     tblgen = "//mlir:mlir-tblgen",
     td_file = "lib/Dialect/Test/TestTypeDefs.td",
+    test = True,
     deps = [
         ":TestOpTdLibrary",
     ],
-    test = True,
 )
 
 cc_library(
