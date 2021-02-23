@@ -21,6 +21,21 @@ cc_library(
     includes = ["."],
 )
 
+cc_library(
+    name = "TestAnalysis",
+    srcs = glob(["lib/Analysis/*.cpp"]),
+    defines = ["MLIR_CUDA_CONVERSIONS_ENABLED"],
+    includes = ["lib/Dialect/Test"],
+    deps = [
+        ":TestDialect",
+        "//llvm:Support",
+        "//mlir:Analysis",
+        "//mlir:IR",
+        "//mlir:Pass",
+        "//mlir:Support",
+    ],
+)
+
 filegroup(
     name = "TestOpTdFiles",
     srcs = [
@@ -251,7 +266,6 @@ cc_library(
         "//mlir:GPUTransforms",
         "//mlir:IR",
         "//mlir:LLVMDialect",
-        "//mlir:TargetLLVMIRModuleTranslation",
         "//mlir:LLVMTransforms",
         "//mlir:LinalgOps",
         "//mlir:LinalgTransforms",
@@ -268,6 +282,7 @@ cc_library(
         "//mlir:StandardOpsTransforms",
         "//mlir:Support",
         "//mlir:TargetLLVMIR",
+        "//mlir:TargetLLVMIRModuleTranslation",
         "//mlir:TransformUtils",
         "//mlir:Transforms",
         "//mlir:VectorOps",
@@ -292,21 +307,6 @@ cc_library(
         "//mlir:Support",
         "//mlir:Transforms",
         "//mlir:VectorOps",
-    ],
-)
-
-cc_library(
-    name = "TestAnalysis",
-    srcs = glob([
-        "lib/Analysis/*.cpp",
-    ]),
-    deps = [
-        ":TestDialect",
-        "//llvm:Support",
-        "//mlir:Analysis",
-        "//mlir:IR",
-        "//mlir:Pass",
-        "//mlir:Support",
     ],
 )
 
