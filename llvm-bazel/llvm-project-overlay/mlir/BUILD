@@ -3576,8 +3576,8 @@ cc_library(
         ":IR",
         ":LLVMAVX512",
         ":LLVMAVX512ConversionIncGen",
-        ":TargetLLVMIRModuleTranslation",
         ":Support",
+        ":TargetLLVMIRModuleTranslation",
         "//llvm:Core",
         "//llvm:Support",
     ],
@@ -3593,8 +3593,8 @@ cc_library(
         ":LLVMArmNeon",
         ":LLVMArmNeonConversionIncGen",
         ":LLVMArmNeonIncGen",
-        ":TargetLLVMIRModuleTranslation",
         ":Support",
+        ":TargetLLVMIRModuleTranslation",
         "//llvm:Core",
         "//llvm:Support",
     ],
@@ -3609,8 +3609,8 @@ cc_library(
         ":IR",
         ":LLVMArmSVE",
         ":LLVMArmSVEConversionIncGen",
-        ":TargetLLVMIRModuleTranslation",
         ":Support",
+        ":TargetLLVMIRModuleTranslation",
         "//llvm:Core",
         "//llvm:Support",
     ],
@@ -3623,10 +3623,10 @@ cc_library(
     includes = ["include"],
     deps = [
         ":IR",
-        ":TargetLLVMIRModuleTranslation",
         ":NVVMConversionIncGen",
         ":NVVMDialect",
         ":Support",
+        ":TargetLLVMIRModuleTranslation",
         "//llvm:Core",
         "//llvm:Support",
     ],
@@ -3639,10 +3639,10 @@ cc_library(
     includes = ["include"],
     deps = [
         ":IR",
-        ":TargetLLVMIRModuleTranslation",
         ":ROCDLConversionIncGen",
         ":ROCDLDialect",
         ":Support",
+        ":TargetLLVMIRModuleTranslation",
         "//llvm:Core",
         "//llvm:Support",
     ],
@@ -3657,8 +3657,8 @@ cc_library(
         ":IR",
         ":LLVMConversionIncGen",
         ":LLVMDialect",
-        ":TargetLLVMIRModuleTranslation",
         ":Support",
+        ":TargetLLVMIRModuleTranslation",
         "//llvm:Core",
         "//llvm:Support",
     ],
@@ -3671,9 +3671,9 @@ cc_library(
     includes = ["include"],
     deps = [
         ":IR",
-        ":TargetLLVMIRModuleTranslation",
         ":OpenMPDialect",
         ":Support",
+        ":TargetLLVMIRModuleTranslation",
         "//llvm:Core",
         "//llvm:FrontendOpenMP",
         "//llvm:Support",
@@ -3698,7 +3698,6 @@ cc_library(
         ":LLVMArmSVEToLLVMIRTranslation",
         ":LLVMConversionIncGen",
         ":LLVMDialect",
-        ":TargetLLVMIRModuleTranslation",
         ":LLVMToLLVMIRTranslation",
         ":NVVMDialect",
         ":NVVMToLLVMIRTranslation",
@@ -3707,6 +3706,7 @@ cc_library(
         ":ROCDLDialect",
         ":ROCDLToLLVMIRTranslation",
         ":Support",
+        ":TargetLLVMIRModuleTranslation",
         ":Translation",
         "//llvm:Core",
         "//llvm:IRReader",
@@ -3722,9 +3722,9 @@ cc_library(
     deps = [
         ":IR",
         ":LLVMDialect",
-        ":TargetLLVMIRModuleTranslation",
         ":Support",
         ":TargetLLVMIR",
+        ":TargetLLVMIRModuleTranslation",
         ":Translation",
         "//llvm:BitReader",
         "//llvm:BitWriter",
@@ -4092,13 +4092,13 @@ cc_binary(
         ":GPUTransforms",
         ":IR",
         ":LLVMDialect",
-        ":TargetLLVMIRModuleTranslation",
         ":MlirJitRunner",
         ":NVVMDialect",
         ":NVVMToLLVMIRTranslation",
         ":Pass",
         ":StandardToLLVM",
         ":TargetLLVMIR",
+        ":TargetLLVMIRModuleTranslation",
         ":Transforms",
         "//llvm:Support",
         "@cuda//:cuda_headers",
@@ -4120,7 +4120,6 @@ cc_binary(
         ":GPUToSPIRV",
         ":GPUToVulkanTransforms",
         ":GPUTransforms",
-        ":TargetLLVMIRModuleTranslation",
         ":MlirJitRunner",
         ":Pass",
         ":SPIRVDialect",
@@ -4128,6 +4127,7 @@ cc_binary(
         ":StandardToLLVM",
         ":StandardToSPIRV",
         ":TargetLLVMIR",
+        ":TargetLLVMIRModuleTranslation",
         "//llvm:Support",
     ],
 )
@@ -4143,7 +4143,6 @@ cc_binary(
         ":GPUTransforms",
         ":IR",
         ":LLVMDialect",
-        ":TargetLLVMIRModuleTranslation",
         ":MlirJitRunner",
         ":Pass",
         ":SPIRVConversion",
@@ -4152,6 +4151,7 @@ cc_binary(
         ":SPIRVTransforms",
         ":StandardToLLVM",
         ":TargetLLVMIR",
+        ":TargetLLVMIRModuleTranslation",
         "//llvm:Core",
         "//llvm:Linker",
         "//llvm:Support",
@@ -4208,9 +4208,23 @@ cc_binary(
 
 cc_binary(
     name = "mlir-linalg-ods-gen",
-    srcs = glob([
+    srcs = [
         "tools/mlir-linalg-ods-gen/mlir-linalg-ods-gen.cpp",
-    ]),
+    ],
+    deps = [
+        ":IR",
+        ":Support",
+        "//third_party/llvm/llvm-project/llvm:Support",
+        "//third_party/llvm/llvm-project/llvm:TableGen",
+        "//third_party/llvm/llvm-project/llvm:config",
+    ],
+)
+
+cc_binary(
+    name = "mlir-linalg-ods-yaml-gen",
+    srcs = [
+        "tools/mlir-linalg-ods-gen/mlir-linalg-ods-yaml-gen.cpp",
+    ],
     linkopts = select({
         "@bazel_tools//src/conditions:windows": [],
         "//conditions:default": [
@@ -4220,6 +4234,7 @@ cc_binary(
     }),
     deps = [
         ":IR",
+        ":Parser",
         ":Support",
         "//llvm:Support",
         "//llvm:TableGen",
@@ -4530,26 +4545,43 @@ gentbl(
 )
 
 genlinalg(
-    name = "LinalgNamedStructuredOpsIncGen",
+    name = "LinalgNamedStructuredOpsTcIncGen",
     src = "include/mlir/Dialect/Linalg/IR/LinalgNamedStructuredOpsSpec.tc",
     linalg_outs = [
         (
-            "-gen-impl",
-            "include/mlir/Dialect/Linalg/IR/LinalgNamedStructuredOps.cpp.inc",
+            "-gen-impl -o=$@",
+            "include/mlir/Dialect/Linalg/IR/LinalgNamedStructuredOps.tcgen.cpp.inc",
         ),
         (
-            "-gen-ods-decl",
-            "include/mlir/Dialect/Linalg/IR/LinalgNamedStructuredOps.td",
+            "-gen-ods-decl -o=$@",
+            "include/mlir/Dialect/Linalg/IR/LinalgNamedStructuredOps.tcgen.td",
         ),
     ],
     linalggen = ":mlir-linalg-ods-gen",
+)
+
+genlinalg(
+    name = "LinalgNamedStructuredOpsYamlIncGen",
+    src = "include/mlir/Dialect/Linalg/IR/LinalgNamedStructuredOps.yaml",
+    linalg_outs = [
+        (
+            "-o-impl=$@",
+            "include/mlir/Dialect/Linalg/IR/LinalgNamedStructuredOps.yamlgen.cpp.inc",
+        ),
+        (
+            "-o-ods-decl=$@",
+            "include/mlir/Dialect/Linalg/IR/LinalgNamedStructuredOps.yamlgen.td",
+        ),
+    ],
+    linalggen = ":mlir-linalg-ods-yaml-gen",
 )
 
 filegroup(
     name = "LinalgStructuredOpsTdFiles",
     srcs = [
         "include/mlir/Dialect/Linalg/IR/LinalgInterfaces.td",
-        "include/mlir/Dialect/Linalg/IR/LinalgNamedStructuredOps.td",
+        "include/mlir/Dialect/Linalg/IR/LinalgNamedStructuredOps.tcgen.td",
+        "include/mlir/Dialect/Linalg/IR/LinalgNamedStructuredOps.yamlgen.td",
         "include/mlir/Dialect/Linalg/IR/LinalgStructuredOps.td",
         "include/mlir/Interfaces/CopyOpInterface.td",
         "include/mlir/Interfaces/ViewLikeInterface.td",
@@ -4576,7 +4608,8 @@ gentbl(
     td_file = "include/mlir/Dialect/Linalg/IR/LinalgStructuredOps.td",
     td_srcs = [
         ":LinalgStructuredOpsTdFiles",
-        "include/mlir/Dialect/Linalg/IR/LinalgNamedStructuredOps.td",
+        "include/mlir/Dialect/Linalg/IR/LinalgNamedStructuredOps.tcgen.td",
+        "include/mlir/Dialect/Linalg/IR/LinalgNamedStructuredOps.yamlgen.td",
     ],
 )
 
@@ -4752,7 +4785,8 @@ cc_library(
         ":IR",
         ":LinalgInterfaces",
         ":LinalgInterfacesIncGen",
-        ":LinalgNamedStructuredOpsIncGen",
+        ":LinalgNamedStructuredOpsTcIncGen",
+        ":LinalgNamedStructuredOpsYamlIncGen",
         ":LinalgOpsIncGen",
         ":LinalgSparseOpsIncGen",
         ":LinalgStructuredOpsIncGen",
@@ -4903,11 +4937,11 @@ cc_library(
         ":LLVMArmNeon",
         ":LLVMArmSVE",
         ":LLVMDialect",
-        ":TargetLLVMIRModuleTranslation",
         ":Pass",
         ":StandardOps",
         ":StandardToLLVM",
         ":Support",
+        ":TargetLLVMIRModuleTranslation",
         ":Transforms",
         ":VectorOps",
         "//llvm:Core",
