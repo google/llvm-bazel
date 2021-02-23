@@ -4221,9 +4221,9 @@ cc_binary(
     deps = [
         ":IR",
         ":Support",
-        "//third_party/llvm/llvm-project/llvm:Support",
-        "//third_party/llvm/llvm-project/llvm:TableGen",
-        "//third_party/llvm/llvm-project/llvm:config",
+        "//llvm:Support",
+        "//llvm:TableGen",
+        "//llvm:config",
     ],
 )
 
