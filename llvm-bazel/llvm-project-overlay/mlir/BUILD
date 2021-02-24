@@ -4291,7 +4291,7 @@ gentbl(
     ],
     tblgen = ":mlir-tblgen",
     td_file = "//llvm:include/llvm/Frontend/OpenACC/ACC.td",
-    td_includes = ["external/llvm-project/llvm/include"],
+    includes = ["/llvm/include"],
     td_srcs = ["//llvm:acc_td_files"],
 )
 
@@ -4365,7 +4365,7 @@ gentbl(
     ],
     tblgen = ":mlir-tblgen",
     td_file = "//llvm:include/llvm/Frontend/OpenMP/OMP.td",
-    td_includes = ["external/llvm-project/llvm/include"],
+    includes = ["/llvm/include"],
     td_srcs = [
         "//llvm:omp_td_files",
     ],

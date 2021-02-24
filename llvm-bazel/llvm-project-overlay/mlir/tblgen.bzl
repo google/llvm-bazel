@@ -56,24 +56,27 @@ def _get_transitive_includes(includes, deps):
         transitive = [_get_dep_transitive_includes(dep) for dep in deps],
     )
 
-def _resolve_includes(ctx, package_path, raw_includes):
-    """Resolves include paths as relative to the current package path."""
-    includes = []
-    for include in raw_includes:
-        if include.startswith("/"):
-            # TODO(gcmn): Figure out how to support absolute includes as
-            # relative to the repository root.
-            fail("Absolute includes not yet supported. Got: '%s'" % include)
-        else:
-            includes.append(package_path + include)
-            includes.append(ctx.genfiles_dir.path + "/" + package_path + include)
-    return includes
+def _resolve_includes(ctx, includes):
+    """Resolves include paths to paths relative to the execution root.
+
+    Relative paths are interpreted as relative to the current label's package.
+    Absolute paths are interpreted as relative to the current label's workspace
+    root."""
+    package = ctx.label.package
+    workspace_root = ctx.label.workspace_root
+    resolved_includes = []
+    for include in includes:
+        if not include.startswith("/"):
+            include = "/" + package + "/" + include
+        include = workspace_root + include
+        resolved_includes.append(include)
+        resolved_includes.append(ctx.genfiles_dir.path + "/" + include)
+    return resolved_includes
 
 def _td_library_impl(ctx):
-    package_path = ctx.file._build_file.path[:-len("BUILD")]
     trans_srcs = _get_transitive_srcs(ctx.files.srcs, ctx.attr.deps)
     trans_includes = _get_transitive_includes(
-        _resolve_includes(ctx, package_path, ctx.attr.includes),
+        _resolve_includes(ctx, ctx.attr.includes),
         ctx.attr.deps,
     )
     return [
@@ -90,16 +93,17 @@ td_library = rule(
         "srcs": attr.label_list(allow_files = True),
         "includes": attr.string_list(),
         "deps": attr.label_list(),
-        "_build_file": attr.label(default = ":BUILD", allow_single_file = True),
     },
 )
 
 def _gentbl_rule_impl(ctx):
     td_file = ctx.file.td_file
-    package_path = ctx.file._build_file.path[:-len("BUILD")]
 
     trans_srcs = _get_transitive_srcs(ctx.files.td_srcs + [td_file], ctx.attr.deps)
-    trans_includes = _get_transitive_includes(_resolve_includes(ctx, package_path, ctx.attr.td_relative_includes), ctx.attr.deps)
+    trans_includes = _get_transitive_includes(
+        _resolve_includes(ctx, ctx.attr.includes),
+        ctx.attr.deps,
+    )
 
     args = ctx.actions.args()
     args.add_all(ctx.attr.opts)
@@ -139,9 +143,8 @@ gentbl_rule = rule(
         "deps": attr.label_list(),
         "output": attr.output(mandatory = True),
         "opts": attr.string_list(),
+        "includes": attr.string_list(),
         "td_includes": attr.string_list(),
-        "td_relative_includes": attr.string_list(),
-        "_build_file": attr.label(default = ":BUILD", allow_single_file = True),
     },
 )
 
@@ -152,6 +155,7 @@ def gentbl(
         tbl_outs,
         td_srcs = [],
         td_includes = [],
+        includes = [],
         td_relative_includes = [],
         deps = [],
         strip_include_prefix = None,
@@ -167,10 +171,14 @@ def gentbl(
         options passed to tblgen, and the out is the corresponding output file
         produced.
       td_srcs: A list of table definition files included transitively.
-      td_includes: A list of absolute include paths to add to the tablegen
-        invocation.
-      td_relative_includes: A list of include paths for relative includes,
-        provided as relative path.
+      includes: Include paths to add to the tablegen invocation. Relative paths
+       are interpreted as relative to the current label's package. Absolute
+       paths are interpreted as relative to the current label's workspace
+       root.
+      td_includes: A list of include paths to add to the tablegen invocation.
+        Paths are added without modification. Deprecated. Use "includes" instead.
+      td_relative_includes: An alias for "includes". Deprecated. Use includes
+        instead.
       deps: td_library dependencies used by td_file.
       strip_include_prefix: attribute to pass through to cc_library.
       test: whether to create a test to invoke the tool too.
@@ -197,8 +205,8 @@ def gentbl(
             opts = opts,
             td_srcs = td_srcs,
             deps = deps,
+            includes = includes + td_relative_includes,
             td_includes = td_includes,
-            td_relative_includes = td_relative_includes,
             output = out,
             **kwargs
         )
