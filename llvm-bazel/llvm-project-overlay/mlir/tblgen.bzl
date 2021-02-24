@@ -179,6 +179,9 @@ def gentbl(
 
         opts = opts_string.split(" ") if opts_string else []
 
+        # Filter out empty options
+        opts = [opt for opt in opts if opt]
+
         first_opt = opts[0] if opts else ""
         rule_suffix = "_{}_{}".format(
             first_opt.replace("-", "_").replace("=", "_"),
@@ -191,7 +194,6 @@ def gentbl(
             opts = opts,
             td_srcs = td_srcs,
             deps = deps,
-            # TODO(gcmn): Remove hardcoded includes once all users properly declare include paths.
             td_includes = td_includes,
             td_relative_includes = td_relative_includes,
             output = out,
