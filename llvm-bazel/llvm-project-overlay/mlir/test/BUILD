@@ -37,7 +37,7 @@ cc_library(
 )
 
 td_library(
-    name = "TestOpTdLibrary",
+    name = "TestOpTdFiles",
     srcs = [
         "lib/Dialect/Test/TestInterfaces.td",
         "lib/Dialect/Test/TestOps.td",
@@ -50,8 +50,8 @@ td_library(
         "//mlir:include/mlir/Interfaces/InferTypeOpInterface.td",
     ],
     deps = [
-        "//mlir:OpBaseTdLibrary",
-        "//mlir:SideEffectTdLibrary",
+        "//mlir:OpBaseTdFiles",
+        "//mlir:SideEffectTdFiles",
     ],
 )
 
@@ -96,7 +96,7 @@ gentbl(
     td_file = "lib/Dialect/Test/TestOps.td",
     test = True,
     deps = [
-        ":TestOpTdLibrary",
+        ":TestOpTdFiles",
     ],
 )
 
@@ -125,8 +125,8 @@ gentbl(
     td_file = "lib/Dialect/Test/TestInterfaces.td",
     test = True,
     deps = [
-        "//mlir:OpBaseTdLibrary",
-        "//mlir:SideEffectBaseTdLibrary",
+        "//mlir:OpBaseTdFiles",
+        "//mlir:SideEffectBaseTdFiles",
     ],
 )
 
@@ -147,7 +147,7 @@ gentbl(
     td_file = "lib/Dialect/Test/TestTypeDefs.td",
     test = True,
     deps = [
-        ":TestOpTdLibrary",
+        ":TestOpTdFiles",
     ],
 )
 
