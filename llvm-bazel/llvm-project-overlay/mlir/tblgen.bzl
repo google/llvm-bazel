@@ -56,10 +56,9 @@ def _get_transitive_includes(includes, deps):
         transitive = [_get_dep_transitive_includes(dep) for dep in deps],
     )
 
-def _resolve_includes(ctx, raw_includes):
+def _resolve_includes(ctx, package_path, raw_includes):
     """Resolves include paths as relative to the current package path."""
     includes = []
-    package_path = ctx.build_file_path[:-len("BUILD")]
     for include in raw_includes:
         if include.startswith("/"):
             # TODO(gcmn): Figure out how to support absolute includes as
@@ -71,9 +70,10 @@ def _resolve_includes(ctx, raw_includes):
     return includes
 
 def _td_library_impl(ctx):
+    package_path = ctx.file._build_file.path[:-len("BUILD")]
     trans_srcs = _get_transitive_srcs(ctx.files.srcs, ctx.attr.deps)
     trans_includes = _get_transitive_includes(
-        _resolve_includes(ctx, ctx.attr.includes),
+        _resolve_includes(ctx, package_path, ctx.attr.includes),
         ctx.attr.deps,
     )
     return [
@@ -90,14 +90,16 @@ td_library = rule(
         "srcs": attr.label_list(allow_files = True),
         "includes": attr.string_list(),
         "deps": attr.label_list(),
+        "_build_file": attr.label(default = ":BUILD", allow_single_file = True),
     },
 )
 
 def _gentbl_rule_impl(ctx):
     td_file = ctx.file.td_file
+    package_path = ctx.file._build_file.path[:-len("BUILD")]
 
     trans_srcs = _get_transitive_srcs(ctx.files.td_srcs + [td_file], ctx.attr.deps)
-    trans_includes = _get_transitive_includes(ctx.attr.td_relative_includes, ctx.attr.deps)
+    trans_includes = _get_transitive_includes(_resolve_includes(ctx, package_path, ctx.attr.td_relative_includes), ctx.attr.deps)
 
     args = ctx.actions.args()
     args.add_all(ctx.attr.opts)
@@ -105,6 +107,7 @@ def _gentbl_rule_impl(ctx):
     args.add("-I", ctx.genfiles_dir.path)
     args.add("-I", td_file.dirname)
     args.add_all(trans_includes, before_each = "-I")
+
     # Can't use map_each because we need ctx.genfiled_dir and map_each can't be
     # a closure.
     args.add_all(ctx.attr.td_includes, before_each = "-I")
@@ -138,6 +141,7 @@ gentbl_rule = rule(
         "opts": attr.string_list(),
         "td_includes": attr.string_list(),
         "td_relative_includes": attr.string_list(),
+        "_build_file": attr.label(default = ":BUILD", allow_single_file = True),
     },
 )
 
