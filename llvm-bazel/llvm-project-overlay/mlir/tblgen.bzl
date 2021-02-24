@@ -64,7 +64,7 @@ def _resolve_includes(ctx, raw_includes):
         if include.startswith("/"):
             # TODO(gcmn): Figure out how to support absolute includes as
             # relative to the repository root.
-            fail("Absolute includes not yet supported. Got: %s" % include)
+            fail("Absolute includes not yet supported. Got: '%s'" % include)
         else:
             includes.append(package_path + include)
             includes.append(ctx.genfiles_dir.path + "/" + package_path + include)
@@ -97,7 +97,7 @@ def _gentbl_rule_impl(ctx):
     td_file = ctx.file.td_file
 
     trans_srcs = _get_transitive_srcs(ctx.files.td_srcs + [td_file], ctx.attr.deps)
-    trans_includes = _get_transitive_includes(ctx.attr.td_includes, ctx.attr.deps)
+    trans_includes = _get_transitive_includes(ctx.attr.td_relative_includes, ctx.attr.deps)
 
     args = ctx.actions.args()
     args.add_all(ctx.attr.opts)
@@ -105,15 +105,14 @@ def _gentbl_rule_impl(ctx):
     args.add("-I", ctx.genfiles_dir.path)
     args.add("-I", td_file.dirname)
     args.add_all(trans_includes, before_each = "-I")
+    # Can't use map_each because we need ctx.genfiled_dir and map_each can't be
+    # a closure.
     args.add_all(ctx.attr.td_includes, before_each = "-I")
     args.add_all(
         ctx.attr.td_includes,
         before_each = "-I",
         format_each = ctx.genfiles_dir.path + "/%s",
     )
-    relative_includes = _resolve_includes(ctx, ctx.attr.td_relative_includes)
-    args.add_all(relative_includes, before_each = "-I")
-    args.add_all(relative_includes, before_each = "-I", format_each = ctx.genfiles_dir.path + "/%s")
     args.add("-o", ctx.outputs.output.path)
 
     ctx.actions.run(
