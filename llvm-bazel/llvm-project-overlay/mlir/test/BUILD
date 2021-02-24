@@ -21,6 +21,21 @@ cc_library(
     includes = ["."],
 )
 
+cc_library(
+    name = "TestAnalysis",
+    srcs = glob(["lib/Analysis/*.cpp"]),
+    defines = ["MLIR_CUDA_CONVERSIONS_ENABLED"],
+    includes = ["lib/Dialect/Test"],
+    deps = [
+        ":TestDialect",
+        "//llvm:Support",
+        "//mlir:Analysis",
+        "//mlir:IR",
+        "//mlir:Pass",
+        "//mlir:Support",
+    ],
+)
+
 td_library(
     name = "TestOpTdLibrary",
     srcs = [
@@ -294,21 +309,6 @@ cc_library(
         "//mlir:Support",
         "//mlir:Transforms",
         "//mlir:VectorOps",
-    ],
-)
-
-cc_library(
-    name = "TestAnalysis",
-    srcs = glob([
-        "lib/Analysis/*.cpp",
-    ]),
-    deps = [
-        ":TestDialect",
-        "//llvm:Support",
-        "//mlir:Analysis",
-        "//mlir:IR",
-        "//mlir:Pass",
-        "//mlir:Support",
     ],
 )
 
