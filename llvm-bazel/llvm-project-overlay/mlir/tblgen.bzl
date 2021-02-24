@@ -4,25 +4,28 @@
 
 """BUILD extensions for MLIR table generation."""
 
-TdFiles = provider(fields = {
-    "transitive_sources": "td files transitively used by this rule.",
-    "transitive_includes": "include arguments to add to the final tablegen invocation.",
-})
+TdFilesInfo = provider(
+    "Holds tablegen files and the dependencies and include paths necessary to build them.",
+    fields = {
+        "transitive_sources": "td files transitively used by this rule.",
+        "transitive_includes": "include arguments to add to the final tablegen invocation.",
+    },
+)
 
 # For now we allow anything that provides DefaultInfo to just forward its files.
 # In particular, this allows filegroups to be used. This is mostly to ease
-# transition. In the future, the TdFiles provider will be required.
-# TODO(gcmn): Switch to enforcing TdFiles provider.
+# transition. In the future, the TdFilesInfo provider will be required.
+# TODO(gcmn): Switch to enforcing TdFilesInfo provider.
 def _get_dep_transitive_srcs(dep):
-    """Extract TdFiles.transitive_sources, falling back to DefaultInfo.files."""
-    if TdFiles in dep:
-        return dep[TdFiles].transitive_sources
+    """Extract TdFilesInfo.transitive_sources, falling back to DefaultInfo.files."""
+    if TdFilesInfo in dep:
+        return dep[TdFilesInfo].transitive_sources
     return dep[DefaultInfo].files
 
 def _get_dep_transitive_includes(dep):
-    """Extract TdFiles.transitive_includes, falling back to an empty depset()."""
-    if TdFiles in dep:
-        return dep[TdFiles].transitive_includes
+    """Extract TdFilesInfo.transitive_includes, falling back to an empty depset()."""
+    if TdFilesInfo in dep:
+        return dep[TdFilesInfo].transitive_includes
     return depset()
 
 def _get_transitive_srcs(srcs, deps):
@@ -73,10 +76,13 @@ def _td_library_impl(ctx):
         _resolve_includes(ctx, ctx.attr.includes),
         ctx.attr.deps,
     )
-    return [TdFiles(
-        transitive_sources = trans_srcs,
-        transitive_includes = trans_includes,
-    )]
+    return [
+        DefaultInfo(files = trans_srcs),
+        TdFilesInfo(
+            transitive_sources = trans_srcs,
+            transitive_includes = trans_includes,
+        ),
+    ]
 
 td_library = rule(
     _td_library_impl,
@@ -105,7 +111,9 @@ def _gentbl_rule_impl(ctx):
         before_each = "-I",
         format_each = ctx.genfiles_dir.path + "/%s",
     )
-    args.add_all(_resolve_includes(ctx, ctx.attr.td_relative_includes))
+    relative_includes = _resolve_includes(ctx, ctx.attr.td_relative_includes)
+    args.add_all(relative_includes, before_each = "-I")
+    args.add_all(relative_includes, before_each = "-I", format_each = ctx.genfiles_dir.path + "/%s")
     args.add("-o", ctx.outputs.output.path)
 
     ctx.actions.run(
@@ -118,6 +126,7 @@ def _gentbl_rule_impl(ctx):
 
 gentbl_rule = rule(
     _gentbl_rule_impl,
+    output_to_genfiles = True,
     attrs = {
         "tblgen": attr.label(
             executable = True,
@@ -125,7 +134,7 @@ gentbl_rule = rule(
         ),
         "td_file": attr.label(allow_single_file = True, mandatory = True),
         "td_srcs": attr.label_list(allow_files = True),
-        "deps": attr.label_list(providers = [TdFiles]),
+        "deps": attr.label_list(),
         "output": attr.output(mandatory = True),
         "opts": attr.string_list(),
         "td_includes": attr.string_list(),
@@ -143,7 +152,8 @@ def gentbl(
         td_relative_includes = [],
         deps = [],
         strip_include_prefix = None,
-        test = False):
+        test = False,
+        **kwargs):
     """gentbl() generates tabular code from a table definition file.
 
     Args:
@@ -161,26 +171,31 @@ def gentbl(
       deps: td_library dependencies used by td_file.
       strip_include_prefix: attribute to pass through to cc_library.
       test: whether to create a test to invoke the tool too.
+      **kwargs: Extra keyword arguments to pass to the genrated rules.
     """
-    for (opts, out) in tbl_outs:
+    for (opts_string, out) in tbl_outs:
         # TODO(gcmn): The API of opts as single string is preserved for backward
         # compatibility. Change to taking a sequence.
-        first_opt = opts.split(" ", 1)[0]
+
+        opts = opts_string.split(" ") if opts_string else []
+
+        first_opt = opts[0] if opts else ""
         rule_suffix = "_{}_{}".format(
             first_opt.replace("-", "_").replace("=", "_"),
-            str(hash(opts)),
+            str(hash(opts_string)),
         )
-
         gentbl_rule(
             name = "%s_%s_genrule" % (name, rule_suffix),
             td_file = td_file,
             tblgen = tblgen,
-            opts = opts.split(" "),
+            opts = opts,
             td_srcs = td_srcs,
             deps = deps,
+            # TODO(gcmn): Remove hardcoded includes once all users properly declare include paths.
             td_includes = td_includes,
             td_relative_includes = td_relative_includes,
             output = out,
+            **kwargs
         )
 
     # List of opts that do not generate cc files.
@@ -192,4 +207,5 @@ def gentbl(
         hdrs = hdrs if strip_include_prefix else [],
         strip_include_prefix = strip_include_prefix,
         textual_hdrs = hdrs,
+        **kwargs
     )
