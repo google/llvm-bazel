@@ -4665,6 +4665,7 @@ td_library(
     includes = ["include"],
     deps = [
         ":OpBaseTdFiles",
+        ":SideEffectTdFiles",
     ],
 )
 
