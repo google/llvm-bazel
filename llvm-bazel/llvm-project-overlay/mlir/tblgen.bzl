@@ -9,12 +9,18 @@ TdFiles = provider(fields = {
     "transitive_includes": "include arguments to add to the final tablegen invocation.",
 })
 
+# For now we allow anything that provides DefaultInfo to just forward its files.
+# In particular, this allows filegroups to be used. This is mostly to ease
+# transition. In the future, the TdFiles provider will be required.
+# TODO(gcmn): Switch to enforcing TdFiles provider.
 def _get_dep_transitive_srcs(dep):
+    """Extract TdFiles.transitive_sources, falling back to DefaultInfo.files."""
     if TdFiles in dep:
         return dep[TdFiles].transitive_sources
     return dep[DefaultInfo].files
 
 def _get_dep_transitive_includes(dep):
+    """Extract TdFiles.transitive_includes, falling back to an empty depset()."""
     if TdFiles in dep:
         return dep[TdFiles].transitive_includes
     return depset()
@@ -34,17 +40,28 @@ def _get_transitive_srcs(srcs, deps):
     )
 
 def _get_transitive_includes(includes, deps):
+    """Obtain the includes paths for a target and its transitive dependencies.
+
+    Args:
+      includes: a list of include paths
+      deps: a list of targets that are direct dependencies
+    Returns:
+      a collection of the transitive include paths
+    """
     return depset(
         direct = includes,
         transitive = [_get_dep_transitive_includes(dep) for dep in deps],
     )
 
-def _process_includes(ctx, raw_includes):
+def _resolve_includes(ctx, raw_includes):
+    """Resolves include paths as relative to the current package path."""
     includes = []
     package_path = ctx.build_file_path[:-len("BUILD")]
     for include in raw_includes:
         if include.startswith("/"):
-            includes.append(include)
+            # TODO(gcmn): Figure out how to support absolute includes as
+            # relative to the repository root.
+            fail("Absolute includes not yet supported. Got: %s" % include)
         else:
             includes.append(package_path + include)
             includes.append(ctx.genfiles_dir.path + "/" + package_path + include)
@@ -53,7 +70,7 @@ def _process_includes(ctx, raw_includes):
 def _td_library_impl(ctx):
     trans_srcs = _get_transitive_srcs(ctx.files.srcs, ctx.attr.deps)
     trans_includes = _get_transitive_includes(
-        _process_includes(ctx, ctx.attr.includes),
+        _resolve_includes(ctx, ctx.attr.includes),
         ctx.attr.deps,
     )
     return [TdFiles(
@@ -88,7 +105,7 @@ def _gentbl_rule_impl(ctx):
         before_each = "-I",
         format_each = ctx.genfiles_dir.path + "/%s",
     )
-    args.add_all(_process_includes(ctx, ctx.attr.td_relative_includes))
+    args.add_all(_resolve_includes(ctx, ctx.attr.td_relative_includes))
     args.add("-o", ctx.outputs.output.path)
 
     ctx.actions.run(
@@ -146,8 +163,13 @@ def gentbl(
       test: whether to create a test to invoke the tool too.
     """
     for (opts, out) in tbl_outs:
+        # TODO(gcmn): The API of opts as single string is preserved for backward
+        # compatibility. Change to taking a sequence.
         first_opt = opts.split(" ", 1)[0]
-        rule_suffix = "_{}_{}".format(first_opt.replace("-", "_").replace("=", "_"), str(hash(opts)))
+        rule_suffix = "_{}_{}".format(
+            first_opt.replace("-", "_").replace("=", "_"),
+            str(hash(opts)),
+        )
 
         gentbl_rule(
             name = "%s_%s_genrule" % (name, rule_suffix),
