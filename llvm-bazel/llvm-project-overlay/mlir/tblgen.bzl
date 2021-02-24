@@ -1,14 +1,19 @@
 # This file is licensed under the Apache License v2.0 with LLVM Exceptions.
 # See https://llvm.org/LICENSE.txt for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-
 """BUILD extensions for MLIR table generation."""
 
 TdFilesInfo = provider(
-    "Holds tablegen files and the dependencies and include paths necessary to build them.",
+    "Holds tablegen files and the dependencies and include paths necessary to" +
+    " build them.",
     fields = {
         "transitive_sources": "td files transitively used by this rule.",
-        "transitive_includes": "include arguments to add to the final tablegen invocation.",
+        "transitive_includes": (
+            "include arguments to add to the final tablegen invocation." +
+            " Relative paths are interpreted as relative to the current" +
+            " label's package. Absolute paths are interpreted as relative to" +
+            " the current label's workspace root."
+        ),
     },
 )
 
@@ -64,6 +69,7 @@ def _resolve_includes(ctx, includes):
     root."""
     package = ctx.label.package
     workspace_root = ctx.label.workspace_root
+    workspace_root = workspace_root if workspace_root else "."
     resolved_includes = []
     for include in includes:
         if not include.startswith("/"):
@@ -99,7 +105,10 @@ td_library = rule(
 def _gentbl_rule_impl(ctx):
     td_file = ctx.file.td_file
 
-    trans_srcs = _get_transitive_srcs(ctx.files.td_srcs + [td_file], ctx.attr.deps)
+    trans_srcs = _get_transitive_srcs(
+        ctx.files.td_srcs + [td_file],
+        ctx.attr.deps,
+    )
     trans_includes = _get_transitive_includes(
         _resolve_includes(ctx, ctx.attr.includes),
         ctx.attr.deps,
@@ -112,7 +121,7 @@ def _gentbl_rule_impl(ctx):
     args.add("-I", td_file.dirname)
     args.add_all(trans_includes, before_each = "-I")
 
-    # Can't use map_each because we need ctx.genfiled_dir and map_each can't be
+    # Can't use map_each because we need ctx.genfiles_dir and map_each can't be
     # a closure.
     args.add_all(ctx.attr.td_includes, before_each = "-I")
     args.add_all(
@@ -174,9 +183,11 @@ def gentbl(
       includes: Include paths to add to the tablegen invocation. Relative paths
        are interpreted as relative to the current label's package. Absolute
        paths are interpreted as relative to the current label's workspace
+       root. Includes are applied from both the execution root and the genfiles
        root.
       td_includes: A list of include paths to add to the tablegen invocation.
-        Paths are added without modification. Deprecated. Use "includes" instead.
+        Paths are interpreted as relative to the execution root and the genfiles
+        root. Deprecated. Use "includes" instead.
       td_relative_includes: An alias for "includes". Deprecated. Use includes
         instead.
       deps: td_library dependencies used by td_file.
@@ -187,7 +198,6 @@ def gentbl(
     for (opts_string, out) in tbl_outs:
         # TODO(gcmn): The API of opts as single string is preserved for backward
         # compatibility. Change to taking a sequence.
-
         opts = opts_string.split(" ") if opts_string else []
 
         # Filter out empty options
@@ -216,7 +226,8 @@ def gentbl(
     hdrs = [f for (opts, f) in tbl_outs if opts not in skip_opts]
     native.cc_library(
         name = name,
-        # include_prefix does not apply to textual_hdrs.
+        # strip_include_prefix does not apply to textual_hdrs.
+        # https://github.com/bazelbuild/bazel/issues/12424
         hdrs = hdrs if strip_include_prefix else [],
         strip_include_prefix = strip_include_prefix,
         textual_hdrs = hdrs,
