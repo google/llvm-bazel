@@ -4108,6 +4108,7 @@ cc_binary(
         ":Async",
         ":AsyncToLLVM",
         ":AsyncTransforms",
+        ":ConversionPasses",
         ":ExecutionEngineUtils",
         ":GPUDialect",
         ":GPUToGPURuntimeTransforms",
@@ -5336,6 +5337,7 @@ cc_library(
     includes = ["include"],
     deps = [
         ":IR",
+        ":LLVMDialect",
         ":MathDialect",
         ":Pass",
         ":SCFDialect",
