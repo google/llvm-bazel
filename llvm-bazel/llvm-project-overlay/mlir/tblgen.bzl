@@ -141,10 +141,10 @@ def _gentbl_rule_impl(ctx):
     args.add(td_file)
     args.add_all(trans_includes, before_each = "-I")
 
-    args.add("-o", ctx.outputs.output.path)
+    args.add("-o", ctx.outputs.out.path)
 
     ctx.actions.run(
-        outputs = [ctx.outputs.output],
+        outputs = [ctx.outputs.out],
         inputs = trans_srcs,
         executable = ctx.executable.tblgen,
         arguments = [args],
@@ -163,7 +163,7 @@ gentbl_rule = rule(
         "td_file": attr.label(allow_single_file = True, mandatory = True),
         "td_srcs": attr.label_list(allow_files = True),
         "deps": attr.label_list(),
-        "output": attr.output(mandatory = True),
+        "out": attr.output(mandatory = True),
         "opts": attr.string_list(),
         "includes": attr.string_list(),
         "td_includes": attr.string_list(),
@@ -236,7 +236,7 @@ def gentbl(
             td_includes = td_includes + [
                 "external/llvm-project/mlir/include",
             ],
-            output = out,
+            out = out,
             **kwargs
         )
 
