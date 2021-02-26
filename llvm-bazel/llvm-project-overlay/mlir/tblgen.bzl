@@ -231,7 +231,11 @@ def gentbl(
             td_srcs = td_srcs,
             deps = deps,
             includes = includes + td_relative_includes,
-            td_includes = td_includes,
+            # TODO(gcmn): Update callers to td_library and explicit includes and
+            # drop this hardcoded include.
+            td_includes = td_includes + [
+                "external/llvm-project/mlir/include",
+            ],
             output = out,
             **kwargs
         )

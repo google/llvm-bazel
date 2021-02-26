@@ -2,7 +2,7 @@
 # See https://llvm.org/LICENSE.txt for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-load("//mlir:tblgen.bzl", "gentbl", "td_library")
+load("//mlir:tblgen.bzl", "gentbl")
 
 package(
     default_visibility = [":test_friends"],
@@ -36,11 +36,13 @@ cc_library(
     ],
 )
 
-td_library(
+filegroup(
     name = "TestOpTdFiles",
     srcs = [
         "lib/Dialect/Test/TestInterfaces.td",
         "lib/Dialect/Test/TestOps.td",
+        "//mlir:OpBaseTdFiles",
+        "//mlir:SideEffectTdFiles",
         "//mlir:include/mlir/IR/OpAsmInterface.td",
         "//mlir:include/mlir/IR/RegionKindInterface.td",
         "//mlir:include/mlir/IR/SymbolInterfaces.td",
@@ -48,10 +50,6 @@ td_library(
         "//mlir:include/mlir/Interfaces/ControlFlowInterfaces.td",
         "//mlir:include/mlir/Interfaces/CopyOpInterface.td",
         "//mlir:include/mlir/Interfaces/InferTypeOpInterface.td",
-    ],
-    deps = [
-        "//mlir:OpBaseTdFiles",
-        "//mlir:SideEffectTdFiles",
     ],
 )
 
@@ -94,10 +92,10 @@ gentbl(
     ],
     tblgen = "//mlir:mlir-tblgen",
     td_file = "lib/Dialect/Test/TestOps.td",
-    test = True,
-    deps = [
+    td_srcs = [
         ":TestOpTdFiles",
     ],
+    test = True,
 )
 
 gentbl(
@@ -123,11 +121,11 @@ gentbl(
     ],
     tblgen = "//mlir:mlir-tblgen",
     td_file = "lib/Dialect/Test/TestInterfaces.td",
-    test = True,
-    deps = [
+    td_srcs = [
         "//mlir:OpBaseTdFiles",
         "//mlir:SideEffectBaseTdFiles",
     ],
+    test = True,
 )
 
 gentbl(
@@ -145,10 +143,10 @@ gentbl(
     ],
     tblgen = "//mlir:mlir-tblgen",
     td_file = "lib/Dialect/Test/TestTypeDefs.td",
-    test = True,
-    deps = [
+    td_srcs = [
         ":TestOpTdFiles",
     ],
+    test = True,
 )
 
 cc_library(
