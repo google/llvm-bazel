@@ -61,6 +61,20 @@ def _get_transitive_includes(includes, deps):
         transitive = [_get_dep_transitive_includes(dep) for dep in deps],
     )
 
+def _prefix_roots(ctx, includes):
+    """Map the given includes to be relative to all root directories.
+
+    This will expand them to be relative to all the root directories available
+    in the execution environment for ctx.run (bin and genfiles in addition to
+    the normal source root)
+    """
+    prefixed_includes = []
+    for include in includes:
+        prefixed_includes.append(include)
+        prefixed_includes.append(ctx.genfiles_dir.path + "/" + include)
+        prefixed_includes.append(ctx.bin_dir.path + "/" + include)
+    return prefixed_includes
+
 def _resolve_includes(ctx, includes):
     """Resolves include paths to paths relative to the execution root.
 
@@ -75,8 +89,7 @@ def _resolve_includes(ctx, includes):
         if not include.startswith("/"):
             include = "/" + package + "/" + include
         include = workspace_root + include
-        resolved_includes.append(include)
-        resolved_includes.append(ctx.genfiles_dir.path + "/" + include)
+        resolved_includes.extend(_prefix_roots(ctx, [include]))
     return resolved_includes
 
 def _td_library_impl(ctx):
@@ -109,26 +122,25 @@ def _gentbl_rule_impl(ctx):
         ctx.files.td_srcs + [td_file],
         ctx.attr.deps,
     )
+
+    # Note that we have two types of includes here. The deprecated ones expanded
+    # only by "_prefix_roots" are already relative to the execution root, i.e.
+    # may contain an `external/<workspace_name>` prefix if the current workspace
+    # is not the main workspace (where workspace_name is something configured
+    # per-project and therefore generally not known). Note that dirname also
+    # already includes this prefix. The new style of includes have it prepended
+    # automatically.
     trans_includes = _get_transitive_includes(
-        _resolve_includes(ctx, ctx.attr.includes),
+        _resolve_includes(ctx, ctx.attr.includes + ["/"]) +
+        _prefix_roots(ctx, ctx.attr.td_includes + [td_file.dirname]),
         ctx.attr.deps,
     )
 
     args = ctx.actions.args()
     args.add_all(ctx.attr.opts)
     args.add(td_file)
-    args.add("-I", ctx.genfiles_dir.path)
-    args.add("-I", td_file.dirname)
     args.add_all(trans_includes, before_each = "-I")
 
-    # Can't use map_each because we need ctx.genfiles_dir and map_each can't be
-    # a closure.
-    args.add_all(ctx.attr.td_includes, before_each = "-I")
-    args.add_all(
-        ctx.attr.td_includes,
-        before_each = "-I",
-        format_each = ctx.genfiles_dir.path + "/%s",
-    )
     args.add("-o", ctx.outputs.output.path)
 
     ctx.actions.run(
@@ -141,6 +153,7 @@ def _gentbl_rule_impl(ctx):
 
 gentbl_rule = rule(
     _gentbl_rule_impl,
+    # Match genrule behavior
     output_to_genfiles = True,
     attrs = {
         "tblgen": attr.label(
@@ -183,11 +196,13 @@ def gentbl(
       includes: Include paths to add to the tablegen invocation. Relative paths
        are interpreted as relative to the current label's package. Absolute
        paths are interpreted as relative to the current label's workspace
-       root. Includes are applied from both the execution root and the genfiles
-       root.
+       root. Includes are applied from all roots available in the execution
+       environment (source, genfiles, and bin directories).
       td_includes: A list of include paths to add to the tablegen invocation.
-        Paths are interpreted as relative to the execution root and the genfiles
-        root. Deprecated. Use "includes" instead.
+        Paths are interpreted as relative to the current labels' workspace root
+        and applied from all roots available in the execution environment
+        (source, genfiles, and bin directories). Deprecated. Use "includes"
+        instead.
       td_relative_includes: An alias for "includes". Deprecated. Use includes
         instead.
       deps: td_library dependencies used by td_file.
