@@ -149,6 +149,7 @@ def _gentbl_rule_impl(ctx):
         executable = ctx.executable.tblgen,
         arguments = [args],
     )
+
     return [DefaultInfo()]
 
 gentbl_rule = rule(
@@ -159,6 +160,66 @@ gentbl_rule = rule(
         "tblgen": attr.label(
             executable = True,
             cfg = "exec",
+        ),
+        "td_file": attr.label(allow_single_file = True, mandatory = True),
+        "td_srcs": attr.label_list(allow_files = True),
+        "deps": attr.label_list(),
+        "out": attr.output(mandatory = True),
+        "opts": attr.string_list(),
+        "includes": attr.string_list(),
+        "td_includes": attr.string_list(),
+    },
+)
+
+def _gentbl_generate_shell_impl(ctx):
+    td_file = ctx.file.td_file
+
+    trans_srcs = _get_transitive_srcs(
+        ctx.files.td_srcs + [td_file],
+        ctx.attr.deps,
+    )
+
+    # Note that we have two types of includes here. The deprecated ones expanded
+    # only by "_prefix_roots" are already relative to the execution root, i.e.
+    # may contain an `external/<workspace_name>` prefix if the current workspace
+    # is not the main workspace (where workspace_name is something configured
+    # per-project and therefore generally not known). Note that dirname also
+    # already includes this prefix. The new style of includes have it prepended
+    # automatically.
+    trans_includes = _get_transitive_includes(
+        _resolve_includes(ctx, ctx.attr.includes + ["/"]) +
+        _prefix_roots(ctx, ctx.attr.td_includes + [td_file.dirname]),
+        ctx.attr.deps,
+    )
+
+    test_args = [ctx.executable.tblgen.short_path]
+    test_args.extend(ctx.attr.opts)
+    test_args.append(td_file.path)
+    test_args.extend(["-I " + include for include in trans_includes.to_list()])
+
+    test_args.extend(["-o", "/dev/null"])
+
+    ctx.actions.write(
+        ctx.outputs.out,
+        content = " ".join(test_args),
+        is_executable = True,
+    )
+
+    return [DefaultInfo(
+        runfiles = ctx.runfiles(
+            [ctx.executable.tblgen],
+            transitive_files = trans_srcs,
+        ),
+    )]
+
+gentbl_generate_shell = rule(
+    _gentbl_generate_shell_impl,
+    # Match genrule behavior
+    output_to_genfiles = True,
+    attrs = {
+        "tblgen": attr.label(
+            executable = True,
+            cfg = "target",
         ),
         "td_file": attr.label(allow_single_file = True, mandatory = True),
         "td_srcs": attr.label_list(allow_files = True),
@@ -207,7 +268,7 @@ def gentbl(
         instead.
       deps: td_library dependencies used by td_file.
       strip_include_prefix: attribute to pass through to cc_library.
-      test: whether to create a test to invoke the tool too.
+      test: whether to create a shell test to invoke the tool too.
       **kwargs: Extra keyword arguments to pass to the genrated rules.
     """
     for (opts_string, out) in tbl_outs:
@@ -223,8 +284,9 @@ def gentbl(
             first_opt.replace("-", "_").replace("=", "_"),
             str(hash(opts_string)),
         )
+        gentbl_name = "%s_%s_genrule" % (name, rule_suffix)
         gentbl_rule(
-            name = "%s_%s_genrule" % (name, rule_suffix),
+            name = gentbl_name,
             td_file = td_file,
             tblgen = tblgen,
             opts = opts,
@@ -239,6 +301,32 @@ def gentbl(
             out = out,
             **kwargs
         )
+        if test:
+            # Also run the generator in the target configuration as a test. This
+            # means it gets run with asserts and sanitizers and such when they
+            # are enabled and is counted in coverage.
+            genshell_name = "%s_gen_shell" % (gentbl_name,)
+            gentbl_generate_shell(
+                name = genshell_name,
+                td_file = td_file,
+                tblgen = tblgen,
+                opts = opts,
+                td_srcs = td_srcs,
+                deps = deps,
+                includes = includes + td_relative_includes,
+                # TODO(gcmn): Update callers to td_library and explicit includes
+                # and drop this hardcoded include.
+                td_includes = td_includes + [
+                    "external/llvm-project/mlir/include",
+                ],
+                out = "%s.sh" % (genshell_name,),
+                **kwargs
+            )
+            native.sh_test(
+                name = "%s_test" % (gentbl_name,),
+                srcs = [":%s" % (genshell_name,)],
+                **kwargs
+            )
 
     # List of opts that do not generate cc files.
     skip_opts = ["-gen-op-doc"]
