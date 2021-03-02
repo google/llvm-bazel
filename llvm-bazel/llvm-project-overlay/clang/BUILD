@@ -426,6 +426,7 @@ cc_library(
         ":sema_attr_gen",
         "//llvm:Core",
         "//llvm:FrontendOpenMP",
+        "//llvm:Instrumentation",
         "//llvm:MC",
         "//llvm:Support",
         "//llvm:Target",

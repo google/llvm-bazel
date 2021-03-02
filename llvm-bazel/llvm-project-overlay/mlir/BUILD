@@ -1178,6 +1178,8 @@ cc_library(
         ":StandardToLLVM",
         ":StandardToSPIRV",
         ":TosaToLinalg",
+        ":TosaToSCF",
+        ":TosaToStandard",
         ":VectorToLLVM",
         ":VectorToROCDL",
         ":VectorToSCF",
@@ -2072,6 +2074,7 @@ cc_library(
     hdrs = ["include/mlir/Conversion/GPUCommon/GPUCommonPass.h"],
     includes = ["include"],
     deps = [
+        ":Async",
         ":AsyncToLLVM",
         ":ConversionPassIncGen",
         ":GPUDialect",
@@ -5075,6 +5078,54 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "TosaToSCF",
+    srcs = glob([
+        "lib/Conversion/TosaToSCF/*.cpp",
+        "lib/Conversion/TosaToSCF/*.h",
+    ]) + ["lib/Conversion/PassDetail.h"],
+    hdrs = glob([
+        "include/mlir/Conversion/TosaToSCF/*.h",
+    ]),
+    includes = [
+        "include",
+        "lib/Conversion/TosaToSCF",
+    ],
+    deps = [
+        ":ConversionPassIncGen",
+        ":IR",
+        ":Pass",
+        ":SCFDialect",
+        ":TensorDialect",
+        ":TosaDialect",
+        ":Transforms",
+    ],
+)
+
+cc_library(
+    name = "TosaToStandard",
+    srcs = glob([
+        "lib/Conversion/TosaToStandard/*.cpp",
+        "lib/Conversion/TosaToStandard/*.h",
+    ]) + ["lib/Conversion/PassDetail.h"],
+    hdrs = glob([
+        "include/mlir/Conversion/TosaToStandard/*.h",
+    ]),
+    includes = [
+        "include",
+        "lib/Conversion/TosaToStandard",
+    ],
+    deps = [
+        ":ConversionPassIncGen",
+        ":IR",
+        ":Pass",
+        ":StandardOps",
+        ":TensorDialect",
+        ":TosaDialect",
+        ":Transforms",
+    ],
+)
+
 filegroup(
     name = "ComplexOpsTdFiles",
     srcs = [
@@ -5275,6 +5326,7 @@ cc_library(
     includes = ["include"],
     deps = [
         ":IR",
+        ":LLVMDialect",
         ":MathDialect",
         ":Pass",
         ":SCFDialect",
