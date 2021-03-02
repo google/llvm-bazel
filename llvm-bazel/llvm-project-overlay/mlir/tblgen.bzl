@@ -3,34 +3,32 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 """BUILD extensions for MLIR table generation."""
 
-TdFilesInfo = provider(
+TdInfo = provider(
     "Holds tablegen files and the dependencies and include paths necessary to" +
     " build them.",
     fields = {
         "transitive_sources": "td files transitively used by this rule.",
         "transitive_includes": (
-            "include arguments to add to the final tablegen invocation." +
-            " Relative paths are interpreted as relative to the current" +
-            " label's package. Absolute paths are interpreted as relative to" +
-            " the current label's workspace root."
+            "include arguments to add to the final tablegen invocation. These" +
+            " are the absolute directory paths that will be added with '-I'."
         ),
     },
 )
 
 # For now we allow anything that provides DefaultInfo to just forward its files.
 # In particular, this allows filegroups to be used. This is mostly to ease
-# transition. In the future, the TdFilesInfo provider will be required.
-# TODO(gcmn): Switch to enforcing TdFilesInfo provider.
+# transition. In the future, the TdInfo provider will be required.
+# TODO(gcmn): Switch to enforcing TdInfo provider.
 def _get_dep_transitive_srcs(dep):
-    """Extract TdFilesInfo.transitive_sources, falling back to DefaultInfo.files."""
-    if TdFilesInfo in dep:
-        return dep[TdFilesInfo].transitive_sources
+    """Extract TdInfo.transitive_sources, falling back to DefaultInfo.files."""
+    if TdInfo in dep:
+        return dep[TdInfo].transitive_sources
     return dep[DefaultInfo].files
 
 def _get_dep_transitive_includes(dep):
-    """Extract TdFilesInfo.transitive_includes, falling back to an empty depset()."""
-    if TdFilesInfo in dep:
-        return dep[TdFilesInfo].transitive_includes
+    """Extract TdInfo.transitive_includes, falling back to an empty depset()."""
+    if TdInfo in dep:
+        return dep[TdInfo].transitive_includes
     return depset()
 
 def _get_transitive_srcs(srcs, deps):
@@ -100,7 +98,7 @@ def _td_library_impl(ctx):
     )
     return [
         DefaultInfo(files = trans_srcs),
-        TdFilesInfo(
+        TdInfo(
             transitive_sources = trans_srcs,
             transitive_includes = trans_includes,
         ),
@@ -110,8 +108,17 @@ td_library = rule(
     _td_library_impl,
     attrs = {
         "srcs": attr.label_list(allow_files = True),
-        "includes": attr.string_list(),
-        "deps": attr.label_list(),
+        "includes": attr.string_list(
+            doc = "Include paths to be added to the final tablegen tool" +
+                  " invocation. Relative paths are interpreted as relative to" +
+                  " the current label's package. Absolute paths are" +
+                  " interpreted as relative to the current label's workspace",
+        ),
+        # TODO(gcmn): limit to TdInfo providers.
+        "deps": attr.label_list(
+            doc = "Dependencies providing tablegen source files and include" +
+                  " paths.",
+        ),
     },
 )
 
@@ -129,7 +136,8 @@ def _gentbl_rule_impl(ctx):
     # is not the main workspace (where workspace_name is something configured
     # per-project and therefore generally not known). Note that dirname also
     # already includes this prefix. The new style of includes have it prepended
-    # automatically.
+    # automatically by `_resolve_includes` to avoid BUILD files having to depend
+    # on project specific configurations and Bazel implementation details.
     trans_includes = _get_transitive_includes(
         _resolve_includes(ctx, ctx.attr.includes + ["/"]) +
         _prefix_roots(ctx, ctx.attr.td_includes + [td_file.dirname]),
@@ -154,24 +162,61 @@ def _gentbl_rule_impl(ctx):
 
 gentbl_rule = rule(
     _gentbl_rule_impl,
+    doc = "Generates tabular code from a table definition file.",
     # Match genrule behavior
     output_to_genfiles = True,
     attrs = {
         "tblgen": attr.label(
+            doc = "The tablegen executable with which to generate `out`.",
             executable = True,
             cfg = "exec",
         ),
-        "td_file": attr.label(allow_single_file = True, mandatory = True),
-        "td_srcs": attr.label_list(allow_files = True),
-        "deps": attr.label_list(),
-        "out": attr.output(mandatory = True),
-        "opts": attr.string_list(),
-        "includes": attr.string_list(),
-        "td_includes": attr.string_list(),
+        "td_file": attr.label(
+            doc = "The tablegen file to run through `tblgen`.",
+            allow_single_file = True,
+            mandatory = True,
+        ),
+        "td_srcs": attr.label_list(
+            doc = "Additional tablegen files included by `td_file`. It is not" +
+                  " necessary to list td_file here (though not an error).",
+            allow_files = True,
+        ),
+        # TODO(gcmn): limit to TdInfo providers.
+        "deps": attr.label_list(
+            doc = "Dependencies providing tablegen source files and include" +
+                  " paths.",
+        ),
+        "out": attr.output(
+            doc = "The output file for the tablegen invocation.",
+            mandatory = True,
+        ),
+        "opts": attr.string_list(
+            doc = "Additional command line options to add to the tablegen" +
+                  " invocation. For include arguments, prefer to use" +
+                  " `includes`.",
+        ),
+        "includes": attr.string_list(
+            doc = "Include paths to be added to the final tablegen tool" +
+                  " invocation. Relative paths are interpreted as relative to" +
+                  " the current label's package. Absolute paths are" +
+                  " interpreted as relative to the current label's workspace." +
+                  " Includes are applied from all roots available in the" +
+                  " execution environment (source, genfiles, and bin" +
+                  " directories). The execution roots themselves and the " +
+                  " directory of td_file are always added.",
+        ),
+        "td_includes": attr.string_list(
+            doc = "Include paths to add to the tablegen invocation. Paths are" +
+                  " interpreted as relative to the current label's workspace" +
+                  " root and applied from all roots available in the" +
+                  " execution environment (source, genfiles, and bin" +
+                  " directories). Deprecated. Use `includes` instead.",
+        ),
     },
 )
 
-def _gentbl_generate_shell_impl(ctx):
+# TODO(gcmn): Figure out how to reduce duplication with _gentbl_rule_impl
+def _gentbl_test_impl(ctx):
     td_file = ctx.file.td_file
 
     trans_srcs = _get_transitive_srcs(
@@ -185,7 +230,8 @@ def _gentbl_generate_shell_impl(ctx):
     # is not the main workspace (where workspace_name is something configured
     # per-project and therefore generally not known). Note that dirname also
     # already includes this prefix. The new style of includes have it prepended
-    # automatically.
+    # automatically by `_resolve_includes` to avoid BUILD files having to depend
+    # on project specific configurations and Bazel implementation details.
     trans_includes = _get_transitive_includes(
         _resolve_includes(ctx, ctx.attr.includes + ["/"]) +
         _prefix_roots(ctx, ctx.attr.td_includes + [td_file.dirname]),
@@ -200,7 +246,7 @@ def _gentbl_generate_shell_impl(ctx):
     test_args.extend(["-o", "/dev/null"])
 
     ctx.actions.write(
-        ctx.outputs.out,
+        ctx.outputs.executable,
         content = " ".join(test_args),
         is_executable = True,
     )
@@ -212,22 +258,35 @@ def _gentbl_generate_shell_impl(ctx):
         ),
     )]
 
-gentbl_generate_shell = rule(
-    _gentbl_generate_shell_impl,
+gentbl_test = rule(
+    _gentbl_test_impl,
+    test = True,
+    doc = "A shell test that tests the given tablegen invocation. Note" +
+          " that unlike gentbl_rule, this builds and invokes `tblgen` in the" +
+          " target configuration. Takes all the same arguments as gentbl_rule" +
+          " except for `out` (as it does not generate any output)",
     # Match genrule behavior
     output_to_genfiles = True,
     attrs = {
         "tblgen": attr.label(
+            doc = "The tablegen executable run in the shell command. Note" +
+                  " that this is built in the target configuration.",
             executable = True,
             cfg = "target",
         ),
-        "td_file": attr.label(allow_single_file = True, mandatory = True),
-        "td_srcs": attr.label_list(allow_files = True),
-        "deps": attr.label_list(),
-        "out": attr.output(mandatory = True),
-        "opts": attr.string_list(),
-        "includes": attr.string_list(),
-        "td_includes": attr.string_list(),
+        "td_file": attr.label(
+            doc = "See gentbl_rule.td_file",
+            allow_single_file = True,
+            mandatory = True,
+        ),
+        "td_srcs": attr.label_list(
+            doc = "See gentbl_rule.td_srcs",
+            allow_files = True,
+        ),
+        "deps": attr.label_list(doc = "See gentbl_rule.deps"),
+        "opts": attr.string_list(doc = "See gentbl_rule.opts"),
+        "includes": attr.string_list(doc = "See gentbl_rule.includes"),
+        "td_includes": attr.string_list(doc = "See gentbl_rule.td_includes"),
     },
 )
 
@@ -244,32 +303,26 @@ def gentbl(
         strip_include_prefix = None,
         test = False,
         **kwargs):
-    """gentbl() generates tabular code from a table definition file.
+    """Create multiple tablegen generated files using the same tool and input.
+
+    All generated outputs are bundled in a cc_library rule.
 
     Args:
-      name: The name of the build rule for use in dependencies.
+      name: The name of the generated cc_library rule for use in dependencies.
       tblgen: The binary used to produce the output.
       td_file: The primary table definitions file.
       tbl_outs: A list of tuples (opts, out), where each opts is a string of
         options passed to tblgen, and the out is the corresponding output file
         produced.
-      td_srcs: A list of table definition files included transitively.
-      includes: Include paths to add to the tablegen invocation. Relative paths
-       are interpreted as relative to the current label's package. Absolute
-       paths are interpreted as relative to the current label's workspace
-       root. Includes are applied from all roots available in the execution
-       environment (source, genfiles, and bin directories).
-      td_includes: A list of include paths to add to the tablegen invocation.
-        Paths are interpreted as relative to the current labels' workspace root
-        and applied from all roots available in the execution environment
-        (source, genfiles, and bin directories). Deprecated. Use "includes"
-        instead.
+      td_srcs: See gentbl_rule.td_srcs
+      includes: See gentbl_rule.includes
+      td_includes: See gentbl_rule.td_includes
       td_relative_includes: An alias for "includes". Deprecated. Use includes
         instead.
-      deps: td_library dependencies used by td_file.
+      deps: See gentbl_rule.deps
       strip_include_prefix: attribute to pass through to cc_library.
-      test: whether to create a shell test to invoke the tool too.
-      **kwargs: Extra keyword arguments to pass to the genrated rules.
+      test: whether to create a shell test that invokes the tool too.
+      **kwargs: Extra keyword arguments to pass to all generated rules.
     """
     for (opts_string, out) in tbl_outs:
         # TODO(gcmn): The API of opts as single string is preserved for backward
@@ -305,9 +358,8 @@ def gentbl(
             # Also run the generator in the target configuration as a test. This
             # means it gets run with asserts and sanitizers and such when they
             # are enabled and is counted in coverage.
-            genshell_name = "%s_gen_shell" % (gentbl_name,)
-            gentbl_generate_shell(
-                name = genshell_name,
+            gentbl_test(
+                name = "%s_test" % (gentbl_name,),
                 td_file = td_file,
                 tblgen = tblgen,
                 opts = opts,
@@ -319,12 +371,6 @@ def gentbl(
                 td_includes = td_includes + [
                     "external/llvm-project/mlir/include",
                 ],
-                out = "%s.sh" % (genshell_name,),
-                **kwargs
-            )
-            native.sh_test(
-                name = "%s_test" % (gentbl_name,),
-                srcs = [":%s" % (genshell_name,)],
                 **kwargs
             )
 
