@@ -129,6 +129,27 @@ gentbl(
 )
 
 gentbl(
+    name = "TestAttrDefsIncGen",
+    strip_include_prefix = "lib/Dialect/Test",
+    tbl_outs = [
+        (
+            "-gen-attrdef-decls",
+            "lib/Dialect/Test/TestAttrDefs.h.inc",
+        ),
+        (
+            "-gen-attrdef-defs",
+            "lib/Dialect/Test/TestAttrDefs.cpp.inc",
+        ),
+    ],
+    tblgen = "//mlir:mlir-tblgen",
+    td_file = "lib/Dialect/Test/TestAttrDefs.td",
+    td_srcs = [
+        ":TestOpTdFiles",
+    ],
+    test = True,
+)
+
+gentbl(
     name = "TestTypeDefsIncGen",
     strip_include_prefix = "lib/Dialect/Test",
     tbl_outs = [
@@ -152,6 +173,7 @@ gentbl(
 cc_library(
     name = "TestDialect",
     srcs = [
+        "lib/Dialect/Test/TestAttributes.cpp",
         "lib/Dialect/Test/TestDialect.cpp",
         "lib/Dialect/Test/TestInterfaces.cpp",
         "lib/Dialect/Test/TestPatterns.cpp",
@@ -159,6 +181,7 @@ cc_library(
         "lib/Dialect/Test/TestTypes.cpp",
     ],
     hdrs = [
+        "lib/Dialect/Test/TestAttributes.h",
         "lib/Dialect/Test/TestDialect.h",
         "lib/Dialect/Test/TestInterfaces.h",
         "lib/Dialect/Test/TestTypes.h",
@@ -167,6 +190,7 @@ cc_library(
         "lib/Dialect/Test",
     ],
     deps = [
+        ":TestAttrDefsIncGen",
         ":TestInterfacesIncGen",
         ":TestOpsIncGen",
         ":TestTypeDefsIncGen",
@@ -266,6 +290,7 @@ cc_library(
         "//mlir:GPUTransforms",
         "//mlir:IR",
         "//mlir:LLVMDialect",
+        "//mlir:LLVMToLLVMIRTranslation",
         "//mlir:LLVMTransforms",
         "//mlir:LinalgOps",
         "//mlir:LinalgTransforms",
@@ -281,8 +306,7 @@ cc_library(
         "//mlir:StandardOps",
         "//mlir:StandardOpsTransforms",
         "//mlir:Support",
-        "//mlir:TargetLLVMIR",
-        "//mlir:TargetLLVMIRModuleTranslation",
+        "//mlir:ToLLVMIRTranslation",
         "//mlir:TransformUtils",
         "//mlir:Transforms",
         "//mlir:VectorOps",
