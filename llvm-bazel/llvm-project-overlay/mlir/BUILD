@@ -4228,7 +4228,6 @@ cc_binary(
         ":StandardToLLVM",
         ":ToLLVMIRTranslation",
         ":Transforms",
-        "//devtools/build/runtime:get_runfiles_dir",
         "//llvm:Support",
         "@cuda//:cuda_headers",
         "@cuda//:cuda_runtime",
