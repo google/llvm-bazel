@@ -1,0 +1,23 @@
+# This file is licensed under the Apache License v2.0 with LLVM Exceptions.
+# See https://llvm.org/LICENSE.txt for license information.
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+name: Lint
+
+on: [pull_request]
+
+jobs:
+  buildifier:
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Checking out repository
+        uses: actions/checkout@v2
+      - name: Running Buildifier
+        # TODO(gcmn): Look into only running only on changed files.
+        uses: thompsonja/bazel-buildifier@v0.2.1
+        with:
+          excludes: "*/third_party/*"
+          # TODO(gcmn): Figure out whether we can switch to loading this
+          # For compatibility with Google's internal source repository, we still
+          # use this.
+          warnings: "-native-cc"
