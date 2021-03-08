@@ -2795,6 +2795,7 @@ cc_binary(
     copts = llvm_copts,
     stamp = 0,
     deps = [
+        ":InterfaceStub",
         ":ObjectYAML",
         ":Support",
         ":TextAPI",
