@@ -85,6 +85,24 @@ gentbl(
 )
 
 gentbl(
+    name = "BuiltinAttributesIncGen",
+    strip_include_prefix = "include",
+    tbl_outs = [
+        (
+            "--gen-attrdef-decls",
+            "include/mlir/IR/BuiltinAttributes.h.inc",
+        ),
+        (
+            "--gen-attrdef-defs",
+            "include/mlir/IR/BuiltinAttributes.cpp.inc",
+        ),
+    ],
+    tblgen = ":mlir-tblgen",
+    td_file = "include/mlir/IR/BuiltinAttributes.td",
+    deps = [":BuiltinDialectTdFiles"],
+)
+
+gentbl(
     name = "BuiltinOpsIncGen",
     strip_include_prefix = "include",
     tbl_outs = [
@@ -137,6 +155,7 @@ cc_library(
     ],
     includes = ["include"],
     deps = [
+        ":BuiltinAttributesIncGen",
         ":BuiltinDialectIncGen",
         ":BuiltinOpsIncGen",
         ":BuiltinTypesIncGen",
