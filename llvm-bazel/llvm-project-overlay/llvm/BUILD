@@ -1716,6 +1716,10 @@ gentbl(
         srcs = ["lib/Target/" + target["name"] + "/TargetInfo/" + target["name"] + "TargetInfo.cpp"],
         hdrs = glob(["lib/Target/" + target["name"] + "/TargetInfo/*.h"]),
         copts = llvm_copts,
+        # Workaround for https://github.com/bazelbuild/bazel/issues/3828
+        # TODO(gcmn): Remove this when upgrading to a Bazel version containing
+        # https://github.com/bazelbuild/bazel/commit/e3b7e17b05f1
+        includes = ["lib/Target/" + target["name"]],
         strip_include_prefix = "lib/Target/" + target["name"],
         deps = [
             ":" + target["name"] + "CommonTableGen",
