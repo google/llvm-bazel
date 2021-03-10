@@ -206,6 +206,7 @@ cc_library(
         "include/llvm-c/ErrorHandling.h",
         "include/llvm-c/Support.h",
         "include/llvm-c/Types.h",
+        "include/llvm/ExecutionEngine/JITSymbol.h",
     ],
     copts = llvm_copts,
     includes = ["include"],
@@ -1332,21 +1333,6 @@ cc_library(
     ],
 )
 
-cc_library(
-    name = "HelloNew",
-    srcs = glob([
-        "lib/Transforms/HelloNew/*.cpp",
-        "lib/Transforms/HelloNew/*.h",
-    ]),
-    hdrs = ["include/llvm/Transforms/HelloNew/HelloWorld.h"],
-    copts = llvm_copts,
-    includes = ["include"],
-    deps = [
-        ":Core",
-        ":Support",
-    ],
-)
-
 # Meta-target for clients which depend on all of the transforms libraries.
 cc_library(
     name = "common_transforms",
@@ -1966,7 +1952,6 @@ cc_library(
         ":CodeGen",
         ":Core",
         ":Coroutines",
-        ":HelloNew",
         ":MLPolicies",
         ":Support",
         ":Target",
@@ -2040,6 +2025,7 @@ cc_library(
         ":MC",
         ":MCDisassembler",
         ":Object",
+        ":OrcTargetProcess",
         ":Passes",
         ":Support",
         ":Target",
@@ -2104,17 +2090,6 @@ cc_library(
     ],
 )
 
-# There is some deep layering violation between these libraries and JITLink.
-# To workaround this, the same headers are included in multiple rules.
-cc_library(
-    name = "Orc_layering_violation_headers",
-    hdrs = glob([
-        "include/llvm/ExecutionEngine/Orc/*.h",
-        "include/llvm/ExecutionEngine/Orc/RPC/*.h",
-        "include/llvm/ExecutionEngine/JITLink/*.h",
-    ]),
-)
-
 cc_library(
     name = "OrcJIT",
     srcs = glob([
@@ -2161,11 +2136,9 @@ cc_library(
         ":CodeGen",
         ":Core",
         ":DebugInfo",
-        ":ExecutionEngine",
         ":MC",
         ":MCDisassembler",
         ":Object",
-        ":Orc_layering_violation_headers",
         ":Passes",
         ":Support",
         ":Target",
@@ -2187,12 +2160,10 @@ cc_library(
         ":CodeGen",
         ":Core",
         ":DebugInfo",
-        ":ExecutionEngine",
         ":MC",
         ":MCDisassembler",
         ":Object",
         ":OrcShared",
-        ":Orc_layering_violation_headers",
         ":Passes",
         ":Support",
         ":Target",
@@ -2828,6 +2799,7 @@ cc_binary(
     copts = llvm_copts,
     stamp = 0,
     deps = [
+        ":InterfaceStub",
         ":ObjectYAML",
         ":Support",
         ":TextAPI",
@@ -2853,6 +2825,7 @@ cc_binary(
             "-Wl,--export-dynamic-symbol=__gxx_personality_v0",
             "-Wl,--export-dynamic-symbol=__cxa_allocate_exception",
             "-Wl,--export-dynamic-symbol=__cxa_throw",
+            "-Wl,--export-dynamic-symbol=llvm_orc_registerJITLoaderGDBWrapper",
         ],
     }),
     stamp = 0,

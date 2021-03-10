@@ -22,6 +22,7 @@ posix_defines = [
     "HAVE_BACKTRACE=1",
     "BACKTRACE_HEADER=<execinfo.h>",
     "LTDL_SHLIB_EXT=\\\".so\\\"",
+    "LLVM_PLUGIN_EXT=\\\".so\\\"",
     "LLVM_ENABLE_THREADS=1",
     "HAVE_SYSEXITS_H=1",
     "HAVE_UNISTD_H=1",
@@ -46,6 +47,7 @@ macos_defines = posix_defines + [
     "HAVE_MACH_MACH_H=1",
     "HAVE_MALLOC_MALLOC_H=1",
     "HAVE_MALLOC_ZONE_STATISTICS=1",
+    "HAVE_PROC_PID_RUSAGE=1",
 ]
 
 win32_defines = [
@@ -55,6 +57,7 @@ win32_defines = [
 
     # LLVM features
     "LTDL_SHLIB_EXT=\\\".dll\\\"",
+    "LLVM_PLUGIN_EXT=\\\".dll\\\"",
 ]
 
 # TODO: We should switch to platforms-based config settings to make this easier

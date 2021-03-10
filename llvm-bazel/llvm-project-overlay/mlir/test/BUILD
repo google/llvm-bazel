@@ -2,7 +2,7 @@
 # See https://llvm.org/LICENSE.txt for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-load("//mlir:tblgen.bzl", "gentbl")
+load("//mlir:tblgen.bzl", "gentbl", "td_library")
 
 package(
     default_visibility = [":test_friends"],
@@ -21,13 +21,25 @@ cc_library(
     includes = ["."],
 )
 
-filegroup(
+cc_library(
+    name = "TestAnalysis",
+    srcs = glob(["lib/Analysis/*.cpp"]),
+    includes = ["lib/Dialect/Test"],
+    deps = [
+        ":TestDialect",
+        "//llvm:Support",
+        "//mlir:Analysis",
+        "//mlir:IR",
+        "//mlir:Pass",
+        "//mlir:Support",
+    ],
+)
+
+td_library(
     name = "TestOpTdFiles",
     srcs = [
         "lib/Dialect/Test/TestInterfaces.td",
         "lib/Dialect/Test/TestOps.td",
-        "//mlir:OpBaseTdFiles",
-        "//mlir:SideEffectTdFiles",
         "//mlir:include/mlir/IR/OpAsmInterface.td",
         "//mlir:include/mlir/IR/RegionKindInterface.td",
         "//mlir:include/mlir/IR/SymbolInterfaces.td",
@@ -35,6 +47,10 @@ filegroup(
         "//mlir:include/mlir/Interfaces/ControlFlowInterfaces.td",
         "//mlir:include/mlir/Interfaces/CopyOpInterface.td",
         "//mlir:include/mlir/Interfaces/InferTypeOpInterface.td",
+    ],
+    deps = [
+        "//mlir:OpBaseTdFiles",
+        "//mlir:SideEffectTdFiles",
     ],
 )
 
@@ -77,10 +93,10 @@ gentbl(
     ],
     tblgen = "//mlir:mlir-tblgen",
     td_file = "lib/Dialect/Test/TestOps.td",
-    td_srcs = [
+    test = True,
+    deps = [
         ":TestOpTdFiles",
     ],
-    test = True,
 )
 
 gentbl(
@@ -106,9 +122,30 @@ gentbl(
     ],
     tblgen = "//mlir:mlir-tblgen",
     td_file = "lib/Dialect/Test/TestInterfaces.td",
-    td_srcs = [
+    test = True,
+    deps = [
         "//mlir:OpBaseTdFiles",
-        "//mlir:SideEffectBaseTdFiles",
+        "//mlir:SideEffectInterfacesTdFiles",
+    ],
+)
+
+gentbl(
+    name = "TestAttrDefsIncGen",
+    strip_include_prefix = "lib/Dialect/Test",
+    tbl_outs = [
+        (
+            "-gen-attrdef-decls",
+            "lib/Dialect/Test/TestAttrDefs.h.inc",
+        ),
+        (
+            "-gen-attrdef-defs",
+            "lib/Dialect/Test/TestAttrDefs.cpp.inc",
+        ),
+    ],
+    tblgen = "//mlir:mlir-tblgen",
+    td_file = "lib/Dialect/Test/TestAttrDefs.td",
+    td_srcs = [
+        ":TestOpTdFiles",
     ],
     test = True,
 )
@@ -128,15 +165,16 @@ gentbl(
     ],
     tblgen = "//mlir:mlir-tblgen",
     td_file = "lib/Dialect/Test/TestTypeDefs.td",
-    td_srcs = [
+    test = True,
+    deps = [
         ":TestOpTdFiles",
     ],
-    test = True,
 )
 
 cc_library(
     name = "TestDialect",
     srcs = [
+        "lib/Dialect/Test/TestAttributes.cpp",
         "lib/Dialect/Test/TestDialect.cpp",
         "lib/Dialect/Test/TestInterfaces.cpp",
         "lib/Dialect/Test/TestPatterns.cpp",
@@ -144,6 +182,7 @@ cc_library(
         "lib/Dialect/Test/TestTypes.cpp",
     ],
     hdrs = [
+        "lib/Dialect/Test/TestAttributes.h",
         "lib/Dialect/Test/TestDialect.h",
         "lib/Dialect/Test/TestInterfaces.h",
         "lib/Dialect/Test/TestTypes.h",
@@ -152,6 +191,7 @@ cc_library(
         "lib/Dialect/Test",
     ],
     deps = [
+        ":TestAttrDefsIncGen",
         ":TestInterfacesIncGen",
         ":TestOpsIncGen",
         ":TestTypeDefsIncGen",
@@ -183,6 +223,7 @@ cc_library(
         "lib/IR/TestSlicing.cpp",
         "lib/IR/TestSymbolUses.cpp",
         "lib/IR/TestTypes.cpp",
+        "lib/IR/TestVisitors.cpp",
     ],
     deps = [
         ":TestDialect",
@@ -251,17 +292,23 @@ cc_library(
         "//mlir:GPUTransforms",
         "//mlir:IR",
         "//mlir:LLVMDialect",
+        "//mlir:LLVMToLLVMIRTranslation",
         "//mlir:LLVMTransforms",
         "//mlir:LinalgOps",
         "//mlir:LinalgTransforms",
+        "//mlir:MathDialect",
+        "//mlir:MathTransforms",
+        "//mlir:NVVMDialect",
+        "//mlir:NVVMToLLVMIRTranslation",
         "//mlir:Pass",
+        "//mlir:ROCDLDialect",
+        "//mlir:ROCDLToLLVMIRTranslation",
         "//mlir:SCFDialect",
         "//mlir:SPIRVDialect",
         "//mlir:StandardOps",
         "//mlir:StandardOpsTransforms",
         "//mlir:Support",
-        "//mlir:TargetNVVMIR",
-        "//mlir:TargetROCDLIR",
+        "//mlir:ToLLVMIRTranslation",
         "//mlir:TransformUtils",
         "//mlir:Transforms",
         "//mlir:VectorOps",
