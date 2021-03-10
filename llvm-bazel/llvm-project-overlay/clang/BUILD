@@ -29,7 +29,12 @@ cc_binary(
     copts = [
         "$(STACK_FRAME_UNLIMITED)",
     ],
-    linkopts = ["-ldl"],
+    linkopts = select({
+        "@bazel_tools//src/conditions:windows": [],
+        "//conditions:default": [
+            "-ldl",
+        ],
+    }),
     stamp = 0,
     deps = [
         "//llvm:Support",
