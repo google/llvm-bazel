@@ -73,6 +73,7 @@ build:generic_gcc --copt=-Werror --host_copt=-Werror
 ###############################################################################
 
 build:mingw_gcc --config=generic_gcc
+build:mingw_gcc --compiler=mingw-gcc
 
 # Other windows toolchains have these by default
 build:mingw_gcc --cxxopt=-DHAVE_UNISTD_H=1 --host_cxxopt=-DHAVE_UNISTD_H=1
