@@ -72,11 +72,10 @@ build:generic_gcc --copt=-Werror --host_copt=-Werror
 # Windows specific flags for building with GCC. Used on top of generic_gcc
 ###############################################################################
 
+build:mingw_gcc --config=generic_gcc
+
 # Other windows toolchains have these by default
 build:mingw_gcc --cxxopt=-DHAVE_UNISTD_H=1 --host_cxxopt=-DHAVE_UNISTD_H=1
-build:mingw_gcc --linkopt=-lole32 --host_linkopt=-lole32
-build:mingw_gcc --linkopt=-luuid --host_linkopt=-luuid
-build:mingw_gcc --linkopt=-lversion --host_linkopt=-lversion
 
 # Needed to avoid  "File too big" error. -Wa,-mbig-obj doesn't seem to fix it.
 build:mingw_gcc --cxxopt=-O2
