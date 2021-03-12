@@ -77,6 +77,18 @@ build:mingw_gcc --config=generic_gcc
 # Other windows toolchains have these by default
 build:mingw_gcc --cxxopt=-DHAVE_UNISTD_H=1 --host_cxxopt=-DHAVE_UNISTD_H=1
 
+# The following link options should go on the BUILD rules instead, but:
+# 1. It's very challenging to make select constraints work properly
+# 2. Trying to set them for windows in general will trigger msvc warnings for
+# unknown flags.
+
+# Needed by @llvm-project//llvm:llvm-tblgen, @llvm-project//clang:clang-tblgen, @llvm-project//clang:clang-scan-deps
+build:mingw_gcc --linkopt=-lole32 --host_linkopt=-lole32
+# Needed by @llvm-project//llvm:llvm-tblgen, @llvm-project//clang:clang-tblgen, @llvm-project//clang:clang-scan-deps
+build:mingw_gcc --linkopt=-luuid --host_linkopt=-luuid
+# Needed by @llvm-project//clang:clang-scan-deps
+build:mingw_gcc --linkopt=-lversion --host_linkopt=-lversion
+
 # Needed to avoid  "File too big" error. -Wa,-mbig-obj doesn't seem to fix it.
 build:mingw_gcc --cxxopt=-O2
 

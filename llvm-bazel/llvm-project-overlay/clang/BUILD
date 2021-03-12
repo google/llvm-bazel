@@ -30,13 +30,7 @@ cc_binary(
         "$(STACK_FRAME_UNLIMITED)",
     ],
     linkopts = select({
-        "@bazel_tools//src/conditions:windows": [
-            # These are only needed by mingw-gcc,
-            # but getting bazel's constraints to work
-            # is challenging.
-            "-lole32",
-            "-luuid",
-        ],
+        "@bazel_tools//src/conditions:windows": [],
         "//conditions:default": [
             "-ldl",
         ],
@@ -2060,15 +2054,4 @@ cc_binary(
         ":tooling_dependency_scanning",
         "//llvm:Support",
     ],
-    linkopts = select({
-        "@bazel_tools//src/conditions:windows": [
-            # These are only needed by mingw-gcc,
-            # but getting bazel's constraints to work
-            # is challenging.
-            "-lole32",
-            "-luuid",
-            "-lversion",
-        ],
-        "//conditions:default": [],
-    }),
 )

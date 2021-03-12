@@ -486,16 +486,6 @@ cc_binary(
     deps = [
         ":tblgen",
     ],
-    linkopts = select({
-        "@bazel_tools//src/conditions:windows": [
-            # These are only needed by mingw-gcc,
-            # but getting bazel's constraints to work
-            # is challenging.
-            "-lole32",
-            "-luuid",
-        ],
-        "//conditions:default": [],
-    }),
 )
 
 gentbl(
