@@ -208,6 +208,32 @@ gentbl(
 )
 
 gentbl(
+    name = "basic_riscv_vector_builtins_gen",
+    tbl_outs = [(
+        "-gen-riscv-vector-builtins",
+        "include/clang/Basic/riscv_vector_builtins.inc",
+    )],
+    tblgen = ":clang-tblgen",
+    td_file = "include/clang/Basic/riscv_vector.td",
+    td_srcs = [
+        "include/clang/Basic/riscv_vector.td",
+    ],
+)
+
+gentbl(
+    name = "basic_riscv_vector_builtin_cg_gen",
+    tbl_outs = [(
+        "-gen-riscv-vector-builtin-codegen",
+        "include/clang/Basic/riscv_vector_builtin_cg.inc",
+    )],
+    tblgen = ":clang-tblgen",
+    td_file = "include/clang/Basic/riscv_vector.td",
+    td_srcs = [
+        "include/clang/Basic/riscv_vector.td",
+    ],
+)
+
+gentbl(
     name = "basic_arm_cde_gen",
     tbl_outs = [(
         "-gen-arm-cde-builtin-def",
@@ -420,6 +446,8 @@ cc_library(
         ":basic_arm_sve_builtins_gen",
         ":basic_arm_sve_typeflags_gen",
         ":basic_attr_gen",
+        ":basic_riscv_vector_builtin_cg_gen",
+        ":basic_riscv_vector_builtins_gen",
         ":basic_internal_headers",
         ":config",
         ":diagnostic_defs_gen",
@@ -1375,6 +1403,32 @@ gentbl(
     ],
 )
 
+gentbl(
+    name = "headers_riscv_vector",
+    tbl_outs = [(
+        "-gen-riscv-vector-header",
+        "lib/Headers/riscv_vector.h",
+    )],
+    tblgen = ":clang-tblgen",
+    td_file = "include/clang/Basic/riscv_vector.td",
+    td_srcs = [
+        "include/clang/Basic/riscv_vector.td",
+    ],
+)
+
+gentbl(
+    name = "headers_riscv_vector_generic",
+    tbl_outs = [(
+        "-gen-riscv-vector-generic-header",
+        "lib/Headers/riscv_vector_generic.h",
+    )],
+    tblgen = ":clang-tblgen",
+    td_file = "include/clang/Basic/riscv_vector.td",
+    td_srcs = [
+        "include/clang/Basic/riscv_vector.td",
+    ],
+)
+
 # We generate the set of builtin headers under a special subdirectory in the
 # 'bin' section of the bazel output so that they can be used as data
 # dependencies. It requires listing explicitly all the generated inputs here.
@@ -1385,6 +1439,8 @@ builtin_headers = glob(["lib/Headers/**/*.h"]) + [
     "lib/Headers/arm_neon.h",
     "lib/Headers/arm_sve.h",
     "lib/Headers/arm_bf16.h",
+    "lib/Headers/riscv_vector.h",
+    "lib/Headers/riscv_vector_generic.h",
 ]
 
 genrule(
@@ -1480,6 +1536,7 @@ cc_library(
         ":basic",
         ":basic_arm_cde_cg_gen",
         ":basic_arm_sve_builtin_cg_gen",
+        ":basic_riscv_vector_builtin_cg_gen",
         ":driver",
         ":frontend",
         ":lex",
