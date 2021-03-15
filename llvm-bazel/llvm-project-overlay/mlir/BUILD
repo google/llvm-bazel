@@ -7,6 +7,7 @@
 
 load(":tblgen.bzl", "gentbl", "td_library")
 load(":linalggen.bzl", "genlinalg")
+load(":build_defs.bzl", "if_cuda_available")
 
 package(
     default_visibility = [":friends"],
