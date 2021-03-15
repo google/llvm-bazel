@@ -3872,10 +3872,7 @@ sh_binary(
 sh_binary(
     name = "llvm-original-di-preservation",
     testonly = True,
-    srcs = glob([
-        "utils/llvm-original-di-preservation.py",
-    ]),
-    visibility = ["//third_party/llvm/google3_users:llvm_tool_users"],
+    srcs = ["utils/llvm-original-di-preservation.py"],
 )
 
 cc_binary(
