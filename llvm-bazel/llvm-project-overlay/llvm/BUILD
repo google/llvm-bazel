@@ -3869,6 +3869,15 @@ sh_binary(
     data = [":llvm-dwarfdump"],
 )
 
+sh_binary(
+    name = "llvm-original-di-preservation",
+    testonly = True,
+    srcs = glob([
+        "utils/llvm-original-di-preservation.py",
+    ]),
+    visibility = ["//third_party/llvm/google3_users:llvm_tool_users"],
+)
+
 cc_binary(
     name = "not",
     testonly = True,
