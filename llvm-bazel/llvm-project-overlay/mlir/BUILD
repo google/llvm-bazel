@@ -2234,19 +2234,8 @@ cc_library(
         ":StandardToLLVM",
         ":Support",
         ":Transforms",
-        ":ToLLVMIRTranslation",
-        ":LLVMToLLVMIRTranslation",
-        "//llvm:Core",
         "//llvm:Support",
-        "//llvm:Target",
-    ] + if_cuda_available([
-        # Dependencies for SerializeToCubin.cpp with
-        # -DMLIR_GPU_TO_CUBIN_PASS_ENABLE
-        ":NVVMToLLVMIRTranslation",
-        "//llvm:NVPTXCodeGen",
-        "@cuda//:cuda_headers",
-        "@cuda//:libcuda",
-    ]),
+    ],
 )
 
 gentbl(
