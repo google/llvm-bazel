@@ -3869,6 +3869,12 @@ sh_binary(
     data = [":llvm-dwarfdump"],
 )
 
+sh_binary(
+    name = "llvm-original-di-preservation",
+    testonly = True,
+    srcs = ["utils/llvm-original-di-preservation.py"],
+)
+
 cc_binary(
     name = "not",
     testonly = True,
