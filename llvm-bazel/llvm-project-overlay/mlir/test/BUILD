@@ -40,12 +40,14 @@ td_library(
     srcs = [
         "lib/Dialect/Test/TestInterfaces.td",
         "lib/Dialect/Test/TestOps.td",
+        "//mlir:include/mlir/Dialect/DLTI/DLTIBase.td",
         "//mlir:include/mlir/IR/OpAsmInterface.td",
         "//mlir:include/mlir/IR/RegionKindInterface.td",
         "//mlir:include/mlir/IR/SymbolInterfaces.td",
         "//mlir:include/mlir/Interfaces/CallInterfaces.td",
         "//mlir:include/mlir/Interfaces/ControlFlowInterfaces.td",
         "//mlir:include/mlir/Interfaces/CopyOpInterface.td",
+        "//mlir:include/mlir/Interfaces/DataLayoutInterfaces.td",
         "//mlir:include/mlir/Interfaces/InferTypeOpInterface.td",
     ],
     deps = [
@@ -67,7 +69,7 @@ gentbl(
             "lib/Dialect/Test/TestOps.cpp.inc",
         ),
         (
-            "-gen-dialect-decls",
+            "-gen-dialect-decls -dialect=test",
             "lib/Dialect/Test/TestOpsDialect.h.inc",
         ),
         (
@@ -198,6 +200,8 @@ cc_library(
         "//llvm:Support",
         "//mlir:ControlFlowInterfaces",
         "//mlir:CopyOpInterface",
+        "//mlir:DLTIDialect",
+        "//mlir:DataLayoutInterfaces",
         "//mlir:DerivedAttributeOpInterface",
         "//mlir:Dialect",
         "//mlir:IR",
@@ -288,6 +292,7 @@ cc_library(
         "//mlir:Affine",
         "//mlir:AffineTransforms",
         "//mlir:Analysis",
+        "//mlir:DLTIDialect",
         "//mlir:EDSC",
         "//mlir:GPUDialect",
         "//mlir:GPUToGPURuntimeTransforms",
