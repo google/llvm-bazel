@@ -830,14 +830,14 @@ cc_library(
     ]),
     copts = ["$(STACK_FRAME_UNLIMITED)"],
     includes = ["include"],
-    textual_hdrs = glob([
+    textual_hdrs = [
         "include/clang/Sema/AttrParsedAttrImpl.inc",
         "include/clang/Sema/AttrParsedAttrKinds.inc",
         "include/clang/Sema/AttrParsedAttrList.inc",
         "include/clang/Sema/AttrSpellingListIndex.inc",
         "include/clang/Sema/AttrTemplateInstantiate.inc",
         "lib/Sema/OpenCLBuiltins.inc",
-    ]),
+    ],
     deps = [
         ":analysis",
         ":ast",
@@ -991,9 +991,13 @@ cc_library(
 
 cc_library(
     name = "tooling",
-    srcs = glob([
-        "lib/Tooling/*.cpp",
-    ]),
+    srcs = glob(
+        [
+            "lib/Tooling/*.cpp",
+        ],
+        # Temporarily disable until we support the generated file.
+        exclude = ["lib/Tooling/NodeIntrospection.cpp"],
+    ),
     hdrs = glob([
         "include/clang/Tooling/*.h",
     ]),
@@ -1146,10 +1150,11 @@ cc_library(
             "lib/Format/*.h",
         ],
     ),
-    hdrs = glob([
-        "include/clang/Format/*.h",
+    hdrs = [
         "lib/Format/FormatTokenLexer.h",
         "lib/Format/Macros.h",
+    ] + glob([
+        "include/clang/Format/*.h",
     ]),
     includes = ["include"],
     deps = [
@@ -1622,11 +1627,12 @@ gentbl(
 
 cc_library(
     name = "serialization",
-    srcs = glob([
-        "lib/Serialization/*.cp" + "p",
-        "lib/Serialization/*.h",
+    srcs = [
         "include/clang/Serialization/AttrPCHRead.inc",
         "include/clang/Serialization/AttrPCHWrite.inc",
+    ] + glob([
+        "lib/Serialization/*.cpp",
+        "lib/Serialization/*.h",
     ]),
     hdrs = glob([
         "include/clang/Serialization/*.h",
