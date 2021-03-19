@@ -441,6 +441,13 @@ td_library(
     deps = [":OpBaseTdFiles"],
 )
 
+td_library(
+    name = "ReducerTdFiles",
+    srcs = ["include/mlir/Reducer/Passes.td"],
+    includes = ["include"],
+    deps = [":OpBaseTdFiles"],
+)
+
 ##---------------------------------------------------------------------------##
 # Affine dialect.
 ##---------------------------------------------------------------------------##
@@ -1964,9 +1971,7 @@ cc_library(
             "lib/Dialect/GPU/IR/*.h",
         ],
     ),
-    hdrs = glob([
-        "include/mlir/Dialect/GPU/GPUDialect.h",
-    ]),
+    hdrs = ["include/mlir/Dialect/GPU/GPUDialect.h"],
     includes = ["include"],
     deps = [
         ":GPUBaseIncGen",
@@ -2228,7 +2233,6 @@ cc_library(
 cc_library(
     name = "GPUToGPURuntimeTransforms",
     srcs = [
-        "lib/Conversion/GPUCommon/ConvertKernelFuncToBlob.cpp",
         "lib/Conversion/GPUCommon/ConvertLaunchFuncToRuntimeCalls.cpp",
         "lib/Conversion/PassDetail.h",
     ],
@@ -2246,6 +2250,7 @@ cc_library(
         ":Pass",
         ":StandardToLLVM",
         ":Support",
+        ":VectorToLLVM",
         "//llvm:Support",
     ],
 )
@@ -5304,6 +5309,7 @@ cc_library(
         ":IR",
         ":LinalgOps",
         ":MathDialect",
+        ":MemRefDialect",
         ":Pass",
         ":StandardOps",
         ":TosaDialect",
@@ -5696,6 +5702,45 @@ cc_library(
         ":DLTIBaseIncGen",
         ":DataLayoutInterfaces",
         ":IR",
+        "//llvm:Support",
+    ],
+)
+
+gentbl(
+    name = "ReducerIncGen",
+    strip_include_prefix = "include",
+    tbl_outs = [
+        (
+            "-gen-pass-decls",
+            "include/mlir/Reducer/Passes.h.inc",
+        ),
+    ],
+    tblgen = ":mlir-tblgen",
+    td_file = "include/mlir/Reducer/Passes.td",
+    deps = [
+        ":PassBaseTdFiles",
+        ":ReducerTdFiles",
+    ],
+)
+
+cc_binary(
+    name = "mlir-reduce",
+    srcs = glob([
+        "include/mlir/Reducer/*.h",
+        "include/mlir/Reducer/Passes/*.h",
+        "tools/mlir-reduce/*.cpp",
+        "tools/mlir-reduce/Passes/*.cpp",
+    ]) + ["lib/Reducer/Tester.cpp"],
+    includes = ["include"],
+    stamp = 0,
+    deps = [
+        ":AllPassesAndDialectsNoRegistration",
+        ":IR",
+        ":Parser",
+        ":Pass",
+        ":ReducerIncGen",
+        ":Support",
+        ":Transforms",
         "//llvm:Support",
     ],
 )
