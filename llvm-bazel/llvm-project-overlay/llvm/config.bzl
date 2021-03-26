@@ -72,5 +72,6 @@ os_defines = select({
 llvm_config_defines = os_defines + select({
     "@bazel_tools//src/conditions:windows": native_arch_defines("X86", "x86_64-pc-win32"),
     "@bazel_tools//src/conditions:darwin": native_arch_defines("X86", "x86_64-unknown-darwin"),
+    "@bazel_tools//src/conditions:linux_aarch64": native_arch_defines("AArch64", "aarch64-unknown-linux_gnu"),
     "//conditions:default": native_arch_defines("X86", "x86_64-unknown-linux-gnu"),
 })
