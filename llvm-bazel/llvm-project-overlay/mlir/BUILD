@@ -306,6 +306,7 @@ cc_library(
         ":CAPIIR",
         ":ExecutionEngine",
         ":LLVMToLLVMIRTranslation",
+        "//llvm:OrcJIT",
         "//llvm:Support",
     ],
 )
