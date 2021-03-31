@@ -1421,19 +1421,6 @@ gentbl(
     ],
 )
 
-gentbl(
-    name = "headers_riscv_vector_generic",
-    tbl_outs = [(
-        "-gen-riscv-vector-generic-header",
-        "lib/Headers/riscv_vector_generic.h",
-    )],
-    tblgen = ":clang-tblgen",
-    td_file = "include/clang/Basic/riscv_vector.td",
-    td_srcs = [
-        "include/clang/Basic/riscv_vector.td",
-    ],
-)
-
 # We generate the set of builtin headers under a special subdirectory in the
 # 'bin' section of the bazel output so that they can be used as data
 # dependencies. It requires listing explicitly all the generated inputs here.
@@ -1445,7 +1432,6 @@ builtin_headers = glob(["lib/Headers/**/*.h"]) + [
     "lib/Headers/arm_sve.h",
     "lib/Headers/arm_bf16.h",
     "lib/Headers/riscv_vector.h",
-    "lib/Headers/riscv_vector_generic.h",
 ]
 
 genrule(
