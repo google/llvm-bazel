@@ -749,7 +749,7 @@ cc_library(
     hdrs = glob([
         "include/llvm/TextAPI/**/*.h",
         "include/llvm/TextAPI/**/*.def",
-        "lib/TextAPI/MachO/*.h",
+        "lib/TextAPI/**/*.h",
     ]),
     copts = llvm_copts,
     deps = [
