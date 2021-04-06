@@ -350,7 +350,7 @@ cc_library(
     hdrs = ["include/mlir-c/Registration.h"],
     includes = ["include"],
     deps = [
-        ":AllPassesAndDialectsNoRegistration",
+        ":AllPassesAndDialects",
         ":CAPIIR",
         ":LLVMToLLVMIRTranslation",
     ],
@@ -1680,18 +1680,14 @@ cc_library(
     hdrs = glob(["include/mlir/Dialect/StandardOps/Transforms/*.h"]),
     includes = ["include"],
     deps = [
-        ":Analysis",
-        ":ControlFlowInterfaces",
+        ":Affine",
         ":IR",
         ":MemRefDialect",
         ":Pass",
         ":SCFDialect",
         ":StandardOps",
         ":StandardOpsTransformsPassIncGen",
-        ":Support",
-        ":TensorDialect",
         ":Transforms",
-        "//llvm:Support",
     ],
 )
 
@@ -4053,7 +4049,7 @@ cc_library(
     name = "MlirTranslateMain",
     srcs = ["tools/mlir-translate/mlir-translate.cpp"],
     deps = [
-        ":AllPassesAndDialectsNoRegistration",
+        ":AllPassesAndDialects",
         ":AllTranslations",
         ":IR",
         ":Parser",
@@ -4069,7 +4065,7 @@ cc_binary(
 )
 
 cc_library(
-    name = "AllPassesAndDialectsNoRegistration",
+    name = "AllPassesAndDialects",
     hdrs = [
         "include/mlir/InitAllDialects.h",
         "include/mlir/InitAllPasses.h",
@@ -4160,9 +4156,10 @@ cc_library(
     ],
 )
 
-cc_library(
-    name = "AllPassesAndDialects",
-    deps = [":AllPassesAndDialectsNoRegistration"],
+alias(
+    name = "AllPassesAndDialectsNoRegistration",
+    actual = ":AllPassesAndDialects",
+    deprecation = "Use AllPassesAndDialects instead",
 )
 
 cc_binary(
@@ -4170,7 +4167,7 @@ cc_binary(
     srcs = ["tools/mlir-opt/mlir-opt.cpp"],
     local_defines = ["MLIR_INCLUDE_TESTS"],
     deps = [
-        ":AllPassesAndDialectsNoRegistration",
+        ":AllPassesAndDialects",
         ":Analysis",
         ":IR",
         ":MlirOptLib",
@@ -4203,7 +4200,7 @@ cc_library(
     hdrs = ["include/mlir/ExecutionEngine/JitRunner.h"],
     includes = ["include"],
     deps = [
-        ":AllPassesAndDialectsNoRegistration",
+        ":AllPassesAndDialects",
         ":ExecutionEngine",
         ":ExecutionEngineUtils",
         ":IR",
@@ -5769,7 +5766,7 @@ cc_binary(
     includes = ["include"],
     stamp = 0,
     deps = [
-        ":AllPassesAndDialectsNoRegistration",
+        ":AllPassesAndDialects",
         ":IR",
         ":Parser",
         ":Pass",
