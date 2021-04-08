@@ -1702,6 +1702,7 @@ cc_library(
     deps = [
         ":Affine",
         ":Analysis",
+        ":DataLayoutInterfaces",
         ":DialectUtils",
         ":EDSC",
         ":IR",
