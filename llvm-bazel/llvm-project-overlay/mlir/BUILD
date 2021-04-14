@@ -1688,7 +1688,9 @@ cc_library(
         ":SCFDialect",
         ":StandardOps",
         ":StandardOpsTransformsPassIncGen",
+        ":Support",
         ":Transforms",
+        "//llvm:Support",
     ],
 )
 
