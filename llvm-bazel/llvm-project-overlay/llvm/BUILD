@@ -3209,11 +3209,25 @@ cc_binary(
         ":Demangle",
         ":MC",
         ":MCDisassembler",
+        ":ObjdumpOptsTableGen",
         ":Object",
+        ":Option",
         ":Support",
         ":Symbolize",
         ":config",
     ],
+)
+
+gentbl(
+    name = "ObjdumpOptsTableGen",
+    strip_include_prefix = "tools/llvm-objdump",
+    tbl_outs = [(
+        "-gen-opt-parser-defs",
+        "tools/llvm-objdump/ObjdumpOpts.inc",
+    )],
+    tblgen = ":llvm-tblgen",
+    td_file = "tools/llvm-objdump/ObjdumpOpts.td",
+    td_srcs = ["include/llvm/Option/OptParser.td"],
 )
 
 cc_binary(
