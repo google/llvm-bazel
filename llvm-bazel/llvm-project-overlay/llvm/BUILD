@@ -3212,6 +3212,7 @@ cc_binary(
         ":ObjdumpOptsTableGen",
         ":Object",
         ":Option",
+        ":OtoolOptsTableGen",
         ":Support",
         ":Symbolize",
         ":config",
@@ -3227,6 +3228,23 @@ gentbl(
     )],
     tblgen = ":llvm-tblgen",
     td_file = "tools/llvm-objdump/ObjdumpOpts.td",
+    td_srcs = ["include/llvm/Option/OptParser.td"],
+)
+
+binary_alias(
+    name = "llvm-otool",
+    binary = ":llvm-objdump",
+)
+
+gentbl(
+    name = "OtoolOptsTableGen",
+    strip_include_prefix = "tools/llvm-objdump",
+    tbl_outs = [(
+        "-gen-opt-parser-defs",
+        "tools/llvm-objdump/OtoolOpts.inc",
+    )],
+    tblgen = ":llvm-tblgen",
+    td_file = "tools/llvm-objdump/OtoolOpts.td",
     td_srcs = ["include/llvm/Option/OptParser.td"],
 )
 
