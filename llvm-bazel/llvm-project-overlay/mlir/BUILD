@@ -213,10 +213,6 @@ cc_library(
         "include/mlir/Pass/*.h",
     ]),
     includes = ["include"],
-    linkopts = [
-        "-lm",
-        "-lpthread",
-    ],
     deps = [
         ":IR",
         ":Support",
@@ -4278,7 +4274,6 @@ cc_library(
 cc_binary(
     name = "mlir-cpu-runner",
     srcs = ["tools/mlir-cpu-runner/mlir-cpu-runner.cpp"],
-    linkopts = ["-ldl"],
     deps = [
         ":AllToLLVMIRTranslations",
         ":ExecutionEngineUtils",
@@ -4447,10 +4442,6 @@ cc_binary(
         "tools/mlir-tblgen/*.h",
         "tools/mlir-tblgen/*.cpp",
     ]),
-    linkopts = [
-        "-lm",
-        "-lpthread",
-    ],
     deps = [
         ":MlirTableGenMain",
         ":Support",
@@ -4465,10 +4456,6 @@ cc_binary(
     name = "mlir-linalg-ods-gen",
     srcs = [
         "tools/mlir-linalg-ods-gen/mlir-linalg-ods-gen.cpp",
-    ],
-    linkopts = [
-        "-lm",
-        "-lpthread",
     ],
     deps = [
         ":IR",
