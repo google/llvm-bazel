@@ -215,6 +215,7 @@ cc_library(
         "//conditions:default": [
             "-pthread",
             "-ldl",
+            "-lm",
         ],
     }),
     textual_hdrs = glob([
