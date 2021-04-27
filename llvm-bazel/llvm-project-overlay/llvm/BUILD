@@ -1199,10 +1199,7 @@ cc_library(
         "lib/AsmParser/*.cpp",
         "lib/AsmParser/*.h",
     ]),
-    hdrs = [
-        "include/llvm/AsmParser/Parser.h",
-        "include/llvm/AsmParser/SlotMapping.h",
-    ],
+    hdrs = glob(["include/llvm/AsmParser/*.h"]),
     copts = llvm_copts,
     deps = [
         ":BinaryFormat",
