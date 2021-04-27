@@ -3308,6 +3308,18 @@ gentbl(
     td_srcs = ["include/llvm/Option/OptParser.td"],
 )
 
+gentbl(
+    name = "WindresTableGen",
+    strip_include_prefix = "tools/llvm-rc",
+    tbl_outs = [(
+        "-gen-opt-parser-defs",
+        "tools/llvm-rc/WindresOpts.inc",
+    )],
+    tblgen = ":llvm-tblgen",
+    td_file = "tools/llvm-rc/WindresOpts.td",
+    td_srcs = ["include/llvm/Option/OptParser.td"],
+)
+
 # Workaround inability to put `.def` files into `srcs` with a library.
 cc_library(
     name = "llvm-rc-defs-lib",
@@ -3329,8 +3341,14 @@ cc_binary(
         ":Option",
         ":RcTableGen",
         ":Support",
+        ":WindresTableGen",
         ":llvm-rc-defs-lib",
     ],
+)
+
+binary_alias(
+    name = "llvm-windres",
+    binary = ":llvm-rc",
 )
 
 cc_binary(
