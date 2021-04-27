@@ -3328,10 +3328,8 @@ cc_library(
     ]),
 )
 
-# Simulate the upstream alias by just creating the target with two different
-# names
-[cc_binary(
-    name = binary,
+cc_binary(
+    name = "llvm-rc",
     srcs = glob([
         "tools/llvm-rc/*.cpp",
         "tools/llvm-rc/*.h",
@@ -3346,10 +3344,12 @@ cc_library(
         ":WindresTableGen",
         ":llvm-rc-defs-lib",
     ],
-) for binary in [
-    "llvm-rc",
-    "llvm-windres",
-]]
+)
+
+binary_alias(
+    name = "llvm-windres",
+    binary = ":llvm-rc",
+)
 
 cc_binary(
     name = "llvm-readobj",
