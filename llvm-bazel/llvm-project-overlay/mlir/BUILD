@@ -5,7 +5,7 @@
 # Description:
 #   The MLIR "Multi-Level Intermediate Representation" Compiler Infrastructure
 
-load(":tblgen.bzl", "gentbl", "td_library")
+load(":tblgen.bzl", "gentbl", "gentbl_filegroup", "td_library")
 load(":linalggen.bzl", "genlinalg")
 load(":build_defs.bzl", "cc_headers_only", "if_cuda_available")
 
@@ -27,6 +27,8 @@ package_group(
 exports_files([
     "LICENSE.TXT",
     "include/mlir/Dialect/LLVMIR/LLVMOps.td",
+    "lib/Bindings/Python/StandardOps.td",
+    "lib/Bindings/Python/BuiltinOps.td",
     "run_lit.sh",
 ])
 
@@ -379,6 +381,27 @@ cc_library(
 )
 
 cc_library(
+    name = "CAPIRegistration",
+    srcs = ["lib/CAPI/Registration/Registration.cpp"],
+    hdrs = ["include/mlir-c/Registration.h"],
+    includes = ["include"],
+    deps = [
+        ":AllPassesAndDialects",
+        ":CAPIIR",
+        ":LLVMToLLVMIRTranslation",
+    ],
+)
+
+##---------------------------------------------------------------------------##
+# Python bindings.
+#
+# This only defines filegroups that are used to construct Python extensions and
+# libraries. Actual libraries can be constructed elsewhere. Note that we define
+# separate filegroups for files in different directories so that we can mirror
+# the tree correctly in Python land.
+##---------------------------------------------------------------------------##
+
+cc_library(
     name = "MLIRBindingsPythonExtension",
     hdrs = ["include/mlir-c/Bindings/Python/Interop.h"],
     tags = [
@@ -391,17 +414,111 @@ cc_library(
     ],
 )
 
-cc_library(
-    name = "CAPIRegistration",
-    srcs = ["lib/CAPI/Registration/Registration.cpp"],
-    hdrs = ["include/mlir-c/Registration.h"],
+filegroup(
+    name = "MLIRBindingsPythonSourceFiles",
+    srcs = glob(["lib/Bindings/Python/*.cpp"]),
+)
+
+filegroup(
+    name = "MLIRBindingsPythonHeaderFiles",
+    srcs = glob(["lib/Bindings/Python/*.h"]),
+)
+
+td_library(
+    name = "StandardOpsPyTdFiles",
+    srcs = [
+        "include/mlir/Bindings/Python/Attributes.td",
+    ],
     includes = ["include"],
     deps = [
-        ":AllPassesAndDialects",
-        ":CAPIIR",
-        ":LLVMToLLVMIRTranslation",
+        ":OpBaseTdFiles",
+        ":StdOpsTdFiles",
     ],
 )
+
+gentbl_filegroup(
+    name = "StandardOpsPyGen",
+    tbl_outs = [
+        (
+            "-gen-python-op-bindings -bind-dialect=std",
+            "lib/Bindings/Python/mlir/dialects/_std_ops_gen.py",
+        ),
+    ],
+    tblgen = ":mlir-tblgen",
+    td_file = "lib/Bindings/Python/StandardOps.td",
+    deps = [
+        ":StandardOpsPyTdFiles",
+    ],
+)
+
+td_library(
+    name = "BuiltinOpsPyTdFiles",
+    srcs = [
+        "include/mlir/Bindings/Python/Attributes.td",
+        "lib/Bindings/Python/BuiltinOps.td",
+    ],
+    includes = ["include"],
+    deps = [
+        ":BuiltinDialectTdFiles",
+        ":OpBaseTdFiles",
+    ],
+)
+
+gentbl_filegroup(
+    name = "BuiltinOpsPyGen",
+    tbl_outs = [
+        (
+            "-gen-python-op-bindings -bind-dialect=builtin",
+            "lib/Bindings/Python/mlir/dialects/_builtin_ops_gen.py",
+        ),
+    ],
+    tblgen = ":mlir-tblgen",
+    td_file = "lib/Bindings/Python/BuiltinOps.td",
+    deps = [
+        ":BuiltinOpsPyTdFiles",
+    ],
+)
+
+filegroup(
+    name = "BuiltinOpsPyFiles",
+    srcs = [
+        "lib/Bindings/Python/mlir/dialects/_builtin_ops_ext.py",
+        "lib/Bindings/Python/mlir/dialects/builtin.py",
+        ":BuiltinOpsPyGen",
+    ],
+)
+
+filegroup(
+    name = "CorePyFiles",
+    srcs = [
+        "lib/Bindings/Python/mlir/_cext_loader.py",
+        "lib/Bindings/Python/mlir/_dlloader.py",
+    ],
+)
+
+filegroup(
+    name = "DialectCorePyFiles",
+    srcs = [
+        "lib/Bindings/Python/mlir/dialects/_ods_common.py",
+    ],
+)
+
+filegroup(
+    name = "IRPyFiles",
+    srcs = [
+        "lib/Bindings/Python/mlir/ir.py",
+    ],
+)
+
+filegroup(
+    name = "StandardOpsPyFiles",
+    srcs = [
+        "lib/Bindings/Python/mlir/dialects/std.py",
+        ":StandardOpsPyGen",
+    ],
+)
+
+##---------------------------------------------------------------------------##
 
 td_library(
     name = "OpBaseTdFiles",
