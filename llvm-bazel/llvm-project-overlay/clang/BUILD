@@ -855,6 +855,7 @@ cc_library(
         "//llvm:AllTargetsCodeGens",
         "//llvm:Core",
         "//llvm:FrontendOpenMP",
+        "//llvm:MC",
         "//llvm:MCParser",
         "//llvm:Support",
     ],
