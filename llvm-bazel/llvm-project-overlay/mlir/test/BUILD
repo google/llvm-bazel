@@ -313,6 +313,8 @@ cc_library(
         "//mlir:ROCDLToLLVMIRTranslation",
         "//mlir:SCFDialect",
         "//mlir:SPIRVDialect",
+        "//mlir:SparseTensor",
+        "//mlir:SparseTensorTransforms",
         "//mlir:StandardOps",
         "//mlir:StandardOpsTransforms",
         "//mlir:Support",
