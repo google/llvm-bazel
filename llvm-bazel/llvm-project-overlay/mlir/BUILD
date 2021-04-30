@@ -454,7 +454,14 @@ cc_library(
 
 filegroup(
     name = "MLIRBindingsPythonSourceFiles",
-    srcs = glob(["lib/Bindings/Python/*.cpp"]),
+    srcs = glob(
+        include = ["lib/Bindings/Python/*.cpp"],
+        exclude = ["lib/Bindings/Python/MainModule.cpp"],
+    ),
+)
+
+exports_files(
+    ["lib/Bindings/Python/MainModule.cpp"],
 )
 
 filegroup(
@@ -1364,6 +1371,7 @@ cc_library(
     includes = ["include"],
     deps = [
         ":Affine",
+        ":Analysis",
         ":IR",
         ":Support",
         ":TransformUtils",
@@ -5311,6 +5319,7 @@ cc_library(
         ":AffineToStandard",
         ":AffineUtils",
         ":Analysis",
+        ":ComplexDialect",
         ":DialectUtils",
         ":EDSC",
         ":IR",
