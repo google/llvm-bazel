@@ -324,8 +324,7 @@ def gentbl(
       test: whether to create a shell test that invokes the tool too.
       **kwargs: Extra keyword arguments to pass to all generated rules.
     """
-    llvm_project_workspace = Label("//:...", relative_to_caller_repository = False)
-    llvm_project_execroot_path = llvm_project_workspace.workspace_root
+    llvm_project_execroot_path = Label("//llvm:tblgen.bzl", relative_to_caller_repository = False).workspace_root
 
     for (opts_string, out) in tbl_outs:
         # TODO(gcmn): The API of opts as single string is preserved for backward
