@@ -35,6 +35,9 @@ def gentbl(
       tblgen_args: Extra arguments string to pass to the tblgen binary.
       **kwargs: Keyword arguments to pass to subsidiary cc_library() rule.
     """
+    llvm_project_workspace = Label("//:...", relative_to_caller_repository = False)
+    llvm_project_execroot_path = llvm_project_workspace.workspace_root
+
     if td_file not in td_srcs:
         td_srcs += [td_file]
     for (opts, out) in tbl_outs:
@@ -45,11 +48,13 @@ def gentbl(
             outs = [out],
             tools = [tblgen],
             message = "Generating code from table: %s" % td_file,
-            cmd = (("$(location %s) -I external/llvm-project/llvm/include " +
-                    "-I external/llvm-project/clang/include " +
+            cmd = (("$(location %s) -I %s/llvm/include " +
+                    "-I %s/clang/include " +
                     "-I $$(dirname $(location %s)) " +
                     "%s $(location %s) %s -o $@") % (
                 tblgen,
+                llvm_project_execroot_path,
+                llvm_project_execroot_path,
                 td_file,
                 opts,
                 td_file,

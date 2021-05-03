@@ -324,6 +324,9 @@ def gentbl(
       test: whether to create a shell test that invokes the tool too.
       **kwargs: Extra keyword arguments to pass to all generated rules.
     """
+    llvm_project_workspace = Label("//:...", relative_to_caller_repository = False)
+    llvm_project_execroot_path = llvm_project_workspace.workspace_root
+
     for (opts_string, out) in tbl_outs:
         # TODO(gcmn): The API of opts as single string is preserved for backward
         # compatibility. Change to taking a sequence.
@@ -349,7 +352,7 @@ def gentbl(
             # TODO(gcmn): Update callers to td_library and explicit includes and
             # drop this hardcoded include.
             td_includes = td_includes + [
-                "external/llvm-project/mlir/include",
+                "%s/mlir/include" % llvm_project_execroot_path,
             ],
             out = out,
             **kwargs
@@ -369,7 +372,7 @@ def gentbl(
                 # TODO(gcmn): Update callers to td_library and explicit includes
                 # and drop this hardcoded include.
                 td_includes = td_includes + [
-                    "external/llvm-project/mlir/include",
+                    "%s/mlir/include" % llvm_project_execroot_path,
                 ],
                 **kwargs
             )
