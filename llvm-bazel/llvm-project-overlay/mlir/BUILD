@@ -1211,6 +1211,7 @@ cc_library(
 td_library(
     name = "SparseTensorTdFiles",
     srcs = [
+        "include/mlir/Dialect/SparseTensor/IR/SparseTensorAttrDefs.td",
         "include/mlir/Dialect/SparseTensor/IR/SparseTensorBase.td",
         "include/mlir/Dialect/SparseTensor/IR/SparseTensorOps.td",
     ],
@@ -1219,6 +1220,24 @@ td_library(
         ":OpBaseTdFiles",
         ":SideEffectInterfacesTdFiles",
     ],
+)
+
+gentbl(
+    name = "SparseTensorAttrDefsIncGen",
+    strip_include_prefix = "include",
+    tbl_outs = [
+        (
+            "--gen-attrdef-decls",
+            "include/mlir/Dialect/SparseTensor/IR/SparseTensorAttrDefs.h.inc",
+        ),
+        (
+            "--gen-attrdef-defs",
+            "include/mlir/Dialect/SparseTensor/IR/SparseTensorAttrDefs.cpp.inc",
+        ),
+    ],
+    tblgen = ":mlir-tblgen",
+    td_file = "include/mlir/Dialect/SparseTensor/IR/SparseTensorAttrDefs.td",
+    deps = [":SparseTensorTdFiles"],
 )
 
 gentbl(
@@ -1255,7 +1274,9 @@ cc_library(
     deps = [
         ":IR",
         ":SideEffectInterfaces",
+        ":SparseTensorAttrDefsIncGen",
         ":SparseTensorOpsIncGen",
+        "//llvm:Support",
     ],
 )
 
@@ -3304,7 +3325,6 @@ cc_library(
 td_library(
     name = "TensorOpsTdFiles",
     srcs = [
-        "include/mlir/Dialect/Tensor/IR/TensorAttrDefs.td",
         "include/mlir/Dialect/Tensor/IR/TensorBase.td",
         "include/mlir/Dialect/Tensor/IR/TensorOps.td",
     ],
@@ -3315,24 +3335,6 @@ td_library(
         ":OpBaseTdFiles",
         ":SideEffectInterfacesTdFiles",
     ],
-)
-
-gentbl(
-    name = "TensorAttrDefsIncGen",
-    strip_include_prefix = "include",
-    tbl_outs = [
-        (
-            "--gen-attrdef-decls",
-            "include/mlir/Dialect/Tensor/IR/TensorAttrDefs.h.inc",
-        ),
-        (
-            "--gen-attrdef-defs",
-            "include/mlir/Dialect/Tensor/IR/TensorAttrDefs.cpp.inc",
-        ),
-    ],
-    tblgen = ":mlir-tblgen",
-    td_file = "include/mlir/Dialect/Tensor/IR/TensorAttrDefs.td",
-    deps = [":TensorOpsTdFiles"],
 )
 
 gentbl(
@@ -3373,7 +3375,6 @@ cc_library(
         ":IR",
         ":SideEffectInterfaces",
         ":Support",
-        ":TensorAttrDefsIncGen",
         ":TensorOpsIncGen",
         "//llvm:Support",
     ],
