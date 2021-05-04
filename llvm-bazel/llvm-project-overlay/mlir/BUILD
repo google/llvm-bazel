@@ -30,6 +30,14 @@ exports_files([
     "run_lit.sh",
 ])
 
+filegroup(
+    name = "c_headers",
+    srcs = glob(["include/mlir-c/**/*"]),  # <== i.e. match the entire tree
+    visibility = [
+        ":friends",
+    ],
+)
+
 [
     gentbl(
         name = name + "IncGen",
@@ -138,11 +146,6 @@ gentbl(
     ],
     tblgen = ":mlir-tblgen",
     td_file = "include/mlir/IR/BuiltinLocationAttributes.td",
-    td_srcs = [
-        "include/mlir/IR/BuiltinLocationAttributes.td",
-        "include/mlir/IR/BuiltinDialect.td",
-        ":OpBaseTdFiles",
-    ],
     deps = [":BuiltinDialectTdFiles"],
 )
 
@@ -413,6 +416,17 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "CAPIRegistration",
+    srcs = ["lib/CAPI/Registration/Registration.cpp"],
+    hdrs = ["include/mlir-c/Registration.h"],
+    includes = ["include"],
+    deps = [
+        ":AllPassesAndDialects",
+        ":CAPIIR",
+        ":LLVMToLLVMIRTranslation",
+    ],
+)
 cc_library(
     name = "MLIRBindingsPythonExtension",
     hdrs = ["include/mlir-c/Bindings/Python/Interop.h"],
@@ -2215,8 +2229,8 @@ cc_library(
         # -DMLIR_GPU_TO_CUBIN_PASS_ENABLE
         ":NVVMToLLVMIRTranslation",
         "//llvm:NVPTXCodeGen",
-        "//third_party/gpus/cuda:cuda_headers",
-        "//third_party/gpus/cuda:libcuda",
+        "@cuda//:cuda_headers",
+        "@cuda//:libcuda",
     ]),
 )
 
@@ -4442,6 +4456,39 @@ cc_binary(
     ],
 )
 
+# This target provides the headers from LLVM's Support target without any of
+# the symbols. In particular, it does not contain the static registration code
+# which may be executed by at most one shared library loaded by ORCJit. Direct
+# dependencies need to avoid requiring symbols from LLVMSupport by adding
+# copts = ["-DLLVM_DISABLE_ABI_BREAKING_CHECKS_ENFORCING=1"].
+#
+# Bazel links the dependencies' object files instead of the archives, which
+# means that symbols are linked in even if none are used. The LLVM cmake build
+# on the other hand links archives (or shared libraries, depending on
+# BUILD_SHARED_LIBS), skipping them if none of the symbols are used.
+# See also https://reviews.llvm.org/D95613.
+cc_headers_only(
+    name = "LLVMSupportHeaders",
+    src = "//llvm:Support",
+)
+
+cc_library(
+    name = "mlir_cuda_runtime",
+    srcs = ["lib/ExecutionEngine/CudaRuntimeWrappers.cpp"],
+    # Prevent needing EnableABIBreakingChecks symbol from LLVMSupport.
+    copts = ["-DLLVM_DISABLE_ABI_BREAKING_CHECKS_ENFORCING=1"],
+    tags = [
+        "manual",  # External dependency
+        "nobuildkite",  # TODO(gcmn): Add support for this target
+    ],
+    deps = [
+        ":LLVMSupportHeaders",
+        ":mlir_c_runner_utils",
+        "@cuda//:cuda_headers",
+        "@cuda//:libcuda",
+    ],
+)
+
 cc_library(
     name = "VulkanRuntime",
     srcs = ["tools/mlir-vulkan-runner/VulkanRuntime.cpp"],
@@ -4487,6 +4534,7 @@ cc_binary(
         ":LLVMDialect",
         ":LLVMToLLVMIRTranslation",
         ":MemRefDialect",
+        ":MemRefTransforms",
         ":MlirJitRunner",
         ":Pass",
         ":SPIRVDialect",
@@ -4511,7 +4559,6 @@ cc_binary(
         ":LLVMDialect",
         ":LLVMToLLVMIRTranslation",
         ":MemRefDialect",
-        ":MemRefTransforms",
         ":MlirJitRunner",
         ":Pass",
         ":SPIRVConversion",
@@ -5689,83 +5736,6 @@ gentbl(
     deps = [":MathOpsTdFiles"],
 )
 
-td_library(
-    name = "MemRefOpsTdFiles",
-    srcs = [
-        "include/mlir/Dialect/MemRef/IR/MemRefBase.td",
-        "include/mlir/Dialect/MemRef/IR/MemRefOps.td",
-    ],
-    includes = ["include"],
-    deps = [
-        ":CastInterfacesTdFiles",
-        ":CopyOpInterfaceTdFiles",
-        ":OpBaseTdFiles",
-        ":SideEffectInterfacesTdFiles",
-        ":ViewLikeInterfaceTdFiles",
-    ],
-)
-
-gentbl(
-    name = "MemRefBaseIncGen",
-    strip_include_prefix = "include",
-    tbl_outs = [
-        (
-            "-gen-dialect-decls -dialect=memref",
-            "include/mlir/Dialect/MemRef/IR/MemRefOpsDialect.h.inc",
-        ),
-    ],
-    tblgen = ":mlir-tblgen",
-    td_file = "include/mlir/Dialect/MemRef/IR/MemRefBase.td",
-    deps = [":MemRefOpsTdFiles"],
-)
-
-gentbl(
-    name = "MemRefOpsIncGen",
-    strip_include_prefix = "include",
-    tbl_outs = [
-        (
-            "-gen-op-decls",
-            "include/mlir/Dialect/MemRef/IR/MemRefOps.h.inc",
-        ),
-        (
-            "-gen-op-defs",
-            "include/mlir/Dialect/MemRef/IR/MemRefOps.cpp.inc",
-        ),
-    ],
-    tblgen = ":mlir-tblgen",
-    td_file = "include/mlir/Dialect/MemRef/IR/MemRefOps.td",
-    deps = [":MemRefOpsTdFiles"],
-)
-
-cc_library(
-    name = "MemRefDialect",
-    srcs = glob(
-        [
-            "lib/Dialect/MemRef/IR/*.cpp",
-            "lib/Dialect/MemRef/IR/*.h",
-            "lib/Dialect/MemRef/Utils/*.cpp",
-        ],
-    ),
-    hdrs = [
-        "include/mlir/Dialect/MemRef/EDSC/Intrinsics.h",
-        "include/mlir/Dialect/MemRef/IR/MemRef.h",
-        "include/mlir/Dialect/MemRef/Utils/MemRefUtils.h",
-    ],
-    includes = ["include"],
-    deps = [
-        ":CopyOpInterface",
-        ":EDSC",
-        ":IR",
-        ":InferTypeOpInterface",
-        ":MemRefBaseIncGen",
-        ":MemRefOpsIncGen",
-        ":StandardOps",
-        ":TensorDialect",
-        ":ViewLikeInterface",
-        "//llvm:Support",
-    ],
-)
-
 gentbl(
     name = "MathOpsIncGen",
     strip_include_prefix = "include",
@@ -5853,6 +5823,83 @@ cc_library(
         ":Transforms",
         ":VectorOps",
         "//llvm:Core",
+        "//llvm:Support",
+    ],
+)
+
+td_library(
+    name = "MemRefOpsTdFiles",
+    srcs = [
+        "include/mlir/Dialect/MemRef/IR/MemRefBase.td",
+        "include/mlir/Dialect/MemRef/IR/MemRefOps.td",
+    ],
+    includes = ["include"],
+    deps = [
+        ":CastInterfacesTdFiles",
+        ":CopyOpInterfaceTdFiles",
+        ":OpBaseTdFiles",
+        ":SideEffectInterfacesTdFiles",
+        ":ViewLikeInterfaceTdFiles",
+    ],
+)
+
+gentbl(
+    name = "MemRefBaseIncGen",
+    strip_include_prefix = "include",
+    tbl_outs = [
+        (
+            "-gen-dialect-decls -dialect=memref",
+            "include/mlir/Dialect/MemRef/IR/MemRefOpsDialect.h.inc",
+        ),
+    ],
+    tblgen = ":mlir-tblgen",
+    td_file = "include/mlir/Dialect/MemRef/IR/MemRefBase.td",
+    deps = [":MemRefOpsTdFiles"],
+)
+
+gentbl(
+    name = "MemRefOpsIncGen",
+    strip_include_prefix = "include",
+    tbl_outs = [
+        (
+            "-gen-op-decls",
+            "include/mlir/Dialect/MemRef/IR/MemRefOps.h.inc",
+        ),
+        (
+            "-gen-op-defs",
+            "include/mlir/Dialect/MemRef/IR/MemRefOps.cpp.inc",
+        ),
+    ],
+    tblgen = ":mlir-tblgen",
+    td_file = "include/mlir/Dialect/MemRef/IR/MemRefOps.td",
+    deps = [":MemRefOpsTdFiles"],
+)
+
+cc_library(
+    name = "MemRefDialect",
+    srcs = glob(
+        [
+            "lib/Dialect/MemRef/IR/*.cpp",
+            "lib/Dialect/MemRef/IR/*.h",
+            "lib/Dialect/MemRef/Utils/*.cpp",
+        ],
+    ),
+    hdrs = [
+        "include/mlir/Dialect/MemRef/EDSC/Intrinsics.h",
+        "include/mlir/Dialect/MemRef/IR/MemRef.h",
+        "include/mlir/Dialect/MemRef/Utils/MemRefUtils.h",
+    ],
+    includes = ["include"],
+    deps = [
+        ":CopyOpInterface",
+        ":EDSC",
+        ":IR",
+        ":InferTypeOpInterface",
+        ":MemRefBaseIncGen",
+        ":MemRefOpsIncGen",
+        ":StandardOps",
+        ":TensorDialect",
+        ":ViewLikeInterface",
         "//llvm:Support",
     ],
 )
