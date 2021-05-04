@@ -440,17 +440,6 @@ cc_library(
     ],
 )
 
-cc_library(
-    name = "CAPIRegistration",
-    srcs = ["lib/CAPI/Registration/Registration.cpp"],
-    hdrs = ["include/mlir-c/Registration.h"],
-    includes = ["include"],
-    deps = [
-        ":AllPassesAndDialects",
-        ":CAPIIR",
-        ":LLVMToLLVMIRTranslation",
-    ],
-)
 
 td_library(
     name = "OpBaseTdFiles",
