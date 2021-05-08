@@ -2002,8 +2002,11 @@ cc_library(
         "lib/ExecutionEngine/RuntimeDyld/*.h",
         "lib/ExecutionEngine/RuntimeDyld/Targets/*.cpp",
         "lib/ExecutionEngine/RuntimeDyld/Targets/*.h",
-        "lib/ExecutionEngine/PerfJITEvents/*.cpp",
-    ]),
+    ]) + select({
+        "@bazel_tools//src/conditions:windows": [],
+        "@bazel_tools//src/conditions:darwin": [],
+        "//conditions:default": glob(["lib/ExecutionEngine/PerfJITEvents/*.cpp"]),
+    }),
     hdrs = glob(
         [
             "include/llvm/ExecutionEngine/*.h",
