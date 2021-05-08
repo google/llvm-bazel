@@ -843,7 +843,7 @@ cc_library(
             "lib/Analysis/*.def",
         ],
         exclude = [
-            # TODO: Add these files to the build.
+            # TODO(mtrofin): Add these files to the build.
             "lib/Analysis/MLInlineAdvisor.cpp",
             "lib/Analysis/DevelopmentModeInlineAdvisor.cpp",
             "lib/Analysis/ReleaseModeModelRunner.cpp",
@@ -856,7 +856,7 @@ cc_library(
             "include/llvm/Analysis/Utils/*.h",
         ],
         exclude = [
-            # TODO: Add this file to the build.
+            # TODO(mtrofin): Add this file to the build.
             "include/llvm/Analysis/Utils/TFUtils.h",
         ],
     ) + [
