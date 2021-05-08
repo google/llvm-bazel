@@ -68,7 +68,7 @@
 #define LLVM_USE_OPROFILE 0
 
 /* Define if we have the perf JIT-support library */
-#define LLVM_USE_PERF 0
+#define LLVM_USE_PERF 1
 
 /* Major version of the LLVM API */
 #define LLVM_VERSION_MAJOR 12

@@ -236,6 +236,8 @@ cc_library(
     ],
 )
 
+# Note: although FileCheck (the binary) is a test utility, some non-test
+# targets depend on the FileCheck library target.
 cc_library(
     name = "FileCheckLib",
     srcs = glob([
@@ -549,16 +551,16 @@ llvm_target_intrinsics_list = [
         "intrinsic_prefix": "r600",
     },
     {
-        "name": "VE",
-        "intrinsic_prefix": "ve",
-    },
-    {
         "name": "RISCV",
         "intrinsic_prefix": "riscv",
     },
     {
         "name": "S390",
         "intrinsic_prefix": "s390",
+    },
+    {
+        "name": "VE",
+        "intrinsic_prefix": "ve",
     },
     {
         "name": "WebAssembly",
@@ -958,6 +960,7 @@ gentbl(
         "include/llvm/CodeGen/*.td",
         "include/llvm/IR/Intrinsics*.td",
     ]) + [
+        "lib/Target/AMDGPU/InstCombineTables.td",
         "include/llvm/TableGen/SearchableTable.td",
     ],
 )
@@ -1124,14 +1127,15 @@ cc_library(
     name = "FrontendOpenMP",
     srcs = glob([
         "lib/Frontend/OpenMP/*.cpp",
-    ]) + [
-        "include/llvm/Frontend/OpenMP/OMP.inc",
-    ],
+    ]),
     hdrs = glob([
         "include/llvm/Frontend/OpenMP/*.h",
         "include/llvm/Frontend/OpenMP/OMP/*.h",
         "include/llvm/Frontend/*.h",
-    ]) + ["include/llvm/Frontend/OpenMP/OMP.h.inc"],
+    ]) + [
+        "include/llvm/Frontend/OpenMP/OMP.h.inc",
+        "include/llvm/Frontend/OpenMP/OMP.inc",
+    ],
     copts = llvm_copts,
     textual_hdrs = glob([
         "include/llvm/Frontend/OpenMP/*.def",
@@ -1998,6 +2002,7 @@ cc_library(
         "lib/ExecutionEngine/RuntimeDyld/*.h",
         "lib/ExecutionEngine/RuntimeDyld/Targets/*.cpp",
         "lib/ExecutionEngine/RuntimeDyld/Targets/*.h",
+        "lib/ExecutionEngine/PerfJITEvents/*.cpp",
     ]),
     hdrs = glob(
         [
@@ -2330,7 +2335,7 @@ cc_library(
 )
 
 cc_library(
-    name = "llvm-exegesis-lib",
+    name = "Exegesis",
     srcs = glob([
         "tools/llvm-exegesis/lib/*.cpp",
         "tools/llvm-exegesis/lib/X86/*.cpp",
@@ -2759,12 +2764,12 @@ cc_binary(
         ":AllTargetsAsmParsers",
         ":AllTargetsCodeGens",
         ":AllTargetsDisassemblers",
+        ":Exegesis",
         ":MC",
         ":MCParser",
         ":Object",
         ":Support",
         ":config",
-        ":llvm-exegesis-lib",
     ],
 )
 
@@ -3296,6 +3301,21 @@ cc_binary(
     ],
 )
 
+cc_binary(
+    name = "llvm-profgen",
+    srcs = glob([
+        "tools/llvm-profgen/*.cpp",
+        "tools/llvm-profgen/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":AllTargetsCodeGens",
+        ":AllTargetsDisassemblers",
+        ":Symbolize",
+    ],
+)
+
 gentbl(
     name = "RcTableGen",
     strip_include_prefix = "tools/llvm-rc",
@@ -3323,9 +3343,7 @@ gentbl(
 # Workaround inability to put `.def` files into `srcs` with a library.
 cc_library(
     name = "llvm-rc-defs-lib",
-    textual_hdrs = glob([
-        "tools/llvm-rc/*.def",
-    ]),
+    textual_hdrs = glob(["tools/llvm-rc/*.def"]),
 )
 
 cc_binary(
@@ -3708,7 +3726,10 @@ cc_library(
         ],
         exclude = ["utils/unittest/googlemock/src/gmock-all.cc"],
     ),
-    hdrs = ["utils/unittest/googlemock/include/gmock/gmock.h"],
+    hdrs = [
+        "utils/unittest/googlemock/include/gmock/gmock.h",
+        "utils/unittest/googlemock/include/gmock/gmock-matchers.h",
+    ],
     copts = llvm_copts,
     includes = [
         "include",
