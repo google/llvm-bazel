@@ -41,7 +41,6 @@ linux_defines = posix_defines + [
     "HAVE_POSIX_FALLOCATE=1",
     "HAVE_SBRK=1",
     "HAVE_STRUCT_STAT_ST_MTIM_TV_NSEC=1",
-    "LLVM_USE_PERF=1",
 ]
 
 macos_defines = posix_defines + [

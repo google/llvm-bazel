@@ -68,7 +68,7 @@
 #define LLVM_USE_OPROFILE 0
 
 /* Define if we have the perf JIT-support library */
-/* LLVM_USE_PERF defined in Bazel */
+#define LLVM_USE_PERF 0
 
 /* Major version of the LLVM API */
 #define LLVM_VERSION_MAJOR 12
