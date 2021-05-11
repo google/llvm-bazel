@@ -5,14 +5,8 @@
 load("//mlir:tblgen.bzl", "gentbl", "td_library")
 
 package(
-    default_visibility = [":test_friends"],
+    default_visibility = ["//visibility:public"],
     licenses = ["notice"],
-)
-
-# Please only depend on this from MLIR tests.
-package_group(
-    name = "test_friends",
-    packages = ["//..."],
 )
 
 cc_library(

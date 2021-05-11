@@ -10,18 +10,8 @@ load(":linalggen.bzl", "genlinalg")
 load(":build_defs.bzl", "cc_headers_only", "if_cuda_available")
 
 package(
-    default_visibility = [":friends"],
+    default_visibility = ["//visibility:public"],
     licenses = ["notice"],
-)
-
-package_group(
-    name = "subpackages",
-    packages = ["//mlir/..."],
-)
-
-package_group(
-    name = "friends",
-    packages = ["//..."],
 )
 
 exports_files([
@@ -33,9 +23,6 @@ exports_files([
 filegroup(
     name = "c_headers",
     srcs = glob(["include/mlir-c/**/*"]),  # <== i.e. match the entire tree
-    visibility = [
-        ":friends",
-    ],
 )
 
 [
@@ -5826,37 +5813,34 @@ cc_library(
     ],
 )
 
-exports_files(
-    [
-        "include/mlir/Bindings/Python/Attributes.td",
-        "include/mlir/Interfaces/CallInterfaces.h",
-        "include/mlir/Interfaces/CallInterfaces.td",
-        "include/mlir/Interfaces/CastInterfaces.h",
-        "include/mlir/Interfaces/CastInterfaces.td",
-        "include/mlir/Interfaces/ControlFlowInterfaces.h",
-        "include/mlir/Interfaces/ControlFlowInterfaces.td",
-        "include/mlir/Interfaces/CopyOpInterface.td",
-        "include/mlir/Interfaces/DataLayoutInterfaces.td",
-        "include/mlir/Interfaces/InferTypeOpInterface.td",
-        "include/mlir/Interfaces/LoopLikeInterface.td",
-        "include/mlir/Interfaces/SideEffectInterfaceBase.td",
-        "include/mlir/Interfaces/SideEffectInterfaces.td",
-        "include/mlir/Interfaces/VectorInterfaces.td",
-        "include/mlir/Interfaces/ViewLikeInterface.td",
-        "include/mlir/Dialect/DLTI/DLTIBase.td",
-        "include/mlir/Dialect/LLVMIR/LLVMOpBase.td",
-        "include/mlir/Dialect/StandardOps/IR/Ops.td",
-        "include/mlir/Dialect/Shape/IR/ShapeOps.td",
-        "include/mlir/Dialect/Shape/IR/ShapeBase.td",
-        "include/mlir/IR/OpAsmInterface.td",
-        "include/mlir/IR/OpBase.td",
-        "include/mlir/IR/RegionKindInterface.td",
-        "include/mlir/IR/SymbolInterfaces.td",
-        "include/mlir/IR/TensorEncoding.td",
-        "include/mlir/Transforms/InliningUtils.h",
-    ],
-    visibility = [":friends"],
-)
+exports_files([
+    "include/mlir/Bindings/Python/Attributes.td",
+    "include/mlir/Interfaces/CallInterfaces.h",
+    "include/mlir/Interfaces/CallInterfaces.td",
+    "include/mlir/Interfaces/CastInterfaces.h",
+    "include/mlir/Interfaces/CastInterfaces.td",
+    "include/mlir/Interfaces/ControlFlowInterfaces.h",
+    "include/mlir/Interfaces/ControlFlowInterfaces.td",
+    "include/mlir/Interfaces/CopyOpInterface.td",
+    "include/mlir/Interfaces/DataLayoutInterfaces.td",
+    "include/mlir/Interfaces/InferTypeOpInterface.td",
+    "include/mlir/Interfaces/LoopLikeInterface.td",
+    "include/mlir/Interfaces/SideEffectInterfaceBase.td",
+    "include/mlir/Interfaces/SideEffectInterfaces.td",
+    "include/mlir/Interfaces/VectorInterfaces.td",
+    "include/mlir/Interfaces/ViewLikeInterface.td",
+    "include/mlir/Dialect/DLTI/DLTIBase.td",
+    "include/mlir/Dialect/LLVMIR/LLVMOpBase.td",
+    "include/mlir/Dialect/StandardOps/IR/Ops.td",
+    "include/mlir/Dialect/Shape/IR/ShapeOps.td",
+    "include/mlir/Dialect/Shape/IR/ShapeBase.td",
+    "include/mlir/IR/OpAsmInterface.td",
+    "include/mlir/IR/OpBase.td",
+    "include/mlir/IR/RegionKindInterface.td",
+    "include/mlir/IR/SymbolInterfaces.td",
+    "include/mlir/IR/TensorEncoding.td",
+    "include/mlir/Transforms/InliningUtils.h",
+])
 
 td_library(
     name = "MathOpsTdFiles",
