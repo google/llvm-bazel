@@ -449,6 +449,10 @@ cc_library(
         "include",
         "lib/Bindings/Python",
     ],
+    tags = [
+        "manual",  # External dependency
+        "nobuildkite",  # TODO(gcmn): Add support for this target
+    ],
     textual_hdrs = glob([
         "lib/Bindings/Python/*.h",
         "include/mlir-c/Bindings/Python/*.h",
