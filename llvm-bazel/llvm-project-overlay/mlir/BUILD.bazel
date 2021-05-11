@@ -456,8 +456,8 @@ cc_library(
     ]),
     deps = [
         ":CAPIIR",
-        "//third_party/pybind11",
-        "//third_party/python_runtime:headers",
+        "@pybind11",
+        "@python_runtime//:headers",
     ],
 )
 
