@@ -1514,6 +1514,39 @@ cc_library(
 )
 
 cc_library(
+    name = "interpreter",
+    srcs = glob([
+        "lib/Interpreter/*.cpp",
+        "lib/Interpreter/*.h",
+    ]),
+    hdrs = glob(["include/clang/Interpreter/*.h"]),
+    includes = ["include"],
+    visibility = ["//third_party/llvm/google3_users:clang_api_users"],
+    deps = [
+        ":analysis",
+        ":ast",
+        ":basic",
+        ":codegen",
+        ":driver",
+        ":edit",
+        ":frontend",
+        ":frontend_tool",
+        ":lex",
+        ":parse",
+        ":sema",
+        ":serialization",
+        "//llvm:AllTargetsAsmParsers",
+        "//llvm:AllTargetsCodeGens",
+        "//llvm:Core",
+        "//llvm:ExecutionEngine",
+        "//llvm:Option",
+        "//llvm:OrcJIT",
+        "//llvm:Support",
+        "//llvm:Target",
+    ],
+)
+
+cc_library(
     name = "codegen",
     srcs = glob([
         "lib/CodeGen/*.cpp",
@@ -2014,6 +2047,23 @@ cc_binary(
         ":rewrite",
         ":tooling",
         ":tooling_refactoring",
+        "//llvm:Support",
+    ],
+)
+
+cc_binary(
+    name = "clang-repl",
+    srcs = glob(["tools/clang-repl/*.cpp"]),
+    stamp = 0,
+    deps = [
+        ":basic",
+        ":frontend",
+        ":interpreter",
+        ":tooling",
+        "//llvm:Core",
+        "//llvm:LineEditor",
+        "//llvm:Option",
+        "//llvm:OrcJIT",
         "//llvm:Support",
     ],
 )
