@@ -1521,7 +1521,6 @@ cc_library(
     ]),
     hdrs = glob(["include/clang/Interpreter/*.h"]),
     includes = ["include"],
-    visibility = ["//third_party/llvm/google3_users:clang_api_users"],
     deps = [
         ":analysis",
         ":ast",
