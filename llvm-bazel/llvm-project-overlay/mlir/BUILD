@@ -417,6 +417,7 @@ cc_library(
     deps = [
         ":CAPIIR",
         ":ExecutionEngine",
+        ":ExecutionEngineUtils",
         ":LLVMToLLVMIRTranslation",
         "//llvm:OrcJIT",
         "//llvm:Support",
