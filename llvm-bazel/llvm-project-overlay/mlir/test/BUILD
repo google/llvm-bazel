@@ -28,8 +28,10 @@ cc_library(
     deps = [
         ":TestDialect",
         "//llvm:Support",
+        "//mlir:Affine",
         "//mlir:Analysis",
         "//mlir:IR",
+        "//mlir:MemRefDialect",
         "//mlir:Pass",
         "//mlir:Support",
     ],
@@ -221,18 +223,7 @@ cc_library(
 
 cc_library(
     name = "TestIR",
-    srcs = [
-        "lib/IR/TestFunc.cpp",
-        "lib/IR/TestInterfaces.cpp",
-        "lib/IR/TestMatchers.cpp",
-        "lib/IR/TestPrintDefUse.cpp",
-        "lib/IR/TestPrintNesting.cpp",
-        "lib/IR/TestSideEffects.cpp",
-        "lib/IR/TestSlicing.cpp",
-        "lib/IR/TestSymbolUses.cpp",
-        "lib/IR/TestTypes.cpp",
-        "lib/IR/TestVisitors.cpp",
-    ],
+    srcs = glob(["lib/IR/*.cpp"]),
     deps = [
         ":TestDialect",
         "//llvm:Support",
@@ -247,9 +238,7 @@ cc_library(
 
 cc_library(
     name = "TestPass",
-    srcs = [
-        "lib/Pass/TestPassManager.cpp",
-    ],
+    srcs = glob(["lib/Pass/*.cpp"]),
     deps = [
         "//llvm:Support",
         "//mlir:IR",
@@ -290,43 +279,30 @@ cc_library(
     includes = ["lib/Dialect/Test"],
     deps = [
         ":TestDialect",
-        "//llvm:NVPTXCodeGen",
         "//llvm:Support",
         "//mlir:Affine",
-        "//mlir:AffineTransforms",
         "//mlir:Analysis",
-        "//mlir:DLTIDialect",
-        "//mlir:EDSC",
-        "//mlir:GPUDialect",
-        "//mlir:GPUToGPURuntimeTransforms",
-        "//mlir:GPUTransforms",
         "//mlir:IR",
-        "//mlir:LLVMDialect",
-        "//mlir:LLVMToLLVMIRTranslation",
-        "//mlir:LLVMTransforms",
-        "//mlir:LinalgOps",
-        "//mlir:LinalgTransforms",
         "//mlir:MathDialect",
-        "//mlir:MathTransforms",
-        "//mlir:MemRefDialect",
-        "//mlir:NVVMDialect",
-        "//mlir:NVVMToLLVMIRTranslation",
         "//mlir:Pass",
-        "//mlir:ROCDLDialect",
-        "//mlir:ROCDLToLLVMIRTranslation",
         "//mlir:SCFDialect",
         "//mlir:SPIRVDialect",
-        "//mlir:SparseTensor",
-        "//mlir:SparseTensorTransforms",
         "//mlir:StandardOps",
-        "//mlir:StandardOpsTransforms",
-        "//mlir:Support",
-        "//mlir:ToLLVMIRTranslation",
         "//mlir:TransformUtils",
-        "//mlir:Transforms",
-        "//mlir:VectorOps",
-        "//mlir:VectorToLLVM",
-        "//mlir:VectorToSCF",
+    ],
+)
+
+cc_library(
+    name = "TestStandardToLLVM",
+    srcs = glob(["lib/Conversion/StandardToLLVM/*.cpp"]),
+    defines = ["MLIR_CUDA_CONVERSIONS_ENABLED"],
+    includes = ["lib/Dialect/Test"],
+    deps = [
+        ":TestDialect",
+        "//mlir:LLVMDialect",
+        "//mlir:LLVMTransforms",
+        "//mlir:Pass",
+        "//mlir:StandardOps",
     ],
 )
 
@@ -347,6 +323,91 @@ cc_library(
         "//mlir:Support",
         "//mlir:Transforms",
         "//mlir:VectorOps",
+    ],
+)
+
+cc_library(
+    name = "TestDLTI",
+    srcs = glob(["lib/Dialect/DLTI/*.cpp"]),
+    defines = ["MLIR_CUDA_CONVERSIONS_ENABLED"],
+    includes = ["lib/Dialect/Test"],
+    deps = [
+        ":TestDialect",
+        "//mlir:DLTIDialect",
+        "//mlir:IR",
+        "//mlir:Pass",
+    ],
+)
+
+cc_library(
+    name = "TestGPU",
+    srcs = glob(["lib/Dialect/GPU/*.cpp"]),
+    defines = ["MLIR_CUDA_CONVERSIONS_ENABLED"],
+    includes = ["lib/Dialect/Test"],
+    deps = [
+        "//llvm:Support",
+        "//mlir:Affine",
+        "//mlir:GPUDialect",
+        "//mlir:GPUTransforms",
+        "//mlir:IR",
+        "//mlir:MemRefDialect",
+        "//mlir:NVVMToLLVMIRTranslation",
+        "//mlir:Pass",
+        "//mlir:ROCDLToLLVMIRTranslation",
+        "//mlir:SCFDialect",
+        "//mlir:SPIRVDialect",
+        "//mlir:StandardOps",
+        "//mlir:ToLLVMIRTranslation",
+        "//mlir:TransformUtils",
+    ],
+)
+
+cc_library(
+    name = "TestLinalg",
+    srcs = glob(["lib/Dialect/Linalg/*.cpp"]),
+    defines = ["MLIR_CUDA_CONVERSIONS_ENABLED"],
+    includes = ["lib/Dialect/Test"],
+    deps = [
+        "//llvm:Support",
+        "//mlir:Affine",
+        "//mlir:GPUDialect",
+        "//mlir:IR",
+        "//mlir:LinalgOps",
+        "//mlir:LinalgTransforms",
+        "//mlir:Pass",
+        "//mlir:StandardOps",
+        "//mlir:TransformUtils",
+        "//mlir:VectorOps",
+        "//mlir:VectorToSCF",
+    ],
+)
+
+cc_library(
+    name = "TestMath",
+    srcs = glob(["lib/Dialect/Math/*.cpp"]),
+    defines = ["MLIR_CUDA_CONVERSIONS_ENABLED"],
+    includes = ["lib/Dialect/Test"],
+    deps = [
+        "//mlir:LLVMDialect",
+        "//mlir:MathDialect",
+        "//mlir:MathTransforms",
+        "//mlir:Pass",
+        "//mlir:TransformUtils",
+        "//mlir:VectorOps",
+    ],
+)
+
+cc_library(
+    name = "TestSCF",
+    srcs = glob(["lib/Dialect/SCF/*.cpp"]),
+    defines = ["MLIR_CUDA_CONVERSIONS_ENABLED"],
+    includes = ["lib/Dialect/Test"],
+    deps = [
+        "//llvm:Support",
+        "//mlir:IR",
+        "//mlir:Pass",
+        "//mlir:SCFDialect",
+        "//mlir:TransformUtils",
     ],
 )
 
@@ -377,6 +438,41 @@ cc_library(
         "//mlir:SPIRVDialect",
         "//mlir:SPIRVModuleCombiner",
         "//mlir:Transforms",
+    ],
+)
+
+cc_library(
+    name = "TestStandardOps",
+    srcs = glob(["lib/Dialect/StandardOps/*.cpp"]),
+    defines = ["MLIR_CUDA_CONVERSIONS_ENABLED"],
+    includes = ["lib/Dialect/Test"],
+    deps = [
+        ":TestDialect",
+        "//mlir:Affine",
+        "//mlir:IR",
+        "//mlir:Pass",
+        "//mlir:StandardOps",
+        "//mlir:StandardOpsTransforms",
+        "//mlir:TransformUtils",
+    ],
+)
+
+cc_library(
+    name = "TestVector",
+    srcs = glob(["lib/Dialect/Vector/*.cpp"]),
+    defines = ["MLIR_CUDA_CONVERSIONS_ENABLED"],
+    includes = ["lib/Dialect/Test"],
+    deps = [
+        "//mlir:Affine",
+        "//mlir:Analysis",
+        "//mlir:LinalgOps",
+        "//mlir:MemRefDialect",
+        "//mlir:Pass",
+        "//mlir:SCFDialect",
+        "//mlir:StandardOps",
+        "//mlir:TransformUtils",
+        "//mlir:VectorOps",
+        "//mlir:VectorToSCF",
     ],
 )
 
