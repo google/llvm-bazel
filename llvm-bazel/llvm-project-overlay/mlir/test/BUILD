@@ -345,6 +345,7 @@ cc_library(
     defines = ["MLIR_CUDA_CONVERSIONS_ENABLED"],
     includes = ["lib/Dialect/Test"],
     deps = [
+        "//llvm:NVPTXCodeGen",
         "//llvm:Support",
         "//mlir:Affine",
         "//mlir:GPUDialect",
