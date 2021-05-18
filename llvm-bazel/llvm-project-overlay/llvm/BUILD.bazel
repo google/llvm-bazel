@@ -1944,7 +1944,7 @@ cc_library(
         "lib/Passes/*.cpp",
         "lib/Passes/*.h",
     ]),
-    hdrs = glob(["include/llvm/Passes/*.h"]),
+    hdrs = glob(["include/llvm/Passes/*.h"]) + ["include/llvm-c/Transforms/PassBuilder.h"],
     copts = llvm_copts,
     deps = [
         ":Analysis",
