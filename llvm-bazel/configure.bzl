@@ -2,7 +2,11 @@
 # See https://llvm.org/LICENSE.txt for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-"""Configures an LLVM overlay project."""
+"""Helper macros to configure the LLVM overlay project."""
+
+load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
+load(":zlib.bzl", "llvm_zlib_disable", "llvm_zlib_system")
+load(":terminfo.bzl", "llvm_terminfo_disable", "llvm_terminfo_system")
 
 # Directory of overlay files relative to WORKSPACE
 DEFAULT_OVERLAY_PATH = "llvm-project-overlay"
@@ -114,3 +118,25 @@ llvm_configure = repository_rule(
         "targets": attr.string_list(default = DEFAULT_TARGETS),
     },
 )
+
+def llvm_disable_optional_support_deps():
+    maybe(
+        llvm_zlib_disable,
+        name = "llvm_zlib",
+    )
+
+    maybe(
+        llvm_terminfo_disable,
+        name = "llvm_terminfo",
+    )
+
+def llvm_use_system_support_deps():
+    maybe(
+        llvm_zlib_system,
+        name = "llvm_zlib",
+    )
+
+    maybe(
+        llvm_terminfo_system,
+        name = "llvm_terminfo",
+    )
