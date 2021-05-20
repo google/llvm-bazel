@@ -233,9 +233,6 @@
 /* Define if the setupterm() function is supported this platform. */
 /* LLVM_ENABLE_TERMINFO defined in Bazel */
 
-/* Define if the xar_open() function is supported this platform. */
-/* #undef HAVE_LIBXAR */
-
 /* Define to 1 if you have the <termios.h> header file. */
 #define HAVE_TERMIOS_H 1
 
