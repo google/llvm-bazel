@@ -15,8 +15,18 @@ suitable for more general usage.
 
 # Status
 
-MLIR has Cuda support and the mlir-vulkan-runner disabled. LLVM does not yet
-have configuration detection and hardcodes values in the config.
+This build configuration is moving upstream to the LLVM monorepo, where it will
+be located in a side directory maintained by the subcommunity interested in the
+Bazel build. This is following the
+[upstreaming proposal](https://github.com/llvm/llvm-www/blob/main/proposals/LP0002-BazelBuildConfiguration.md).
+The patch to introduce the files is at https://reviews.llvm.org/D90352. It will
+be possible to use the build files in their new location using a very similar
+mechanism.
+
+In the meantime, please continue to send PRs or issues, but know that major
+changes will likely be paused until the upstreaming completes. When upstreaming
+is complete this repository will see less regular maintenance, though patches
+will still be accepted.
 
 # Usage
 
