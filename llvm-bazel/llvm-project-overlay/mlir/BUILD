@@ -5517,7 +5517,6 @@ cc_library(
         "lib/Dialect/Linalg/IR/LinalgTypes.cpp",
     ],
     hdrs = [
-        "include/mlir/Dialect/Linalg/EDSC/Intrinsics.h",
         "include/mlir/Dialect/Linalg/IR/LinalgOps.h",
         "include/mlir/Dialect/Linalg/IR/LinalgTypes.h",
     ],
@@ -5583,13 +5582,10 @@ cc_library(
         "lib/Dialect/Linalg/Transforms/*.h",
     ]) + [
         "lib/Dialect/Linalg/Analysis/DependenceAnalysis.cpp",
-        "lib/Dialect/Linalg/EDSC/Builders.cpp",
         "lib/Dialect/Linalg/Utils/Utils.cpp",
     ],
     hdrs = [
         "include/mlir/Dialect/Linalg/Analysis/DependenceAnalysis.h",
-        "include/mlir/Dialect/Linalg/EDSC/Builders.h",
-        "include/mlir/Dialect/Linalg/EDSC/FoldedIntrinsics.h",
         "include/mlir/Dialect/Linalg/Passes.h",
         "include/mlir/Dialect/Linalg/Transforms/CodegenStrategy.h",
         "include/mlir/Dialect/Linalg/Transforms/Hoisting.h",
@@ -6250,7 +6246,6 @@ cc_library(
         ],
     ),
     hdrs = [
-        "include/mlir/Dialect/MemRef/EDSC/Intrinsics.h",
         "include/mlir/Dialect/MemRef/IR/MemRef.h",
         "include/mlir/Dialect/MemRef/Utils/MemRefUtils.h",
     ],
