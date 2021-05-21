@@ -1934,6 +1934,12 @@ filegroup(
 )
 
 filegroup(
+    name = "module-deps-to-rsp",
+    testonly = 1,
+    data = ["utils/module-deps-to-rsp.py"],
+)
+
+filegroup(
     name = "hmaptool",
     testonly = 1,
     data = ["utils/hmaptool/hmaptool"],
