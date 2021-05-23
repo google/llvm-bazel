@@ -5,6 +5,7 @@
 load(":template_rule.bzl", "template_rule")
 load(":tblgen.bzl", "gentbl")
 load(":config.bzl", "llvm_config_defines")
+load(":targets.bzl", "llvm_targets")
 load(":binary_alias.bzl", "binary_alias")
 
 package(
@@ -21,21 +22,6 @@ exports_files(["LICENSE.TXT"])
 # this `Make` variable.
 llvm_copts = [
     "$(STACK_FRAME_UNLIMITED)",
-]
-
-llvm_targets = [
-    "AArch64",
-    "AMDGPU",
-    "ARM",
-    "BPF",
-    "Hexagon",
-    "Lanai",
-    "NVPTX",
-    "PowerPC",
-    "RISCV",
-    "Sparc",
-    "WebAssembly",
-    "X86",
 ]
 
 template_rule(
@@ -56,7 +42,8 @@ template_rule(
     },
 )
 
-llvm_target_asm_parsers = [
+# List of targets with ASM parsers, filtered to our list of overall targets.
+llvm_target_asm_parsers = [t for t in [
     "AArch64",
     "AMDGPU",
     "ARM",
@@ -68,7 +55,7 @@ llvm_target_asm_parsers = [
     "Sparc",
     "WebAssembly",
     "X86",
-]
+] if t in llvm_targets]
 
 template_rule(
     name = "asm_parsers_def_gen",
@@ -79,7 +66,8 @@ template_rule(
     },
 )
 
-llvm_target_disassemblers = [
+# List of targets with disassemblers, filtered to our list of overall targets.
+llvm_target_disassemblers = [t for t in [
     "AArch64",
     "AMDGPU",
     "ARM",
@@ -91,7 +79,7 @@ llvm_target_disassemblers = [
     "Sparc",
     "WebAssembly",
     "X86",
-]
+] if t in llvm_targets]
 
 template_rule(
     name = "disassemblers_def_gen",
@@ -513,6 +501,8 @@ gentbl(
     ]),
 )
 
+# Note that the intrinsics are not currently set up so they can be pruneed for
+# disabled targets.
 llvm_target_intrinsics_list = [
     {
         "name": "AArch64",
@@ -1417,7 +1407,7 @@ cc_library(
     ],
 )
 
-llvm_target_list = [
+llvm_target_lib_list = [lib for lib in [
     {
         "name": "AArch64",
         "short_name": "AArch64",
@@ -1629,7 +1619,7 @@ llvm_target_list = [
             ("-gen-exegesis", "lib/Target/X86/X86GenExegesis.inc"),
         ],
     },
-]
+] if lib["name"] in llvm_targets]
 
 cc_library(
     name = "x86_target_layering_problem_hdrs",
@@ -1886,14 +1876,14 @@ gentbl(
             ":" + target["name"] + "UtilsAndDesc",
         ],
     )],
-] for target in llvm_target_list]
+] for target in llvm_target_lib_list]
 
 cc_library(
     name = "AllTargetsCodeGens",
     copts = llvm_copts,
     deps = [
         target["name"] + "CodeGen"
-        for target in llvm_target_list
+        for target in llvm_target_lib_list
     ],
 )
 
@@ -1902,7 +1892,7 @@ cc_library(
     copts = llvm_copts,
     deps = [
         target["name"] + "AsmParser"
-        for target in llvm_target_list
+        for target in llvm_target_lib_list
     ],
 )
 
@@ -1911,7 +1901,7 @@ cc_library(
     copts = llvm_copts,
     deps = [
         target["name"] + "Disassembler"
-        for target in llvm_target_list
+        for target in llvm_target_lib_list
     ],
 )
 
