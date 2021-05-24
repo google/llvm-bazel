@@ -501,7 +501,7 @@ gentbl(
     ]),
 )
 
-# Note that the intrinsics are not currently set up so they can be pruneed for
+# Note that the intrinsics are not currently set up so they can be pruned for
 # disabled targets.
 llvm_target_intrinsics_list = [
     {
