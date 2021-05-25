@@ -195,6 +195,7 @@ cc_library(
     hdrs = glob([
         "include/llvm/Support/**/*.h",
         "include/llvm/ADT/*.h",
+        "include/llvm/MC/*.h",  # TODO(b/189134997)
     ]) + [
         "include/llvm-c/Core.h",
         "include/llvm-c/DataTypes.h",
@@ -932,6 +933,7 @@ cc_library(
         "lib/Transforms/Utils/*.h",
     ]),
     hdrs = glob(["include/llvm/Transforms/Utils/*.h"]) + [
+        "include/llvm/Transforms/Scalar/LoopPassManager.h",
         "include/llvm/Transforms/Utils.h",
         "include/llvm-c/Transforms/Utils.h",
     ],
