@@ -932,6 +932,7 @@ cc_library(
         "lib/Transforms/Utils/*.h",
     ]),
     hdrs = glob(["include/llvm/Transforms/Utils/*.h"]) + [
+        "include/llvm/Transforms/Scalar/LoopPassManager.h",
         "include/llvm/Transforms/Utils.h",
         "include/llvm-c/Transforms/Utils.h",
     ],
