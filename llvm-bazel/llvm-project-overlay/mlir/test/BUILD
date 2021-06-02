@@ -213,6 +213,7 @@ cc_library(
         "//mlir:InferTypeOpInterface",
         "//mlir:MemRefDialect",
         "//mlir:Pass",
+        "//mlir:Reducer",
         "//mlir:SideEffects",
         "//mlir:StandardOps",
         "//mlir:StandardOpsTransforms",
