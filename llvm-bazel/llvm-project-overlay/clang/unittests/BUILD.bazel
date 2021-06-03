@@ -212,7 +212,10 @@ cc_test(
     name = "lex_tests",
     size = "small",
     srcs = glob(
-        ["Lex/*.cpp"],
+        [
+          "Lex/*.cpp",
+          "Lex/*.h",
+        ],
         allow_empty = False,
     ),
     copts = ["$(STACK_FRAME_UNLIMITED)"],
