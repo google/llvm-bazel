@@ -179,6 +179,14 @@ gentbl_cc_library(
             ["--gen-typedef-defs"],
             "include/mlir/IR/BuiltinTypes.cpp.inc",
         ),
+        (
+            ["--gen-type-interface-decls"],
+            "include/mlir/IR/BuiltinTypeInterfaces.h.inc",
+        ),
+        (
+            ["--gen-type-interface-defs"],
+            "include/mlir/IR/BuiltinTypeInterfaces.cpp.inc",
+        ),
     ],
     tblgen = ":mlir-tblgen",
     td_file = "include/mlir/IR/BuiltinTypes.td",
@@ -1661,6 +1669,7 @@ cc_library(
         ":LinalgToStandard",
         ":MathToLibm",
         ":OpenACCToLLVM",
+        ":OpenACCToSCF",
         ":OpenMPToLLVM",
         ":PDLToPDLInterp",
         ":SCFToGPUPass",
@@ -2396,6 +2405,7 @@ cc_library(
         ":GPUOpsIncGen",
         ":IR",
         ":LLVMDialect",
+        ":MemRefDialect",
         ":SideEffectInterfaces",
         ":StandardOps",
         ":Support",
@@ -3962,6 +3972,7 @@ cc_library(
     ],
     includes = ["include"],
     deps = [
+        ":Analysis",
         ":ConversionPassIncGen",
         ":DataLayoutInterfaces",
         ":IR",
@@ -4171,6 +4182,7 @@ cc_library(
         ":Affine",
         ":CallOpInterfaces",
         ":ControlFlowInterfaces",
+        ":DataLayoutInterfaces",
         ":IR",
         ":LinalgOps",
         ":SCFDialect",
@@ -5027,6 +5039,7 @@ cc_library(
         ":IR",
         ":OpenACCOpsIncGen",
         ":StandardOps",
+        ":Transforms",
         "//llvm:Support",
     ],
 )
@@ -5121,6 +5134,27 @@ cc_library(
         ":SideEffectInterfaces",
         ":StandardOps",
         "//llvm:Support",
+    ],
+)
+
+cc_library(
+    name = "OpenACCToSCF",
+    srcs = glob([
+        "lib/Conversion/OpenACCToSCF/*.cpp",
+        "lib/Conversion/OpenACCToSCF/*.h",
+    ]) + ["lib/Conversion/PassDetail.h"],
+    hdrs = glob([
+        "include/mlir/Conversion/OpenACCToSCF/*.h",
+    ]),
+    includes = ["include"],
+    deps = [
+        ":ConversionPassIncGen",
+        ":IR",
+        ":OpenACCDialect",
+        ":Pass",
+        ":SCFDialect",
+        ":StandardOps",
+        ":Transforms",
     ],
 )
 
