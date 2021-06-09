@@ -1094,6 +1094,7 @@ cc_library(
     hdrs = glob(["include/clang/Tooling/DependencyScanning/**/*.h"]),
     deps = [
         ":basic",
+        ":codegen",
         ":frontend",
         ":lex",
         ":serialization",
