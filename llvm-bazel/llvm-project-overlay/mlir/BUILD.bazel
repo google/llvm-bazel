@@ -166,6 +166,14 @@ gentbl_cc_library(
             ["--gen-typedef-defs"],
             "include/mlir/IR/BuiltinTypes.cpp.inc",
         ),
+        (
+            ["--gen-type-interface-decls"],
+            "include/mlir/IR/BuiltinTypeInterfaces.h.inc",
+        ),
+        (
+            ["--gen-type-interface-defs"],
+            "include/mlir/IR/BuiltinTypeInterfaces.cpp.inc",
+        ),
     ],
     tblgen = ":mlir-tblgen",
     td_file = "include/mlir/IR/BuiltinTypes.td",
@@ -1648,6 +1656,7 @@ cc_library(
         ":LinalgToStandard",
         ":MathToLibm",
         ":OpenACCToLLVM",
+        ":OpenACCToSCF",
         ":OpenMPToLLVM",
         ":PDLToPDLInterp",
         ":SCFToGPUPass",
@@ -2383,6 +2392,7 @@ cc_library(
         ":GPUOpsIncGen",
         ":IR",
         ":LLVMDialect",
+        ":MemRefDialect",
         ":SideEffectInterfaces",
         ":StandardOps",
         ":Support",
@@ -3949,6 +3959,7 @@ cc_library(
     ],
     includes = ["include"],
     deps = [
+        ":Analysis",
         ":ConversionPassIncGen",
         ":DataLayoutInterfaces",
         ":IR",
@@ -4158,6 +4169,7 @@ cc_library(
         ":Affine",
         ":CallOpInterfaces",
         ":ControlFlowInterfaces",
+        ":DataLayoutInterfaces",
         ":IR",
         ":LinalgOps",
         ":SCFDialect",
@@ -5014,6 +5026,7 @@ cc_library(
         ":IR",
         ":OpenACCOpsIncGen",
         ":StandardOps",
+        ":Transforms",
         "//llvm:Support",
     ],
 )
@@ -5108,6 +5121,27 @@ cc_library(
         ":SideEffectInterfaces",
         ":StandardOps",
         "//llvm:Support",
+    ],
+)
+
+cc_library(
+    name = "OpenACCToSCF",
+    srcs = glob([
+        "lib/Conversion/OpenACCToSCF/*.cpp",
+        "lib/Conversion/OpenACCToSCF/*.h",
+    ]) + ["lib/Conversion/PassDetail.h"],
+    hdrs = glob([
+        "include/mlir/Conversion/OpenACCToSCF/*.h",
+    ]),
+    includes = ["include"],
+    deps = [
+        ":ConversionPassIncGen",
+        ":IR",
+        ":OpenACCDialect",
+        ":Pass",
+        ":SCFDialect",
+        ":StandardOps",
+        ":Transforms",
     ],
 )
 
@@ -6348,6 +6382,22 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "MlirReduceLib",
+    srcs = ["lib/Tools/mlir-reduce/MlirReduceMain.cpp"],
+    hdrs = ["include/mlir/Tools/mlir-reduce/MlirReduceMain.h"],
+    includes = ["include"],
+    deps = [
+        ":IR",
+        ":Parser",
+        ":Pass",
+        ":Reducer",
+        ":Rewrite",
+        ":Support",
+        "//llvm:Support",
+    ],
+)
+
 cc_binary(
     name = "mlir-reduce",
     srcs = ["tools/mlir-reduce/mlir-reduce.cpp"],
@@ -6357,6 +6407,7 @@ cc_binary(
     deps = [
         ":AllPassesAndDialects",
         ":IR",
+        ":MlirReduceLib",
         ":Parser",
         ":Pass",
         ":Reducer",
