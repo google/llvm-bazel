@@ -2257,6 +2257,7 @@ cc_library(
     includes = ["include"],
     deps = [
         ":ControlFlowInterfaces",
+        ":DataLayoutInterfaces",
         ":IR",
         ":LLVMDialectAttributesIncGen",
         ":LLVMDialectInterfaceIncGen",
