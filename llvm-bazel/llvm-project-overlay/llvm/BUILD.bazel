@@ -3966,6 +3966,22 @@ cc_binary(
 )
 
 cc_binary(
+    name = "llvm-tapi-diff",
+    testonly = True,
+    srcs = glob([
+        "tools/llvm-tapi-diff/*.cpp",
+        "tools/llvm-tapi-diff/*.h",
+    ]),
+    copts = llvm_copts,
+    stamp = 0,
+    deps = [
+        ":Object",
+        ":Support",
+        ":TextAPI",
+    ],
+)
+
+cc_binary(
     name = "obj2yaml",
     testonly = True,
     srcs = glob([
