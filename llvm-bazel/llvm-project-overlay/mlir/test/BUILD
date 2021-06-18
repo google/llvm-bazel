@@ -232,6 +232,7 @@ cc_library(
         "//mlir:SideEffects",
         "//mlir:StandardOps",
         "//mlir:StandardOpsTransforms",
+        "//mlir:TensorDialect",
         "//mlir:TransformUtils",
         "//mlir:Transforms",
     ],
