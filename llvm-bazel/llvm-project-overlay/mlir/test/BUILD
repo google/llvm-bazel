@@ -322,10 +322,11 @@ cc_library(
     includes = ["lib/Dialect/Test"],
     deps = [
         ":TestDialect",
+        "//mlir:LLVMCommonConversion",
         "//mlir:LLVMDialect",
-        "//mlir:LLVMTransforms",
         "//mlir:Pass",
         "//mlir:StandardOps",
+        "//mlir:StandardToLLVM",
     ],
 )
 
