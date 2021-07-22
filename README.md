@@ -1,7 +1,8 @@
 # LLVM Bazel BUILD files
 
-DISCLAIMER: This is not an officially-supported Google project and is still in
-development.
+DISCLAIMER: This is not an officially-supported Google project and has been
+superseded by the Bazel build configuration in the
+[LLVM Project monorepo](https://github.com/llvm/llvm-project/tree/main/utils/bazel).
 
 This repo contains standalone Bazel BUILD configuration for part of the
 [LLVM project](http://llvm.org/) that could be shared by dependent projects
@@ -15,18 +16,15 @@ suitable for more general usage.
 
 # Status
 
-This build configuration is moving upstream to the LLVM monorepo, where it will
-be located in a side directory maintained by the subcommunity interested in the
-Bazel build. This is following the
+This build configuration has now been migrated upstream to the LLVM monorepo, in
+a [side directory](https://github.com/llvm/llvm-project/tree/main/utils/bazel).
+This is following the
 [upstreaming proposal](https://github.com/llvm/llvm-www/blob/main/proposals/LP0002-BazelBuildConfiguration.md).
-The patch to introduce the files is at https://reviews.llvm.org/D90352. It will
-be possible to use the build files in their new location using a very similar
-mechanism.
-
-In the meantime, please continue to send PRs or issues, but know that major
-changes will likely be paused until the upstreaming completes. When upstreaming
-is complete this repository will see less regular maintenance, though patches
-will still be accepted.
+Therefore this repository is no longer actively updated. Please prefer the
+upstream build files which will see regular maintenance. Transitioning to those
+should be straightforward and you can find usage examples there. We will
+continue to accept PRs updating this repository until projects have time to
+migrate, but will not be updating it ourselves.
 
 # Usage
 
